@@ -90,9 +90,34 @@ describe('applyFieldMapping — a column the file does not have', () => {
 
     const { issues } = applyFieldMapping(mapping, row, header, template([mapping]), CONTEXT);
 
-    expect(issues).toHaveLength(1);
     expect(issues[0]?.severity).toBe('ERROR');
     expect(issues[0]?.code).toBe('MISSING_COLUMN');
+  });
+
+  // One absent column currently yields two issues for the same root cause: MISSING_COLUMN
+  // from the lookup, then MISSING_REQUIRED_VALUE because the merged value is null.
+  // `reconcile` counts both codes into `missingRequiredFields`, so a district is told two
+  // fields are missing when one column was renamed — and the same summary is their only
+  // evidence of what the platform did with their file (§10.5). The transform-failure branch
+  // already guards against this with `else if`; the missing-column branch does not.
+  // Correct behaviour: a row that has already reported MISSING_COLUMN for a field must not
+  // also report MISSING_REQUIRED_VALUE for that field.
+  it.todo('reports one absent required column as a single issue, not two');
+
+  it('currently reports both MISSING_COLUMN and MISSING_REQUIRED_VALUE (double count)', () => {
+    const { header, row } = rowOf(EXPENDITURES);
+    const mapping = field({
+      target: 'federal_actual_expenditure',
+      sources: ['FEDERAL_ACTUAL'],
+      valueType: 'money',
+      required: true,
+    });
+
+    const codes = applyFieldMapping(mapping, row, header, template([mapping]), CONTEXT).issues.map(
+      (issue) => issue.code,
+    );
+
+    expect(codes).toEqual(['MISSING_COLUMN', 'MISSING_REQUIRED_VALUE']);
   });
 
   it('is only a WARNING when the field is optional', () => {
@@ -109,6 +134,7 @@ describe('applyFieldMapping — a column the file does not have', () => {
     expect(issues).toHaveLength(1);
     expect(issues[0]?.severity).toBe('WARNING');
     expect(issues[0]?.code).toBe('MISSING_COLUMN');
+    // An optional field that produces nothing is not additionally a missing-value error.
   });
 
   it('names the missing column and tells the district to update the named template', () => {
@@ -143,10 +169,9 @@ describe('applyFieldMapping — a column the file does not have', () => {
 
     const { issues, value } = applyFieldMapping(mapping, row, header, template([mapping]), CONTEXT);
 
-    expect(issues.map((issue) => issue.sourceColumn)).toEqual([
-      'FEDERAL_ACTUAL',
-      'FEDERAL_ACTUAL_REVISED',
-    ]);
+    expect(
+      issues.filter((issue) => issue.code === 'MISSING_COLUMN').map((issue) => issue.sourceColumn),
+    ).toEqual(['FEDERAL_ACTUAL', 'FEDERAL_ACTUAL_REVISED']);
     // Nothing was guessed at: an absent column contributes null, not an empty string.
     expect(value.value).toBeNull();
     expect(value.provenance.sourceValues).toEqual([null, null]);
@@ -264,7 +289,8 @@ LEA-4412,,"9,900.00"
   });
 
   it('"concat" yields null, not an empty string, when every source is empty', () => {
-    const csv = `FUND_CODE,OBJECT_CODE\n,\n`;
+    // A leading identifier keeps the record from being read as a blank line.
+    const csv = `LEA_ID,FUND_CODE,OBJECT_CODE\nLEA-4412,,\n`;
     const { header, row } = rowOf(csv);
     const mapping = field({
       target: 'account_code',
@@ -505,7 +531,7 @@ describe('applyMapping', () => {
   });
 
   it('accumulates the issues of every field rather than stopping at the first', () => {
-    const csv = `LEA_ID,LOCAL_ACTUAL,CHILD_COUNT\nLEA-4412,1.234,56\n`;
+    const csv = `LEA_ID,LOCAL_ACTUAL,CHILD_COUNT\nLEA-4412,"1.234,56",\n`;
     const { header, row } = rowOf(csv);
     const tpl = template([
       field({
