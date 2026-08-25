@@ -1,10 +1,14 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { SITE } from '@/site';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'ComplianceOS EDU',
-  description: 'Compliance assurance for publicly funded education programs.',
+  title: {
+    default: SITE.name,
+    template: `%s · ${SITE.name}`,
+  },
+  description: SITE.description,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
