@@ -1,11 +1,8 @@
 {
   "files": [],
   "references": [
-    {
-      "path": "./packages/domain"
-    },
-    {
-      "path": "./packages/rulepack-sdk"
-    }
+    { "path": "./packages/domain" },
+    { "path": "./packages/rulepack-sdk" },
+    { "path": "./packages/calculators" }
   ]
 }

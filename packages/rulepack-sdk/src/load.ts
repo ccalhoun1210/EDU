@@ -11,6 +11,7 @@ import path from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { collectCalculators, collectInputs } from './expression.js';
 import { RulePackManifestSchema, RuleSchema, type Rule, type RulePackManifest } from './rule.js';
+import { SourceRegistrySchema, type RegulatorySource, type SourceRegistry } from './source.js';
 
 export interface LoadedRulePack {
   readonly manifest: RulePackManifest;
@@ -108,4 +109,44 @@ export async function loadRulePack(
 
 function z_issues(issues: readonly { path: PropertyKey[]; message: string }[]): string {
   return issues.map((issue) => `${issue.path.join('.') || '(root)'} — ${issue.message}`).join('; ');
+}
+
+/** Load one regulatory source registry file (spec 9). */
+export async function loadSourceRegistry(file: string): Promise<SourceRegistry> {
+  const result = SourceRegistrySchema.safeParse(await readYaml(file));
+  if (!result.success) {
+    throw new RulePackValidationError(z_issues(result.error.issues), file);
+  }
+  return result.data;
+}
+
+/**
+ * Load every registry under a directory into one flat source list.
+ *
+ * A duplicate source id across registries is an error rather than a last-one-wins merge: two
+ * entries claiming the same id will eventually disagree about an effective date, and the
+ * rule that cites the id would then mean different things depending on load order.
+ */
+export async function loadSourceRegistries(dir: string): Promise<readonly RegulatorySource[]> {
+  const files = (await readdir(dir)).filter((name) => name.endsWith('.yaml')).sort();
+  const sources: RegulatorySource[] = [];
+  const seen = new Map<string, string>();
+
+  for (const name of files) {
+    const file = path.join(dir, name);
+    const registry = await loadSourceRegistry(file);
+    for (const source of registry.sources) {
+      const previous = seen.get(source.sourceId);
+      if (previous !== undefined) {
+        throw new RulePackValidationError(
+          `duplicate sourceId "${source.sourceId}", already defined in ${previous}`,
+          file,
+        );
+      }
+      seen.set(source.sourceId, file);
+      sources.push(source);
+    }
+  }
+
+  return sources;
 }

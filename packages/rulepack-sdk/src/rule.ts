@@ -28,9 +28,16 @@ export type RuleLifecycleStatus = (typeof RULE_LIFECYCLE_STATUSES)[number];
 /** Statuses at which a rule version becomes immutable. */
 export const IMMUTABLE_FROM: RuleLifecycleStatus = 'ACTIVE';
 
-const IsoDate = z
+/**
+ * Invariant 6: a regulatory date is a calendar date. Exported because the regulatory source
+ * registry needs the identical rule — a publication date that round-trips through a UTC
+ * timestamp can land on the wrong day, and an effective date off by one is a wrong finding.
+ */
+export const IsoDateSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Regulatory dates are calendar dates (YYYY-MM-DD), not timestamps');
+
+const IsoDate = IsoDateSchema;
 
 export const AuthoritySchema = z.object({
   citation: z.string().min(1),
