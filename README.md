@@ -102,6 +102,40 @@ Vercel, with Neon Postgres, Inngest for durable background work, and Vercel Blob
 objects. This differs from the AWS design in the buildout; ADR 0002 records the swap and
 what it costs, including the procurement questions to close before a district contract.
 
+### Deploying from either root directory
+
+The Next application lives in `apps/web`, and a Vercel project can be pointed at it two
+ways. Both work, deliberately:
+
+| Project Root Directory | Config read            | Output           |
+| ---------------------- | ---------------------- | ---------------- |
+| repository root        | `vercel.json`          | `apps/web/.next` |
+| `apps/web`             | `apps/web/vercel.json` | `.next`          |
+
+A monorepo that only deploys under one particular dashboard setting is fragile — the
+setting lives outside the repository, so nothing here can test it and a change to it breaks
+the build with an error that looks like a code problem. Supporting both removes that class
+of failure.
+
+Two details make it work, and both look odd without the explanation:
+
+- **`next` is a devDependency of the workspace root** even though the root builds no Next
+  application. Vercel's framework detection reads the `package.json` at whichever directory
+  the project is rooted at, and refuses a root-directory deployment when it finds no `next`
+  there — regardless of `framework: "nextjs"` in `vercel.json`. It is a detection shim, not
+  a dependency the root code uses.
+- **Both build commands run `tsc --build` first.** Workspace packages resolve through their
+  compiled `dist/`, so `next build` cannot resolve `@complianceos/rulepack-sdk` until they
+  have been built.
+
+The rule packs are read from disk at request time and nothing imports them, so Next's
+dependency tracing cannot see them. `outputFileTracingIncludes` in `next.config.ts` pulls
+them into the bundle; without it the build succeeds and the deployed application fails on
+its first request.
+
+Security headers are declared in `next.config.ts` rather than in `vercel.json`, so they
+apply under both layouts and under `next start`.
+
 ## Contributing
 
 Read `CLAUDE.md` first. It lists ten invariants that govern this codebase — determinism,
