@@ -17,7 +17,7 @@
     "rules:validate": "vitest run --project rulepack-sdk",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
     "dev": "pnpm --filter @complianceos/web dev",
-    "build": "pnpm --filter @complianceos/web build"
+    "build": "tsc --build && pnpm --filter @complianceos/web build"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
