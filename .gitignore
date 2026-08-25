@@ -1,0 +1,51 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+build/
+*.tsbuildinfo
+.next/
+out/
+
+# test / coverage
+coverage/
+.vitest/
+
+# environment & secrets — never commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+
+# terraform state contains secrets and must live in remote backend
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+crash.log
+
+# customer / regulated data must never enter the repo
+/data/
+/uploads/
+/evidence/
+*.csv
+*.xlsx
+*.sqlite
+!docs/**/*.csv
+
+# editor & OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# claude code local overrides
+.claude/settings.local.json
+
+# next generated types
+next-env.d.ts

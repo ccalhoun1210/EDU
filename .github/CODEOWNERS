@@ -1,0 +1,9 @@
+# Regulatory content and the rules engine require review from someone who can speak to
+# the statute, not only to the code.
+/rulepacks/                     @OWNER
+/packages/rulepack-sdk/         @OWNER
+/docs/regulatory-methodology/   @OWNER
+
+# Architecture decisions are reviewed, not merged quietly.
+/docs/adrs/                     @OWNER
+/CLAUDE.md                      @OWNER

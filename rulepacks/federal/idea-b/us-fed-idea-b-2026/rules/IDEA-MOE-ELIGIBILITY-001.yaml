@@ -1,0 +1,34 @@
+ruleId: IDEA-MOE-ELIGIBILITY-001
+pack: US-FED-IDEA-B-2026
+jurisdiction: US-FED
+program: IDEA_PART_B
+subjectType: LEA_FISCAL_YEAR
+lifecycle: DRAFT
+
+authority:
+  citation: '34 CFR 300.203(a)'
+  sourceId: REG-US-IDEA-300-203
+  url: 'https://www.ecfr.gov/current/title-34/subtitle-B/chapter-III/part-300/subpart-C/section-300.203'
+
+effective:
+  start: 2015-07-01
+  end: null
+
+inputs:
+  - current_budget_local
+  - current_budget_state_local
+  - comparison_actual_local
+  - comparison_actual_state_local
+  - current_child_count
+  - comparison_child_count
+
+calculator: idea_moe_eligibility_v1
+
+outputSchema:
+  status: enum
+  qualifyingMethods: array
+  marginByMethod: object
+  missingInputs: array
+
+severityOnFailure: CRITICAL
+explanationTemplate: moe_eligibility_v1

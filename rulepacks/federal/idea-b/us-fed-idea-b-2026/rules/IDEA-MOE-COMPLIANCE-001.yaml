@@ -1,0 +1,37 @@
+ruleId: IDEA-MOE-COMPLIANCE-001
+pack: US-FED-IDEA-B-2026
+jurisdiction: US-FED
+program: IDEA_PART_B
+subjectType: LEA_FISCAL_YEAR
+lifecycle: DRAFT
+
+authority:
+  citation: '34 CFR 300.203(b)'
+  sourceId: REG-US-IDEA-300-203
+  url: 'https://www.ecfr.gov/current/title-34/subtitle-B/chapter-III/part-300/subpart-C/section-300.203'
+
+effective:
+  start: 2015-07-01
+  end: null
+
+inputs:
+  - current_actual_local
+  - current_actual_state_local
+  - comparison_actual_local
+  - comparison_actual_state_local
+  - current_child_count
+  - comparison_child_count
+  - claimed_exceptions
+  - claimed_adjustment
+
+calculator: idea_moe_compliance_v1
+
+outputSchema:
+  status: enum
+  qualifyingMethods: array
+  shortfallByMethod: object
+  allowedExceptions: array
+  missingInputs: array
+
+severityOnFailure: CRITICAL
+explanationTemplate: moe_compliance_v1

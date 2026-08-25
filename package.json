@@ -1,0 +1,35 @@
+{
+  "name": "complianceos-edu",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --build --force && pnpm --filter @complianceos/web exec tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "rules:validate": "vitest run --project rulepack-sdk",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "dev": "pnpm --filter @complianceos/web dev",
+    "build": "pnpm --filter @complianceos/web build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^22.19.2",
+    "eslint": "^9.39.1",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.4",
+    "vitest": "^3.2.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

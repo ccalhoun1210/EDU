@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Format
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit and rule-pack tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+  data-hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Customer data, student records and district exports must never enter the repo.
+      # .gitignore is the first line of defence; this job is the second.
+      - name: Reject data files
+        run: |
+          matches=$(git ls-files '*.csv' '*.xlsx' '*.xls' '*.sqlite' | grep -v '^docs/' || true)
+          if [ -n "$matches" ]; then
+            echo "Data files committed outside docs/:"
+            echo "$matches"
+            exit 1
+          fi
+
+      - name: Reject populated env files
+        run: |
+          matches=$(git ls-files '.env' '.env.*' | grep -v '\.env\.example$' || true)
+          if [ -n "$matches" ]; then
+            echo "Environment files committed:"
+            echo "$matches"
+            exit 1
+          fi

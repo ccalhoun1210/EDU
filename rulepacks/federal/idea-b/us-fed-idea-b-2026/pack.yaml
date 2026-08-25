@@ -1,0 +1,13 @@
+packId: US-FED-IDEA-B-2026
+version: 0.1.0
+jurisdiction: US-FED
+program: IDEA_PART_B
+layer: FEDERAL
+extendsPack: null
+effective:
+  start: 2026-07-01
+  end: null
+description: >-
+  Federal baseline rule pack for IDEA Part B fiscal compliance. State packs overlay this
+  baseline and may add requirements or tighten thresholds; they do not rewrite the
+  statutory requirement itself.

@@ -1,0 +1,35 @@
+ruleId: IDEA-EXCESS-COST-001
+pack: US-FED-IDEA-B-2026
+jurisdiction: US-FED
+program: IDEA_PART_B
+subjectType: LEA_FISCAL_YEAR
+lifecycle: DRAFT
+
+authority:
+  citation: '34 CFR 300.202(b)'
+  sourceId: REG-US-IDEA-300-202
+  url: 'https://www.ecfr.gov/current/title-34/subtitle-B/chapter-III/part-300/subpart-C/section-300.202'
+
+effective:
+  start: 2015-07-01
+  end: null
+
+inputs:
+  - elementary_total_expenditures
+  - secondary_total_expenditures
+  - elementary_enrollment
+  - secondary_enrollment
+  - idea_part_b_funds
+  - state_local_sped_funds
+  - federal_funds_excluded
+
+calculator: idea_excess_cost_v1
+
+outputSchema:
+  status: enum
+  minimumAverageAmountPerChild: object
+  computedAverageByLevel: object
+  missingInputs: array
+
+severityOnFailure: HIGH
+explanationTemplate: excess_cost_v1
