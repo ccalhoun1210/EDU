@@ -25,65 +25,12 @@
  * and cannot be tested at all.
  */
 
+// Calendar arithmetic lives in one place (./calendar.js) and is pure integer maths on
+// (year, month, day). Three separate implementations of "add 30 days" in one package is
+// how two screens come to disagree about a due date.
+import { diffDays, type CalendarDate } from './calendar.js';
+
 import type { Severity } from './evaluation.js';
-
-/* ------------------------------------------------------------------ calendar dates -- */
-
-/**
- * A calendar date in ISO `YYYY-MM-DD` form — the canonical wire and storage form for every
- * regulatory date in the platform (invariant 6).
- */
-export type CalendarDate = string;
-
-export class CalendarDateError extends Error {
-  constructor(
-    readonly raw: unknown,
-    reason: string,
-  ) {
-    super(`Cannot read ${JSON.stringify(raw)} as a calendar date: ${reason}`);
-    this.name = 'CalendarDateError';
-  }
-}
-
-const CALENDAR_DATE = /^\d{4}-\d{2}-\d{2}$/;
-
-const MILLISECONDS_PER_DAY = 86_400_000;
-
-/**
- * Days since the epoch for a calendar date.
- *
- * `Date.UTC` is an implementation detail used only to do calendar arithmetic; the value
- * never leaves this module and no timestamp is ever stored. UTC specifically, so that the
- * host's time zone cannot move a deadline by a day.
- *
- * Strict like `amount()` in money.ts: a malformed or impossible date is rejected rather
- * than coerced, because a silently shifted deadline is a compliance defect. The round-trip
- * check catches both the impossible day ("2026-02-30") and the two-digit-year trap, where
- * `Date.UTC(26, ...)` would quietly mean 1926.
- */
-function epochDay(date: CalendarDate): number {
-  if (typeof date !== 'string' || !CALENDAR_DATE.test(date)) {
-    throw new CalendarDateError(date, 'expected an ISO calendar date such as "2026-06-30"');
-  }
-  const year = Number(date.slice(0, 4));
-  const month = Number(date.slice(5, 7));
-  const day = Number(date.slice(8, 10));
-  const utc = Date.UTC(year, month - 1, day);
-  const roundTrip = new Date(utc);
-  if (
-    roundTrip.getUTCFullYear() !== year ||
-    roundTrip.getUTCMonth() + 1 !== month ||
-    roundTrip.getUTCDate() !== day
-  ) {
-    throw new CalendarDateError(date, 'that day does not exist on the calendar');
-  }
-  return Math.round(utc / MILLISECONDS_PER_DAY);
-}
-
-/** Whole days from `from` to `to`. Negative when `to` is the earlier date. */
-function daysBetween(from: CalendarDate, to: CalendarDate): number {
-  return epochDay(to) - epochDay(from);
-}
 
 /* ------------------------------------------------------------------------- the state -- */
 
@@ -533,7 +480,7 @@ export function summarizeCorrectiveActions(
 ): CorrectiveActionSummary {
   // Validate the reference date once, so an empty or all-undated list cannot let a
   // malformed `asOf` through unnoticed and produce a plausible-looking zeroed panel.
-  epochDay(asOf);
+  diffDays(asOf, asOf);
 
   let open = 0;
   let critical = 0;
@@ -549,7 +496,7 @@ export function summarizeCorrectiveActions(
 
     const dueDate = action.dueDate;
     if (dueDate === undefined) continue;
-    const daysRemaining = daysBetween(asOf, dueDate);
+    const daysRemaining = diffDays(asOf, dueDate);
     if (daysRemaining < 0) pastDue += 1;
     else if (daysRemaining <= DUE_SOON_WINDOW_DAYS) dueWithin30Days += 1;
   }

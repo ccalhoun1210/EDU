@@ -88,6 +88,18 @@ importers:
         specifier: ^4.1.12
         version: 4.4.3
 
+  packages/rules-engine:
+    dependencies:
+      '@complianceos/calculators':
+        specifier: workspace:*
+        version: link:../calculators
+      '@complianceos/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@complianceos/rulepack-sdk':
+        specifier: workspace:*
+        version: link:../rulepack-sdk
+
 packages:
 
   '@emnapi/runtime@1.11.3':

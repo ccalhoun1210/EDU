@@ -218,11 +218,15 @@ describe('formatUsd', () => {
     expect(formatUsd(amount('1234567'), 0)).toBe('$1,234,567');
   });
 
-  // BUG: a negative amount smaller than half a cent renders as "-$0.00", because the sign
-  // is taken from the unrounded value while the digits are rounded to dp. Presentation
-  // only — no stored or hashed value is affected — but a district reading "-$0.00" on a
-  // remediation screen has been told something false.
-  it.todo('renders a negative amount that rounds to zero as $0.00, without a sign');
+  // A negative amount smaller than half a cent must not render as "-$0.00": a minus sign in
+  // front of nothing, on a screen where a district is deciding whether it has a shortfall.
+  it('renders a negative amount that rounds to zero as $0.00, without a sign', () => {
+    expect(formatUsd(amount('-0.001'))).toBe('$0.00');
+    expect(formatUsd(amount('-0.004'))).toBe('$0.00');
+    // Half a cent still rounds away from zero, so the sign is real there.
+    expect(formatUsd(amount('-0.005'))).toBe('-$0.01');
+    expect(formatUsd(amount('-0.4'), 0)).toBe('$0');
+  });
 });
 
 describe('count', () => {
@@ -250,10 +254,13 @@ describe('count', () => {
     expect(() => count(Number.POSITIVE_INFINITY)).toThrow(AmountParseError);
   });
 
-  // BUG: AmountParseError builds its message with JSON.stringify(raw), and JSON.stringify
-  // renders NaN and Infinity as "null". The message reads "Cannot read null as an exact
-  // amount", naming a value the caller never passed. `raw` itself is correct.
-  it.todo('names NaN in the parse error message rather than reporting null');
+  // An error whose whole job is to tell the caller what they handed us has to name the
+  // thing they handed us. JSON.stringify renders NaN and Infinity as "null".
+  it('names NaN in the parse error message rather than reporting null', () => {
+    expect(() => count(Number.NaN)).toThrow(/NaN/);
+    expect(() => count(Number.POSITIVE_INFINITY)).toThrow(/Infinity/);
+    expect(() => count(Number.NaN)).not.toThrow(/null/);
+  });
 });
 
 describe('comparison', () => {
