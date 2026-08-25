@@ -93,7 +93,23 @@ export function parseCalendarDate(raw: string): CalendarParts {
   return { year, month, day };
 }
 
+/**
+ * Render a date, refusing to emit one this module would not read back.
+ *
+ * The range check is on the way *out* as well as in. Without it `addDays('9999-12-31', 1)`
+ * returns `'10000-01-01'` — five digits, which `parseCalendarDate` rejects and
+ * `isCalendarDate` reports as false. A function whose contract is to return a calendar date
+ * must not hand back a string that is not one; the caller would carry it until something far
+ * downstream failed to parse it, with nothing left to say where it came from.
+ */
 export function formatCalendarDate(date: CalendarParts): string {
+  if (date.year < 1583 || date.year > 9999) {
+    throw new CalendarDateError(
+      `${date.year}-${date.month}-${date.day}`,
+      `the result falls in year ${date.year}, outside the range this platform accepts ` +
+        '(1583-9999)',
+    );
+  }
   const month = String(date.month).padStart(2, '0');
   const day = String(date.day).padStart(2, '0');
   return `${String(date.year).padStart(4, '0')}-${month}-${day}`;

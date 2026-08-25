@@ -32,6 +32,19 @@ export type PackLayer = (typeof PACK_LAYERS)[number];
 
 const LAYER_ORDER: Record<PackLayer, number> = { FEDERAL: 0, STATE: 1, LOCAL: 2 };
 
+/**
+ * Order packs federal, then state, then local.
+ *
+ * Exported so that everything which layers packs uses the same order. Anything that instead
+ * iterates the caller's array applies overlays in whatever order the argument happened to be
+ * built in, and then a result depends on how someone wrote a function call.
+ */
+export function sortPacksByLayer<T extends { readonly manifest: { readonly layer: PackLayer } }>(
+  packs: readonly T[],
+): readonly T[] {
+  return [...packs].sort((a, b) => LAYER_ORDER[a.manifest.layer] - LAYER_ORDER[b.manifest.layer]);
+}
+
 export interface PackRef {
   readonly packId: string;
   readonly version: string;
@@ -81,9 +94,7 @@ function packRef(pack: LoadedRulePack): PackRef {
 export function resolveRulePacks(packs: readonly LoadedRulePack[], asOf: string): ResolvedRuleSet {
   if (packs.length === 0) throw new RuleResolutionError('no rule packs supplied');
 
-  const ordered = [...packs].sort(
-    (a, b) => LAYER_ORDER[a.manifest.layer] - LAYER_ORDER[b.manifest.layer],
-  );
+  const ordered = sortPacksByLayer(packs);
 
   const federalCount = ordered.filter((pack) => pack.manifest.layer === 'FEDERAL').length;
   if (federalCount === 0) {

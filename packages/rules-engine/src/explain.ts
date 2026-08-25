@@ -35,7 +35,15 @@ export interface ExplanationContext {
 /** Rendered when a placeholder resolves to nothing. Never an empty string, which reads as a typo. */
 const ABSENT = '—';
 
-const PLACEHOLDER = /\{\{\s*([a-zA-Z0-9_.[\]]+)\s*\}\}/g;
+/**
+ * Any `{{...}}` span, not only well-formed ones.
+ *
+ * A narrower pattern leaves an authoring typo — `{{input.prior-local}}`, or someone trying
+ * `{{ shortfall + 1 }}` — unmatched and therefore emitted verbatim, so a district reads raw
+ * template syntax in a compliance document. Matching everything and rendering the
+ * unresolvable ones as the absent marker means template scaffolding can never reach a reader.
+ */
+const PLACEHOLDER = /\{\{([^{}]*)\}\}/g;
 
 function formatStepValue(step: CalculationStep): string {
   switch (step.unit) {
@@ -49,10 +57,20 @@ function formatStepValue(step: CalculationStep): string {
   }
 }
 
+/**
+ * Walk a dotted path, reading own enumerable properties only.
+ *
+ * The own-property check is the whole point. Plain indexing walks the prototype chain, so
+ * `{{input.constructor}}` and `{{output.toString}}` resolve to members of `Object.prototype`
+ * and render as engine internals inside a district-facing compliance explanation. Nothing is
+ * ever invoked — a template still cannot compute — but a name that is not a declared input
+ * must resolve to nothing at all.
+ */
 function readPath(source: unknown, path: readonly string[]): unknown {
   let current = source;
   for (const segment of path) {
     if (current === null || current === undefined || typeof current !== 'object') return undefined;
+    if (!Object.prototype.hasOwnProperty.call(current, segment)) return undefined;
     current = (current as Record<string, unknown>)[segment];
   }
   return current;
@@ -74,7 +92,8 @@ function renderValue(value: unknown): string {
  * than `{{ required_local }}` reading from wherever it can be found: the sentence and the
  * table below it cannot disagree, because they are the same value.
  */
-function resolve(path: string, context: ExplanationContext): string {
+function resolve(rawPath: string, context: ExplanationContext): string {
+  const path = rawPath.trim();
   const segments = path.split('.');
   const [namespace, ...rest] = segments;
 

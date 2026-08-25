@@ -32,7 +32,12 @@ import {
   type EvaluationContext,
 } from './evaluate.js';
 import { explain, type ExplanationContext } from './explain.js';
-import { resolveRulePacks, type ResolvedRule, type ResolvedRuleSet } from './resolve.js';
+import {
+  resolveRulePacks,
+  sortPacksByLayer,
+  type ResolvedRule,
+  type ResolvedRuleSet,
+} from './resolve.js';
 import { computeEvaluationHash, ENGINE_VERSION, type EvaluationResult } from './result.js';
 
 export interface SubjectRef {
@@ -88,6 +93,10 @@ export function evaluateRule(request: EvaluateRuleRequest): EvaluationResult {
   const evaluationContext: EvaluationContext = { facts, calculators };
   const trace = new EvaluationTrace();
 
+  // Projected before anything reads it, because this — not the whole fact bag — is what the
+  // calculator is allowed to see. See the note on the calculator branch below.
+  const computedInputs = projectInputs(rule.inputs, facts);
+
   let status: EvaluationStatus;
   let output: Record<string, CalculatorValue> = {};
   let steps: readonly CalculationStep[] = [];
@@ -117,7 +126,13 @@ export function evaluateRule(request: EvaluateRuleRequest): EvaluationResult {
       );
       status = 'INDETERMINATE';
     } else {
-      const result = calculator.run(facts);
+      // The declared inputs only, never the whole bag. `runAssessment` builds one fact bag for
+      // every rule in the stack, so passing it wholesale would let a calculator read — and
+      // decide on — a fact its rule never declared. The finding's `computedInputs` would then
+      // no longer record everything the decision rested on, which breaks the provenance chain
+      // (invariant 3), and a module would be handed data outside its declared contract
+      // (invariant 10). Declaring an input is how a rule asks for it.
+      const result = calculator.run(computedInputs);
       status = result.status;
       output = { ...result.output } as Record<string, CalculatorValue>;
       steps = result.steps;
@@ -135,7 +150,6 @@ export function evaluateRule(request: EvaluateRuleRequest): EvaluationResult {
     status = 'INDETERMINATE';
   }
 
-  const computedInputs = projectInputs(rule.inputs, facts);
   const missingInputs = trace.missingInputs;
 
   const explanationContext: ExplanationContext = {
@@ -209,10 +223,14 @@ export interface AssessmentRunOutcome {
 export function runAssessment(request: AssessmentRunRequest): AssessmentRunOutcome {
   const resolved = resolveRulePacks(request.packs, request.asOf);
 
-  // One merged template map. Later layers win, matching rule resolution: a state overlay that
-  // supersedes a federal rule brings its own wording for it.
+  // One merged template map, merged in layer order rather than in the order the caller
+  // supplied the packs. Later layers win, matching rule resolution: a state overlay that
+  // supersedes a federal rule brings its own wording for it. Iterating `request.packs`
+  // directly would let the federal template overwrite the state one when the array happened
+  // to be built [state, federal], so a rule decided under state text could be explained in
+  // federal words depending on how a call site was written.
   const explanations = new Map<string, string>();
-  for (const pack of request.packs) {
+  for (const pack of sortPacksByLayer(request.packs)) {
     for (const [name, template] of pack.explanations) explanations.set(name, template);
   }
 

@@ -295,25 +295,21 @@ describe('addDays', () => {
     expect(addDays('2026-06-30', -0)).toBe('2026-06-30');
   });
 
-  /**
-   * DEFECT (do not fix here — reported to the orchestrator).
-   *
-   * The offset guard closed one half of this; the other half is open. `parseCalendarDate`
-   * declares an accepted year range of 1583-9999, but no add function validates its computed
-   * result against that range, so the module emits dates it would refuse to read back:
-   *
-   *   addDays('9999-12-31', 1)    === '10000-01-01'  // five-digit year, fails the regex
-   *   addMonths('1583-01-01', -1) === '1582-12-01'   // below the plausibility bound
-   *   addYears('9999-01-01', 1)   === '10000-01-01'
-   *
-   * `isCalendarDate` returns false for all three. A value that cannot be parsed back is not
-   * a calendar date, and shipping one into a DATE column or a finding breaks the round-trip
-   * the rest of the platform assumes — the same class of silent-bad-value the parser's year
-   * bound was added to prevent, just on the way out instead of in. Correct behaviour:
-   * validate the formatted result before returning it and throw a `CalendarDateError` naming
-   * the out-of-range year, so that every string this module returns is one it would accept.
-   */
-  it.todo('refuses to return a date outside the year range parseCalendarDate accepts');
+  it('refuses to return a date outside the year range parseCalendarDate accepts', () => {
+    // Every string this module returns must be one it would read back. Emitting
+    // '10000-01-01' — which `isCalendarDate` reports as false — would let a value that is not
+    // a calendar date travel until something far downstream failed to parse it, with nothing
+    // left to say where it came from. The same silent-bad-value class the parser's year bound
+    // prevents, on the way out instead of in.
+    expect(() => addDays('9999-12-31', 1)).toThrow(CalendarDateError);
+    expect(() => addMonths('1583-01-01', -1)).toThrow(CalendarDateError);
+    expect(() => addYears('9999-01-01', 1)).toThrow(CalendarDateError);
+    expect(() => addYears('9999-01-01', 1)).toThrow(/outside the range/);
+
+    // The edges themselves remain usable.
+    expect(addDays('9999-12-30', 1)).toBe('9999-12-31');
+    expect(addDays('1583-01-02', -1)).toBe('1583-01-01');
+  });
 });
 
 describe('addWeeks', () => {
