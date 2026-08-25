@@ -20,7 +20,8 @@ and ERP remain authoritative. Integrations are read-only.
 - Rule-pack schema, restricted rule DSL, and pack loader, with validation in CI
 - Federal IDEA Part B baseline pack: three fiscal rules, each carrying its CFR citation
 - Core domain vocabulary — evaluation statuses, organization model, explicit access scopes
-- A page that loads the committed rule pack and reports what parsed
+- A public landing page at `/` describing the product, its invariants, and its current stage
+- A rule library at `/rule-pack` that loads the committed rule pack and reports what parsed
 
 No rule is evaluated yet. Calculators are declared in the registry and not implemented; no
 rule has passed legal review. The roadmap is §32 of the master technical buildout.
@@ -37,6 +38,10 @@ pnpm dev              # http://localhost:3000
 Copy `.env.example` to `.env.local` and fill in what you need. `pnpm dev` runs without any
 of it — nothing is wired to a database yet.
 
+Set `NEXT_PUBLIC_CONTACT_EMAIL` to the address the landing page's calls to action should
+reach. It falls back to the placeholder in `apps/web/src/site.ts`, which must be replaced
+with a real inbox before the site is announced anywhere.
+
 ## Commands
 
 | Command          | What it does                                           |
@@ -51,7 +56,7 @@ of it — nothing is wired to a database yet.
 ## Layout
 
 ```
-apps/web/               Next.js application
+apps/web/               Next.js application — landing page and rule library
 packages/domain/        Evaluation vocabulary, organization model, access rules
 packages/rulepack-sdk/  Rule schema, DSL, loader, calculator allow-list
 rulepacks/              Regulatory content as YAML

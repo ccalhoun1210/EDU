@@ -1,0 +1,565 @@
+/* ---------------------------------------------------------------- shell */
+
+.page {
+  --gutter: 1.5rem;
+  --measure: 68rem;
+}
+
+.shell {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.masthead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.mastheadInner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 4rem;
+}
+
+@media (min-width: 46rem) {
+  .mastheadInner {
+    gap: 1.5rem;
+  }
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  text-decoration: none;
+  margin-right: auto;
+}
+
+.wordmarkBadge {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.1rem 0.4rem;
+  color: var(--muted);
+}
+
+.navLinks {
+  display: none;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.navLinks a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.navLinks a:hover {
+  color: var(--fg);
+}
+
+@media (min-width: 62rem) {
+  .navLinks {
+    display: flex;
+  }
+}
+
+/* --------------------------------------------------------------- blocks */
+
+.section {
+  padding: 5rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.sectionSunken {
+  background: var(--bg-sunken);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 1.25rem;
+}
+
+.eyebrow::before {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--accent);
+  flex: none;
+}
+
+.sectionTitle {
+  font-size: clamp(1.6rem, 3.2vw, 2.15rem);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  margin: 0 0 0.9rem;
+  max-width: 30ch;
+}
+
+.sectionLede {
+  color: var(--muted);
+  font-size: 1.05rem;
+  margin: 0 0 2.75rem;
+  max-width: 62ch;
+}
+
+/* ----------------------------------------------------------------- hero */
+
+.hero {
+  display: grid;
+  gap: 3rem;
+  padding: 4.5rem 0 4rem;
+}
+
+@media (min-width: 62rem) {
+  .hero {
+    grid-template-columns: 1.05fr 0.95fr;
+    align-items: center;
+    gap: 4rem;
+    padding: 6rem 0 5.5rem;
+  }
+}
+
+.heroTitle {
+  font-size: clamp(2.2rem, 5.4vw, 3.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  margin: 0 0 1.25rem;
+}
+
+.heroLede {
+  font-size: 1.15rem;
+  color: var(--muted);
+  margin: 0 0 2rem;
+  max-width: 36ch;
+}
+
+.heroLede strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.btnPrimary,
+.btnGhost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 1.15rem;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-weight: 550;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+/* The masthead is 4rem tall; the header call to action has to stay inside it. */
+.mastheadCta {
+  padding: 0.55rem 0.85rem;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
+.ctaLabelShort {
+  display: none;
+}
+
+/* Small handsets: the wordmark and the call to action share one line, so both give ground. */
+@media (max-width: 26rem) {
+  .page {
+    --gutter: 1.1rem;
+  }
+
+  .wordmark {
+    font-size: 0.95rem;
+  }
+
+  .mastheadCta {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.8rem;
+  }
+
+  .ctaLabelFull {
+    display: none;
+  }
+
+  .ctaLabelShort {
+    display: inline;
+  }
+}
+
+.btnPrimary {
+  background: var(--accent);
+  color: var(--fg-inverse);
+}
+
+.btnPrimary:hover {
+  background: var(--accent-hover);
+}
+
+.btnGhost {
+  border-color: var(--line-strong);
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.btnGhost:hover {
+  border-color: var(--fg);
+}
+
+.heroFine {
+  margin: 1.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* --------------------------------------------------------- sample panel */
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.panelTitle {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.panelRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1.1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.panelLabel {
+  color: var(--muted);
+}
+
+.panelValue {
+  font-variant-numeric: tabular-nums;
+}
+
+.panelFoot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.85rem 1.1rem;
+  color: var(--muted);
+}
+
+.panelCaption {
+  margin: 0.75rem 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.pill {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.08rem 0.5rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  border: 1px solid currentColor;
+}
+
+.pass {
+  color: var(--pass);
+}
+
+.risk {
+  color: var(--risk);
+}
+
+.fail {
+  color: var(--fail);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------------- grids */
+
+.grid2,
+.grid3,
+.grid4 {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 46rem) {
+  .grid2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid3,
+  .grid4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 62rem) {
+  .grid3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .grid4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  padding: 1.5rem;
+}
+
+.cardTitle {
+  font-size: 1.02rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.5rem;
+}
+
+.cardBody {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+.cardList {
+  margin: 1rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.cardList li + li {
+  margin-top: 0.3rem;
+}
+
+/* ---------------------------------------------------------------- steps */
+
+.steps {
+  list-style: none;
+  counter-reset: step;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 46rem) {
+  .steps {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 62rem) {
+  .steps {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.step {
+  border-top: 2px solid var(--line-strong);
+  padding-top: 1rem;
+}
+
+.stepNumber {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 0.6rem;
+}
+
+/* ----------------------------------------------------------- provenance */
+
+.chain {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+}
+
+.chainItem {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.28rem 0.7rem;
+  background: var(--bg);
+  white-space: nowrap;
+}
+
+.chainItem:first-child {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.chainArrow {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* --------------------------------------------------------------- status */
+
+.statusGrid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 46rem) {
+  .statusGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.statusList {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  font-size: 0.94rem;
+}
+
+.statusList li {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.statusList li:last-child {
+  border-bottom: 0;
+}
+
+.markShipped,
+.markPlanned {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  flex: none;
+  padding-top: 0.15rem;
+}
+
+.markShipped {
+  color: var(--pass);
+}
+
+.markPlanned {
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------ close/cta */
+
+.cta {
+  border-top: 1px solid var(--line);
+  background: var(--accent-soft);
+  padding: 5rem 0;
+  text-align: center;
+}
+
+.ctaTitle {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin: 0 auto 1rem;
+  max-width: 20ch;
+}
+
+.ctaLede {
+  color: var(--muted);
+  margin: 0 auto 2rem;
+  max-width: 52ch;
+}
+
+.ctaActions {
+  justify-content: center;
+}
+
+/* --------------------------------------------------------------- footer */
+
+.footer {
+  border-top: 1px solid var(--line);
+  padding: 3rem 0 4rem;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.footerTop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 1.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.footerLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.footerLinks a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.footerLinks a:hover {
+  color: var(--fg);
+}
+
+.footerNote {
+  margin: 1.75rem 0 0;
+  max-width: 70ch;
+}
