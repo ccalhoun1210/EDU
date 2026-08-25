@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { calculatorFor } from '@complianceos/calculators';
 import {
   ALLOWED_CALCULATORS,
   checkRuleSources,
@@ -32,6 +33,12 @@ export default async function Home() {
   ]);
 
   const problems = checkRuleSources(pack.rules, sources);
+  // A rule may name a calculator nobody has written yet. That is legitimate during authoring —
+  // the house rule is tests before calculators — but it must be visible, because such a rule
+  // evaluates to INDETERMINATE for every district and would otherwise look ready on this page.
+  const awaitingArithmetic = pack.rules.filter(
+    (rule) => rule.calculator !== undefined && calculatorFor(rule.calculator) === undefined,
+  );
   const unverified = sources.filter((source) => !isVerified(source));
   const liveRules = pack.rules.filter((rule) => requiresVerifiedSource(rule.lifecycle));
 
@@ -62,13 +69,15 @@ export default async function Home() {
       <div className="table-wrap">
         <table>
           <caption>
-            Every rule carries the provision it implements and the review stage it has reached.
+            Every rule carries the provision it implements, the review stage it has reached, and
+            whether the arithmetic behind it has been written.
           </caption>
           <thead>
             <tr>
               <th scope="col">Rule</th>
               <th scope="col">Authority</th>
               <th scope="col">Calculator</th>
+              <th scope="col">Arithmetic</th>
               <th scope="col">Stage</th>
               <th scope="col">Source</th>
             </tr>
@@ -90,6 +99,13 @@ export default async function Home() {
                 </td>
                 <td>
                   <code>{rule.calculator ?? '—'}</code>
+                </td>
+                <td>
+                  {rule.calculator === undefined
+                    ? 'Declarative rule'
+                    : calculatorFor(rule.calculator) !== undefined
+                      ? 'Implemented'
+                      : 'Not yet written'}
                 </td>
                 <td>
                   <span className="tag">{rule.lifecycle}</span>
@@ -116,6 +132,8 @@ export default async function Home() {
           <dd>{unverified.length}</dd>
           <dt>Rules evaluating data</dt>
           <dd>{liveRules.length}</dd>
+          <dt>Awaiting arithmetic</dt>
+          <dd>{awaitingArithmetic.length}</dd>
           <dt>Gate</dt>
           <dd>{problems.length === 0 ? 'Holding' : `${problems.length} violation(s)`}</dd>
         </dl>

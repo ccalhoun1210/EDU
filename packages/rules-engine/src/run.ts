@@ -120,10 +120,16 @@ export function evaluateRule(request: EvaluateRuleRequest): EvaluationResult {
     // second-guess it (invariant 1 — the deterministic calculation is the decision).
     const calculator = calculators.get(rule.calculator);
     if (calculator === undefined) {
-      trace.note(
-        `calculator "${rule.calculator}" is not registered in engine ${ENGINE_VERSION}. ` +
-          'The deployed engine is older than this rule pack.',
-      );
+      const why =
+        `The arithmetic this requirement needs — calculator "${rule.calculator}" — is not ` +
+        `implemented in engine ${ENGINE_VERSION}, so the requirement could not be evaluated. ` +
+        'This is a gap in the platform, not in the data the LEA supplied, and no conclusion ' +
+        'about compliance follows from it.';
+      // A warning and not only a note. A note is an engine diagnostic; a warning is what
+      // reaches the reader. Without it the district sees the single word INDETERMINATE with
+      // nothing behind it and no way to tell whether the fault is theirs.
+      trace.note(`calculator "${rule.calculator}" is not registered in engine ${ENGINE_VERSION}`);
+      warnings = [{ code: 'CALCULATOR_NOT_IMPLEMENTED', message: why, severity: 'BLOCKING' }];
       status = 'INDETERMINATE';
     } else {
       // The declared inputs only, never the whole bag. `runAssessment` builds one fact bag for
@@ -147,6 +153,15 @@ export function evaluateRule(request: EvaluateRuleRequest): EvaluationResult {
     // The schema refuses a rule with neither, so reaching here means a pack bypassed
     // validation. Refuse to guess.
     trace.note('rule declares neither a calculator nor a condition');
+    warnings = [
+      {
+        code: 'RULE_DECLARES_NO_LOGIC',
+        message:
+          'This rule declares neither a calculator nor a condition, so there is nothing to ' +
+          'evaluate. The rule pack reached the engine without passing schema validation.',
+        severity: 'BLOCKING',
+      },
+    ];
     status = 'INDETERMINATE';
   }
 
@@ -158,6 +173,7 @@ export function evaluateRule(request: EvaluateRuleRequest): EvaluationResult {
     output,
     steps,
     missingInputs,
+    warnings,
   };
 
   const withoutHash = {

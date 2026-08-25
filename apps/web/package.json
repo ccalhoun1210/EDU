@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@complianceos/calculators": "workspace:*",
     "@complianceos/domain": "workspace:*",
     "@complianceos/rulepack-sdk": "workspace:*",
     "next": "^15.5.6",

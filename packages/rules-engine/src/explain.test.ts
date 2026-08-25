@@ -35,7 +35,15 @@ function step(overrides: Partial<CalculationStep> = {}): CalculationStep {
 }
 
 function context(overrides: Partial<ExplanationContext> = {}): ExplanationContext {
-  return { status: 'PASS', inputs: {}, output: {}, steps: [], missingInputs: [], ...overrides };
+  return {
+    status: 'PASS',
+    inputs: {},
+    output: {},
+    steps: [],
+    missingInputs: [],
+    warnings: [],
+    ...overrides,
+  };
 }
 
 function inputs(values: Record<string, CalculatorValue | null>): ExplanationContext {

@@ -39,6 +39,17 @@ export type CalculatorValue =
 
 export type CalculatorInputs = Readonly<Record<string, CalculatorValue | undefined>>;
 
+/**
+ * The shape of a calculator's output object.
+ *
+ * A property may be absent, which is how a calculator declines to report a quantity it never
+ * computes — an eligibility result carries no repayment bounds at all, rather than carrying
+ * them as `null`, which would read as "a liability was computed and came out at nothing".
+ * `canonicalize()` drops an undefined property rather than encoding it, so an optional field
+ * cannot change an evaluation hash by being absent in one run and present in the next.
+ */
+export type CalculatorOutput = { readonly [key: string]: CalculatorValue | undefined };
+
 /** The unit a step's value is expressed in, so the UI can format without guessing. */
 export const STEP_UNITS = [
   'USD',
@@ -54,6 +65,17 @@ export const STEP_UNITS = [
 export type StepUnit = (typeof STEP_UNITS)[number];
 
 /**
+ * Decimal places for a per-child amount.
+ *
+ * Six rather than two because a per-capita level is a quotient, not money: a district with
+ * a thousand children and a dollar of difference is four decimal places away from its
+ * neighbour, and a display rounded to cents would show two different levels as one figure.
+ * The comparison itself never touches this form — it is cross-multiplied — so the precision
+ * chosen here cannot decide a case.
+ */
+export const PER_CHILD_DP = 6;
+
+/**
  * One line of the shown work.
  *
  * `detail` carries the arithmetic in words — "5,250,000.00 − 84,231.00" — because a district
@@ -65,7 +87,12 @@ export type StepUnit = (typeof STEP_UNITS)[number];
 export interface CalculationStep {
   readonly key: string;
   readonly label: string;
-  /** Canonical string form. Money is fixed to two places; ratios to ten. */
+  /**
+   * Canonical string form, fixed to the number of places `unit` prescribes: `USD` two,
+   * `USD_PER_CHILD` six, `RATIO` ten, `COUNT` none. A quantity is rounded to that form once,
+   * for display, and never re-read as an operand — two per-child levels differing in the
+   * seventh place render as the same string.
+   */
   readonly value: string;
   readonly unit: StepUnit;
   readonly citation?: string;
@@ -90,7 +117,7 @@ export interface CalculatorWarning {
   readonly citation?: string;
 }
 
-export interface CalculatorResult<TOutput extends object = Record<string, CalculatorValue>> {
+export interface CalculatorResult<TOutput extends CalculatorOutput = CalculatorOutput> {
   readonly status: EvaluationStatus;
   /** Declared inputs that were absent and that the result depended on. */
   readonly missingInputs: readonly string[];
@@ -107,7 +134,7 @@ export interface CalculatorInputSpec {
   readonly definition: string;
 }
 
-export interface Calculator<TOutput extends object = Record<string, CalculatorValue>> {
+export interface Calculator<TOutput extends CalculatorOutput = CalculatorOutput> {
   readonly name: CalculatorName;
   readonly title: string;
   /** Every provision this calculator implements. Rendered on the finding-detail screen. */
@@ -266,7 +293,7 @@ export class InputReader {
 }
 
 /** The result shape for a calculation that could not run because data was missing. */
-export function indeterminate<TOutput extends object>(
+export function indeterminate<TOutput extends CalculatorOutput>(
   reader: InputReader,
   output: TOutput,
   steps: readonly CalculationStep[] = [],

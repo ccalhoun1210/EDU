@@ -28,6 +28,7 @@ import {
   multiply,
   optionalAmount,
   round,
+  roundTowardZero,
   subtract,
   sum,
 } from './money.js';
@@ -171,6 +172,21 @@ describe('round', () => {
   });
 });
 
+describe('roundTowardZero', () => {
+  it('never rounds a magnitude up, in either direction', () => {
+    // A ceiling rounded to nearest can authorise a fraction of a cent the regulation does
+    // not. Toward zero is the only direction that cannot.
+    expect(roundTowardZero(amount('2.349'), 2).toString()).toBe('2.34');
+    expect(roundTowardZero(amount('2.345'), 2).toString()).toBe('2.34');
+    expect(roundTowardZero(amount('-2.349'), 2).toString()).toBe('-2.34');
+  });
+
+  it('leaves a value already at dp untouched', () => {
+    expect(roundTowardZero(amount('150000.00'), 2).toString()).toBe('150000');
+    expect(formatAmount(roundTowardZero(amount('150000.00'), 2))).toBe('150000.00');
+  });
+});
+
 describe('formatAmount', () => {
   it('gives one canonical string to values that denote the same amount', () => {
     // This is what makes a snapshot hash reproducible: "1250" and "1250.00" describe the
@@ -179,6 +195,16 @@ describe('formatAmount', () => {
     expect(formatAmount(amount('1250'))).toBe('1250.00');
     expect(formatAmount(amount('0'))).toBe('0.00');
     expect(formatAmount(amount('-0.00'))).toBe('0.00');
+  });
+
+  it('emits a rounded-away zero unsigned', () => {
+    // -0.001 at two places is zero. Rendering it "-0.00" would put a minus sign in front of
+    // nothing and give one fiscal reality two spellings inside a content hash.
+    expect(formatAmount(amount('-0.001'))).toBe('0.00');
+    expect(formatAmount(amount('-0.0000001'), 6)).toBe('0.000000');
+    expect(formatAmount(amount('-0.004'))).toBe('0.00');
+    // A magnitude that survives the rounding keeps its sign.
+    expect(formatAmount(amount('-0.005'))).toBe('-0.01');
   });
 
   it('is idempotent, so a stored amount re-read formats identically', () => {

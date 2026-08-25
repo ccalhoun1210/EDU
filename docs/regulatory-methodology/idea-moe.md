@@ -292,6 +292,12 @@ reduction_state_local  = the same for STATE_AND_LOCAL
 amount, the whole run returns `MANUAL_REVIEW`** with
 `REDUCTION_NOT_LESS_THAN_COMPARISON_AMOUNT`.
 
+The same test catches a second, different problem: a comparison amount of zero with no
+reduction claimed against it. The required level is zero either way and the refusal is the
+same, but the warning is `ZERO_COMPARISON_AMOUNT`, because naming a claimed reduction to a
+reviewer who is looking at an empty claim list sends them hunting for something that is not
+there.
+
 This is the one place the calculator refuses on arithmetic alone rather than on an
 interpretive gap. Clamping the required level to zero — the draft behaviour — makes any
 non-negative amount a PASS on a test with a repayment attached, so a single bad ingest
@@ -507,20 +513,21 @@ run for that fiscal year, or an SEA determination of record.
 
 ## Every refusal branch, and why it refuses
 
-| Warning code                                | Trigger                                                                                                                                                             | Why not an answer                                                                                                                                                                                    |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `UNRECOGNISED_EXCEPTION_GROUND`             | A `claimed_exceptions` entry naming a ground outside the enumerated five                                                                                            | Admitting it lets the platform reduce a required level on a basis the regulation does not recognise; discarding it silently reports a status while the district believes it is relying on the claim. |
-| `EXCEPTION_GROUND_CONDITION_NOT_SUPPLIED`   | A ground-specific field absent — in particular the SEA determination that a program was exceptionally costly                                                        | The ground is conditioned on the determination. Without it the claim is not the thing the provision describes.                                                                                       |
-| `REDUCTION_NOT_LESS_THAN_COMPARISON_AMOUNT` | Reductions against a source at or above that source's comparison amount                                                                                             | A required level of zero makes any non-negative amount a PASS on a test with a repayment attached.                                                                                                   |
-| `FEDERAL_FUNDS_NOT_EXCLUDED`                | The attestation is present and false                                                                                                                                | The amounts are not on the statutory basis; no arithmetic on them measures the requirement.                                                                                                          |
-| `OUTSIDE_RULE_EFFECTIVE_WINDOW`             | Fiscal year earlier than the implemented text                                                                                                                       | The requirement applied under the prior text. `NOT_APPLICABLE` would report an exemption that does not exist.                                                                                        |
-| `COMPARISON_YEAR_MOE_STATUS_UNKNOWN`        | Prior-year status supplied as `UNKNOWN`                                                                                                                             | Without knowing whether the prior year failed, the comparison basis is undetermined and no comparison is meaningful.                                                                                 |
-| `COMPARISON_YEAR_NOT_PRIOR`                 | Comparison year not earlier than the year under test                                                                                                                | A year cannot be its own comparison year.                                                                                                                                                            |
-| `COMPARISON_BASIS_INCONSISTENT`             | The declared basis contradicts the declared prior-year status                                                                                                       | The most likely cause is an ingest-mapping error; the next most likely is an LEA measuring against its own reduced level. Both need a person.                                                        |
-| `COMPARISON_BASIS_READING_DISPUTED`         | Compliance: the comparison year was met under some but not all methods, and the two readings of the subsequent-years rule give a method different comparison levels | OQ-2. The difference decides whether a repayment is owed.                                                                                                                                            |
-| `PER_CAPITA_REDUCTION_BASIS_DISPUTED`       | The two readings of how a reduction enters a per-capita method disagree on that method's status                                                                     | OQ-5.                                                                                                                                                                                                |
-| `ENROLLMENT_EXCEPTION_PER_CAPITA_DISPUTED`  | Admitting and excluding a 300.204(b) claim from a per-capita method disagree on that method's status                                                                | OQ-6. The exclusion is a platform invention that runs against the LEA; admitting it may double-count.                                                                                                |
-| `NO_PART_B_SUBGRANT_FOR_THE_YEAR`           | Compliance: the subgrant is decimal-zero                                                                                                                            | OQ-14. `NOT_APPLICABLE` would answer it, and the year's levels still set the next year's bar.                                                                                                        |
+| Warning code                                | Trigger                                                                                                                                                             | Why not an answer                                                                                                                                                                                                         |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `UNRECOGNISED_EXCEPTION_GROUND`             | A `claimed_exceptions` entry naming a ground outside the enumerated five                                                                                            | Admitting it lets the platform reduce a required level on a basis the regulation does not recognise; discarding it silently reports a status while the district believes it is relying on the claim.                      |
+| `EXCEPTION_GROUND_CONDITION_NOT_SUPPLIED`   | A ground-specific field absent — in particular the SEA determination that a program was exceptionally costly                                                        | The ground is conditioned on the determination. Without it the claim is not the thing the provision describes.                                                                                                            |
+| `REDUCTION_NOT_LESS_THAN_COMPARISON_AMOUNT` | Reductions against a source at or above that source's comparison amount                                                                                             | A required level of zero makes any non-negative amount a PASS on a test with a repayment attached.                                                                                                                        |
+| `FEDERAL_FUNDS_NOT_EXCLUDED`                | The attestation is present and false                                                                                                                                | The amounts are not on the statutory basis; no arithmetic on them measures the requirement.                                                                                                                               |
+| `OUTSIDE_RULE_EFFECTIVE_WINDOW`             | Fiscal year earlier than the implemented text                                                                                                                       | The requirement applied under the prior text. `NOT_APPLICABLE` would report an exemption that does not exist.                                                                                                             |
+| `COMPARISON_YEAR_MOE_STATUS_UNKNOWN`        | Prior-year status supplied as `UNKNOWN`                                                                                                                             | Without knowing whether the prior year failed, the comparison basis is undetermined and no comparison is meaningful.                                                                                                      |
+| `COMPARISON_YEAR_NOT_PRIOR`                 | Comparison year not earlier than the year under test                                                                                                                | A year cannot be its own comparison year.                                                                                                                                                                                 |
+| `COMPARISON_BASIS_INCONSISTENT`             | The declared basis contradicts the declared prior-year status                                                                                                       | The most likely cause is an ingest-mapping error; the next most likely is an LEA measuring against its own reduced level. Both need a person.                                                                             |
+| `COMPARISON_BASIS_READING_DISPUTED`         | Compliance: the comparison year was met under some but not all methods, and the two readings of the subsequent-years rule give a method different comparison levels | OQ-2. The difference decides whether a repayment is owed.                                                                                                                                                                 |
+| `PER_CAPITA_REDUCTION_BASIS_DISPUTED`       | The two readings of how a reduction enters a per-capita method disagree on that method's status                                                                     | OQ-5.                                                                                                                                                                                                                     |
+| `ENROLLMENT_EXCEPTION_PER_CAPITA_DISPUTED`  | Admitting and excluding a 300.204(b) claim from a per-capita method disagree on that method's status                                                                | OQ-6. The exclusion is a platform invention that runs against the LEA; admitting it may double-count.                                                                                                                     |
+| `ZERO_COMPARISON_AMOUNT`                    | The comparison-year amount for a measure is zero and no reduction is claimed against it                                                                             | The required level is zero, so any figure clears it. Either that measure genuinely had no expenditure — in which case maintenance of effort is not the question to ask of it — or the figure did not survive the mapping. |
+| `NO_PART_B_SUBGRANT_FOR_THE_YEAR`           | Compliance: the subgrant is decimal-zero                                                                                                                            | OQ-14. `NOT_APPLICABLE` would answer it, and the year's levels still set the next year's bar.                                                                                                                             |
 
 Non-refusing warnings, all at `WARNING` or `INFO` severity and all compatible with a
 conclusive status: `ADJUSTMENT_300_205_CAPPED`, `ADJUSTMENT_300_205_PROHIBITED_BY_SEA`,
@@ -793,13 +800,33 @@ marked **outcome-determinative** change a district's result in at least one gold
 
 ## Before either calculator is wired in
 
-- Extend `inputs` on both rule files to every input named above, in the canonical order the
-  `missingInputs` ordering depends on.
-- Extend `outputSchema` on both rule files to the emitted object. The declared schema and the
-  emitted object have to match or provenance breaks at the rule boundary.
-- Add `USD_PER_CHILD` at six decimal places to the canonical-form rule in
-  `packages/calculators/src/types.ts`.
-- Retrieve, hash and archive every source in the authorities table, then re-check every
-  paraphrase in this document against it. Both gates are required and neither substitutes for
-  the other: retrieval proves the text was obtained, domain review proves the rule implements
-  it.
+Three of the four items below are done, and each is now held in place by a test rather than
+by this list — a checklist nobody re-reads is not a control.
+
+- **Done.** `inputs` on both rule files names every input above. The engine hands a calculator
+  `projectInputs(rule.inputs, facts)` and nothing else, so an under-declared array starves the
+  calculator and returns INDETERMINATE for every district while every golden case still
+  passes. `packages/calculators/src/rule-contract.test.ts` asserts the two agree in both
+  directions, and `packages/rules-engine/src/idea-fiscal-e2e.test.ts` runs the real pack
+  against the real calculators to catch it dynamically.
+- **Done.** `outputSchema` on both rule files matches the emitted object, checked against a
+  real run rather than against a list, so a field renamed in the implementation fails the test.
+- **Done.** `PER_CHILD_DP` in `packages/calculators/src/types.ts` fixes `USD_PER_CHILD` at six
+  places, and `formatAmount` now emits a rounded-away zero unsigned so that `-0.000000` cannot
+  reach a hash or a screen.
+- **Outstanding, and the one that matters.** Retrieve, hash and archive every source in the
+  authorities table, then re-check every paraphrase in this document against it. Both gates
+  are required and neither substitutes for the other: retrieval proves the text was obtained,
+  domain review proves the rule implements it. Until then both rules stay at `DRAFT` and
+  neither may evaluate a district's data.
+
+One further item is now an open question rather than a task, because it is a presentation
+decision with no obviously right answer: **the two calculators report per-capita magnitudes in
+different units.** `idea_moe_eligibility_v1` reports dollars per child at six places, matching
+the corpus derivations; `idea_moe_compliance_v1` reports the current-year dollars the LEA fell
+short by, at two places, because those figures feed the repayment range and have to be
+commensurable with the total-amount shortfalls. Both are computed from the same exact
+cross-products, so no status turns on the choice — but a reviewer reading the two side by side
+will see the same column heading over two different quantities. Each result carries a
+`perCapitaMagnitudeUnit` field naming which, and the UI must render it. Reconcile before either
+calculator leaves DRAFT.

@@ -22,7 +22,11 @@
  */
 
 import { formatUsd, amount, isAmountString } from '@complianceos/domain';
-import type { CalculationStep, CalculatorValue } from '@complianceos/calculators';
+import type {
+  CalculationStep,
+  CalculatorValue,
+  CalculatorWarning,
+} from '@complianceos/calculators';
 
 export interface ExplanationContext {
   readonly status: string;
@@ -30,6 +34,14 @@ export interface ExplanationContext {
   readonly output: Readonly<Record<string, CalculatorValue>>;
   readonly steps: readonly CalculationStep[];
   readonly missingInputs: readonly string[];
+  /**
+   * Why the result is what it is, where the arithmetic alone does not say.
+   *
+   * A MANUAL_REVIEW is the clearest case: the steps show a complete, correct calculation and
+   * the status says the platform declines to conclude from it. Without the warning on the
+   * page, the reader is left to guess which of the two they should believe.
+   */
+  readonly warnings: readonly CalculatorWarning[];
 }
 
 /** Rendered when a placeholder resolves to nothing. Never an empty string, which reads as a typo. */
@@ -103,6 +115,12 @@ function resolve(rawPath: string, context: ExplanationContext): string {
     return context.missingInputs.length === 0 ? ABSENT : context.missingInputs.join(', ');
   }
 
+  if (namespace === 'warnings') {
+    return context.warnings.length === 0
+      ? ABSENT
+      : context.warnings.map((warning) => warning.message).join(' ');
+  }
+
   if (namespace === 'step') {
     const key = rest.join('.');
     const step = context.steps.find((candidate) => candidate.key === key);
@@ -137,6 +155,22 @@ export function generateExplanation(context: ExplanationContext): string {
     );
   }
 
+  // Before the arithmetic, because where a warning exists it is usually the whole story: a
+  // refusal explains a status the steps cannot, and a result with no steps at all — a rule
+  // whose calculator is a name nobody has implemented yet — would otherwise reach a district
+  // as the single word INDETERMINATE with nothing behind it.
+  const blocking = context.warnings.filter((warning) => warning.severity === 'BLOCKING');
+  const advisory = context.warnings.filter((warning) => warning.severity !== 'BLOCKING');
+
+  if (blocking.length > 0) {
+    lines.push('', 'Why this was not concluded:');
+    for (const warning of blocking) lines.push(`- ${warning.message}${cite(warning)}`);
+  }
+  if (advisory.length > 0) {
+    lines.push('', 'Also worth knowing:');
+    for (const warning of advisory) lines.push(`- ${warning.message}${cite(warning)}`);
+  }
+
   if (context.steps.length > 0) {
     lines.push('', 'How this was calculated:');
     for (const step of context.steps) {
@@ -147,6 +181,10 @@ export function generateExplanation(context: ExplanationContext): string {
   }
 
   return lines.join('\n');
+}
+
+function cite(warning: CalculatorWarning): string {
+  return warning.citation === undefined ? '' : ` [${warning.citation}]`;
 }
 
 /** Render a rule's named template, falling back to the generated step listing. */

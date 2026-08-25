@@ -161,13 +161,30 @@ export function round(value: Amount, dp: number): Amount {
 }
 
 /**
+ * Round toward zero at `dp` places.
+ *
+ * For a statutory *maximum* — the ceiling on a permitted reduction, a cap on a recovery —
+ * rounding to nearest can authorise a fraction of a cent more than the regulation allows.
+ * Rounding toward zero cannot. This is the only directional rounding the platform uses, and
+ * it is used only where a value bounds something from above.
+ */
+export function roundTowardZero(value: Amount, dp: number): Amount {
+  return value.toDecimalPlaces(dp, Decimal.ROUND_DOWN);
+}
+
+/**
  * Canonical string form. This is what gets stored, hashed and compared.
  *
  * Fixed to `dp` places so that "1250" and "1250.00" cannot both appear in a snapshot and
  * produce two different hashes for the same fiscal reality.
  */
 export function formatAmount(value: Amount, dp: number = MONEY_DP): string {
-  return value.toFixed(dp, Decimal.ROUND_HALF_UP);
+  const rounded = round(value, dp);
+  // A value that rounds to zero from below is emitted unsigned. `toFixed` on the unrounded
+  // value would render -0.001 as "-0.00": two spellings of one fiscal reality, hashing
+  // differently, and a minus sign in front of nothing on a screen where a district is
+  // deciding whether it has a shortfall. Sign lives in the status, not in a rounded zero.
+  return (rounded.isZero() ? ZERO : rounded).toFixed(dp);
 }
 
 /** Presentation only. Never store, hash or compare this form. */

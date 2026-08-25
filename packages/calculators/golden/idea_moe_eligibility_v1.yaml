@@ -806,6 +806,7 @@ cases:
       current_budget_state_local: '14900000.00'
       current_child_count: 1000
       part_b_611_allocation_prior: '1180000.00'
+      ceis_amount_300_226: '0.00'
       esea_use_condition_attested: true
       sea_prohibition_300_205_ground: NONE
       claimed_adjustments_300_205:
@@ -859,6 +860,7 @@ cases:
       current_budget_state_local: '14900000.00'
       current_child_count: 1000
       part_b_611_allocation_prior: '1180000.00'
+      ceis_amount_300_226: '0.00'
       esea_use_condition_attested: true
       sea_prohibition_300_205_ground: NONE
       claimed_adjustments_300_205:

@@ -15,8 +15,10 @@ and ERP remain authoritative. Integrations are read-only.
 
 ## Status
 
-**Platform core.** The engine and the data path are built and tested; the statutory
-calculators are the work in progress.
+**Platform core, and the first two statutory calculators.** The engine and the data path are
+built and tested. The two IDEA maintenance-of-effort calculators are implemented against a
+42-case golden corpus and run end to end through the engine; the other four are specified and
+waiting.
 
 | Package                 | What it does                                                                                                                                     |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -25,9 +27,9 @@ calculators are the work in progress.
 | `packages/rules-engine` | Three-valued evaluator, pack layering, deterministic explanations, evaluation hash, run orchestration                                            |
 | `packages/ingest`       | Strict parsing, versioned mapping templates, validation, reconciliation, provenance, immutable snapshots                                         |
 | `packages/db`           | Migrations with composite tenant keys, forced RLS, immutability triggers, append-only audit log                                                  |
-| `packages/calculators`  | Calculator contract, registry, golden-corpus runner, purity scan. Statutory calculators in progress                                              |
+| `packages/calculators`  | Calculator contract, registry, golden-corpus runner, purity scan, and the two IDEA maintenance-of-effort calculators                             |
 
-999 tests: 970 run anywhere, 29 exercise tenant isolation against a real Postgres.
+1,072 tests: 1,043 run anywhere, 29 exercise tenant isolation against a real Postgres.
 
 **No rule evaluates district data, and that is enforced rather than merely true.** No
 regulatory text has been retrieved in this environment — eCFR is unreachable behind the
@@ -38,11 +40,21 @@ unverified source cannot leave the authoring stages. The entire federal corpus i
 Each statutory specification was independently reviewed by an adversarial pass that
 recomputed every case by hand. All six came back needing revision, with findings including
 an order-dependent ceiling and a path where a claimed reduction larger than the comparison
-amount produced a trivially passing zero requirement. The calculators are therefore being
-built to a **refusal policy**: correct where the regulation is unambiguous, and
-`MANUAL_REVIEW` with the provision named where it is not.
+amount produced a trivially passing zero requirement. The calculators are therefore built to a
+**refusal policy**: correct where the regulation is unambiguous, and `MANUAL_REVIEW` with the
+provision named where it is not.
 [ADR 0007](docs/adrs/0007-a-calculator-refuses-rather-than-guesses.md) explains why that is
 the right behaviour for a compliance product, and what it costs.
+
+The two maintenance-of-effort calculators are what that policy looks like in code. Where the
+regulation is clear they answer exactly — the four measures, the exceptions at 34 CFR 300.204,
+the adjustment ceiling at 300.205 apportioned pro rata so no claim is favoured by its position
+in a list, per-capita comparisons decided by cross-multiplication so no rounding can flip a
+boundary. Where it is not, they evaluate every live reading and refuse when the readings
+disagree, naming the provision and the open question. A zero requirement is never a pass, and a
+compliance failure is never issued on a calculation that could not be completed.
+[`docs/regulatory-methodology/idea-moe.md`](docs/regulatory-methodology/idea-moe.md) is the
+specification; `packages/calculators/golden/` is the test corpus a domain reviewer reads.
 
 The roadmap is §32 of the master technical buildout.
 

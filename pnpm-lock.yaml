@@ -35,6 +35,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@complianceos/calculators':
+        specifier: workspace:*
+        version: link:../../packages/calculators
       '@complianceos/domain':
         specifier: workspace:*
         version: link:../../packages/domain
