@@ -174,7 +174,7 @@ CREATE POLICY evaluation_results_isolation ON evaluation_results
   WITH CHECK (tenant_id = current_tenant_id());
 
 CREATE TRIGGER evaluation_results_finalized_immutable
-  BEFORE UPDATE OR DELETE ON evaluation_results
+  BEFORE INSERT OR UPDATE OR DELETE ON evaluation_results
   FOR EACH ROW EXECUTE FUNCTION forbid_finalized_run_result_change();
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON evaluation_results TO complianceos_app;
@@ -260,6 +260,12 @@ CREATE TABLE findings (
 
 CREATE INDEX findings_by_run ON findings (tenant_id, assessment_run_id, severity);
 CREATE INDEX findings_by_org ON findings (tenant_id, organization_id, detected_on DESC);
+
+-- Same protection as evaluation_results: a finalized run cannot gain, lose or alter a
+-- finding after the fact.
+CREATE TRIGGER findings_finalized_immutable
+  BEFORE INSERT OR UPDATE OR DELETE ON findings
+  FOR EACH ROW EXECUTE FUNCTION forbid_finalized_run_result_change();
 
 ALTER TABLE findings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE findings FORCE ROW LEVEL SECURITY;

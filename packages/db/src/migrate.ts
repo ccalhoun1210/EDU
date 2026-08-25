@@ -114,9 +114,7 @@ export async function readMigrations(directory: string = MIGRATIONS_DIR): Promis
     if (!filename.endsWith('.sql')) continue;
     const match = MIGRATION_FILE.exec(filename);
     if (match === null) {
-      throw new MigrationError(
-        `${filename}: migration files are named NNNN_lower_snake_name.sql`,
-      );
+      throw new MigrationError(`${filename}: migration files are named NNNN_lower_snake_name.sql`);
     }
     const version = match[1];
     const name = match[2];

@@ -217,9 +217,7 @@ function wrap(client: PoolClient, tenantId: string): TenantConnection {
     ): Promise<QueryResult<R>> {
       // Copied into a mutable array because `pg` types the parameter list as mutable, and
       // the caller's array should not be reachable from the driver.
-      return values === undefined
-        ? client.query<R>(text)
-        : client.query<R>(text, [...values]);
+      return values === undefined ? client.query<R>(text) : client.query<R>(text, [...values]);
     },
   };
 }

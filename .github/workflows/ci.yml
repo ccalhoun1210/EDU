@@ -42,6 +42,46 @@ jobs:
       - name: Build
         run: pnpm build
 
+  # Tenant isolation is the severest threat in a multi-tenant compliance platform
+  # (threat model row 1), and the controls that prevent it are Postgres features —
+  # FORCE row level security, composite tenant foreign keys, a non-owner application
+  # role. None of that can be exercised without a real server, so the suite skips
+  # locally and this job is where it actually runs. A green `verify` job does not
+  # mean isolation holds; this one does.
+  database:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: complianceos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Tenant isolation and migration tests
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/complianceos_test
+        run: pnpm exec vitest run --project db
+
   data-hygiene:
     runs-on: ubuntu-latest
     steps:

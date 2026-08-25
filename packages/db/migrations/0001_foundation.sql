@@ -102,34 +102,54 @@ BEGIN
 END;
 $$;
 
--- The same invariant, one level down: a result belonging to a finalized run is
--- part of that record.
+-- The same invariant, one level down: a row belonging to a finalized run is part of
+-- that record. Attached to evaluation_results and to findings.
 --
--- The parent lookup uses TG_TABLE_SCHEMA rather than an unqualified table name.
--- An unqualified reference inside a plpgsql body resolves against the CALLER's
--- search_path, so the application role could shadow `assessment_runs` with its
--- own table and walk straight past this check. Resolving against the schema the
--- trigger's own table lives in closes that.
+-- It fires on INSERT as well as UPDATE and DELETE, which is the part that is easy to
+-- leave out. Refusing to CHANGE a finalized run's results but allowing new ones to be
+-- appended would let a run acquire findings it did not produce, and the audit story —
+-- "this is what the platform concluded on that day from that snapshot" — would be false
+-- without a single row having been edited.
+--
+-- The parent lookup uses TG_TABLE_SCHEMA rather than an unqualified table name. An
+-- unqualified reference inside a plpgsql body resolves against the CALLER's search_path,
+-- so the application role could shadow `assessment_runs` with its own table and walk
+-- straight past this check. Resolving against the schema the trigger's own table lives in
+-- closes that.
 CREATE OR REPLACE FUNCTION forbid_finalized_run_result_change() RETURNS trigger
   LANGUAGE plpgsql
 AS $$
 DECLARE
+  subject_tenant_id uuid;
+  subject_run_id uuid;
+  subject_id uuid;
   parent_status text;
 BEGIN
+  IF TG_OP = 'DELETE' THEN
+    subject_tenant_id := OLD.tenant_id;
+    subject_run_id := OLD.assessment_run_id;
+    subject_id := OLD.id;
+  ELSE
+    subject_tenant_id := NEW.tenant_id;
+    subject_run_id := NEW.assessment_run_id;
+    subject_id := NEW.id;
+  END IF;
+
   EXECUTE format(
     'SELECT status FROM %I.assessment_runs WHERE tenant_id = $1 AND id = $2',
     TG_TABLE_SCHEMA
   )
   INTO parent_status
-  USING OLD.tenant_id, OLD.assessment_run_id;
+  USING subject_tenant_id, subject_run_id;
 
   IF parent_status = 'FINALIZED' THEN
     RAISE EXCEPTION
-      'evaluation result %/% belongs to FINALIZED run % and cannot be changed (% refused)',
-      OLD.tenant_id, OLD.id, OLD.assessment_run_id, TG_OP
+      '%.% row % belongs to FINALIZED run % and cannot be changed (% refused)',
+      TG_TABLE_SCHEMA, TG_TABLE_NAME, subject_id, subject_run_id, TG_OP
       USING ERRCODE = 'CO001',
             HINT = 'Finalized runs are immutable. Start a new assessment run instead.';
   END IF;
+
   IF TG_OP = 'DELETE' THEN
     RETURN OLD;
   END IF;
