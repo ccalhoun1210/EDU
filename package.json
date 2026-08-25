@@ -11,6 +11,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --build --force && pnpm --filter @complianceos/web exec tsc --noEmit",
+    "pretest": "tsc --build",
     "test": "vitest run",
     "test:watch": "vitest",
     "rules:validate": "vitest run --project rulepack-sdk",

@@ -77,6 +77,12 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Workspace packages resolve through their built `dist/`, so the suite needs a build
+      # before it can import `@complianceos/domain`. The `verify` job gets this for free from
+      # `pnpm typecheck`; this job has to ask for it.
+      - name: Build workspace packages
+        run: pnpm exec tsc --build
+
       - name: Tenant isolation and migration tests
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/complianceos_test
