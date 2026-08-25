@@ -1,0 +1,726 @@
+/* ComplianceOS EDU — sales landing.
+   Aesthetic: authoritative regtech. Precise, auditable, editorial.
+   Builds on the global tokens (--bg/--fg/--muted/--line/--accent) and adds
+   marketing-only tokens plus a semantic status palette used only where a
+   compliance status is actually being communicated. */
+
+.page {
+  --pass: #1f9d63;
+  --fail: #d1453b;
+  --risk: #c8880f;
+  --indeterminate: #6b7280;
+  --panel: color-mix(in srgb, var(--fg) 3%, var(--bg));
+  --panel-line: var(--line);
+  --maxw: 68rem;
+
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+@media (prefers-color-scheme: dark) {
+  .page {
+    --pass: #3ecf8e;
+    --fail: #ff6b61;
+    --risk: #e0a533;
+    --indeterminate: #9aa1af;
+    --panel: color-mix(in srgb, var(--fg) 5%, var(--bg));
+  }
+}
+
+.container {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ---------- Header ---------- */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: saturate(140%) blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
+.headerInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 4rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.4rem;
+  background: var(--accent);
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.nav {
+  display: none;
+  align-items: center;
+  gap: 1.75rem;
+}
+
+.navLink {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.navLink:hover {
+  color: var(--fg);
+}
+
+.headerCta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.headerCta .btnGhost {
+  display: none;
+}
+
+@media (min-width: 560px) {
+  .headerCta .btnGhost {
+    display: inline-flex;
+  }
+}
+
+@media (min-width: 820px) {
+  .nav {
+    display: flex;
+  }
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 0.5rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 550;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    transform 0.08s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btnPrimary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btnPrimary:hover {
+  background: color-mix(in srgb, var(--accent) 88%, #000);
+}
+
+.btnGhost {
+  background: transparent;
+  color: var(--fg);
+  border-color: var(--line);
+}
+
+.btnGhost:hover {
+  border-color: color-mix(in srgb, var(--fg) 35%, var(--line));
+}
+
+.btnLg {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.95rem;
+}
+
+/* ---------- Section scaffolding ---------- */
+.section {
+  padding: 5rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.sectionFirst {
+  border-top: none;
+}
+
+.eyebrow {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.9rem;
+}
+
+.sectionTitle {
+  font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.75rem;
+  max-width: 32ch;
+  text-wrap: balance;
+}
+
+.sectionLede {
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  max-width: 58ch;
+  margin: 0;
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  padding: 5.5rem 0 4.5rem;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  background: var(--panel);
+}
+
+.heroBadge .dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--pass);
+}
+
+.heroTitle {
+  font-size: clamp(2.2rem, 1.4rem + 3.4vw, 3.6rem);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  margin: 1.4rem 0 0;
+  max-width: 20ch;
+  text-wrap: balance;
+}
+
+.heroTitle em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.heroSub {
+  color: var(--muted);
+  font-size: 1.15rem;
+  line-height: 1.6;
+  max-width: 52ch;
+  margin: 1.35rem 0 0;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.heroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem 2.5rem;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+
+.heroMetaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.heroMetaValue {
+  font-size: 1.5rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.heroMetaLabel {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+/* ---------- Status system (signature element) ---------- */
+.statusPanel {
+  margin-top: 3.5rem;
+  border: 1px solid var(--panel-line);
+  border-radius: 0.9rem;
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.statusPanelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid var(--panel-line);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.statusPanelDots {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.statusPanelDots span {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--panel-line);
+}
+
+.statusRows {
+  display: grid;
+}
+
+.statusRow {
+  display: grid;
+  grid-template-columns: 9.5rem 1fr;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid var(--panel-line);
+  font-size: 0.9rem;
+}
+
+.statusRow:last-child {
+  border-bottom: none;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.35rem;
+  border: 1px solid currentColor;
+  width: fit-content;
+}
+
+.statusPill::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.sPass {
+  color: var(--pass);
+}
+.sFail {
+  color: var(--fail);
+}
+.sRisk {
+  color: var(--risk);
+}
+.sIndeterminate {
+  color: var(--indeterminate);
+}
+
+.statusDesc {
+  color: var(--muted);
+}
+
+.statusDesc strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+/* ---------- Feature grid ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+@media (min-width: 720px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  padding: 1.4rem;
+  background: var(--panel);
+}
+
+.cardIcon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+
+.cardTitle {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.4rem;
+}
+
+.cardBody {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ---------- Split (security) ---------- */
+.split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+@media (min-width: 860px) {
+  .split {
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 3.5rem;
+  }
+}
+
+.checkList {
+  list-style: none;
+  margin: 1.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.checkList li {
+  display: grid;
+  grid-template-columns: 1.25rem 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.checkList svg {
+  color: var(--accent);
+  margin-top: 0.15rem;
+}
+
+.checkList strong {
+  font-weight: 600;
+}
+
+.checkList span {
+  color: var(--muted);
+}
+
+.codePanel {
+  border: 1px solid var(--panel-line);
+  border-radius: 0.9rem;
+  background: var(--panel);
+  overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+}
+
+.codePanelHead {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--panel-line);
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.codeBody {
+  margin: 0;
+  padding: 1.1rem;
+  overflow-x: auto;
+  line-height: 1.7;
+  color: var(--fg);
+}
+
+.codeBody .cmt {
+  color: var(--muted);
+}
+.codeBody .kw {
+  color: var(--accent);
+}
+.codeBody .ok {
+  color: var(--pass);
+}
+.codeBody .no {
+  color: var(--fail);
+}
+
+/* ---------- Coverage ---------- */
+.coverageList {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-top: 2.5rem;
+}
+
+@media (min-width: 720px) {
+  .coverageList {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.coverageItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  padding: 1rem 1.15rem;
+  background: var(--panel);
+}
+
+.coverageName {
+  font-weight: 550;
+  font-size: 0.95rem;
+}
+
+.coverageAuthority {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.badgeLive {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--pass);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  white-space: nowrap;
+}
+
+.badgeSoon {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  white-space: nowrap;
+}
+
+/* ---------- Pricing ---------- */
+.pricing {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+@media (min-width: 860px) {
+  .pricing {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.priceCard {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  padding: 1.6rem;
+  background: var(--panel);
+}
+
+.priceCardFeatured {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.priceTag {
+  align-self: flex-start;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.priceName {
+  font-size: 1.1rem;
+  font-weight: 650;
+  margin: 0 0 0.35rem;
+}
+
+.priceDesc {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: 0 0 1.25rem;
+  min-height: 2.6em;
+}
+
+.priceValue {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin-bottom: 1.5rem;
+}
+
+.priceValue strong {
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.priceValue span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.priceFeatures {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+  font-size: 0.9rem;
+}
+
+.priceFeatures li {
+  display: grid;
+  grid-template-columns: 1.1rem 1fr;
+  gap: 0.6rem;
+  align-items: start;
+  color: var(--muted);
+}
+
+.priceFeatures svg {
+  color: var(--accent);
+  margin-top: 0.15rem;
+}
+
+.priceCta {
+  margin-top: auto;
+}
+
+.priceCta .btn {
+  width: 100%;
+}
+
+/* ---------- CTA banner ---------- */
+.ctaBanner {
+  border: 1px solid var(--line);
+  border-radius: 1.1rem;
+  padding: 3rem 2rem;
+  text-align: center;
+  background: var(--panel);
+}
+
+.ctaTitle {
+  font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.25rem);
+  letter-spacing: -0.02em;
+  margin: 0 0 0.75rem;
+  text-wrap: balance;
+}
+
+.ctaSub {
+  color: var(--muted);
+  font-size: 1.05rem;
+  max-width: 46ch;
+  margin: 0 auto 1.75rem;
+  line-height: 1.6;
+}
+
+.ctaActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+/* ---------- Footer ---------- */
+.footer {
+  border-top: 1px solid var(--line);
+  padding: 2.5rem 0;
+}
+
+.footerInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.footerNote {
+  color: var(--muted);
+  font-size: 0.85rem;
+  max-width: 44ch;
+  line-height: 1.5;
+}
+
+.footerLinks {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.footerLinks a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.88rem;
+}
+
+.footerLinks a:hover {
+  color: var(--fg);
+}
