@@ -1,6 +1,21 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { Public_Sans, Merriweather } from 'next/font/google';
 import './globals.css';
+
+const publicSans = Public_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+const merriweather = Merriweather({
+  subsets: ['latin'],
+  weight: ['400', '700', '900'],
+  variable: '--font-serif',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'ComplianceOS EDU — Compliance assurance for publicly funded education',
@@ -15,15 +30,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0f1115' },
-  ],
+  themeColor: '#162e51',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${publicSans.variable} ${merriweather.variable}`}>
       <body>{children}</body>
     </html>
   );
