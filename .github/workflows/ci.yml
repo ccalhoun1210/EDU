@@ -86,6 +86,9 @@ jobs:
       - name: Tenant isolation and migration tests
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/complianceos_test
+          # Turns a skipped isolation suite into a failure. Only this job sets it: the
+          # `verify` job runs the same project and legitimately has no database.
+          REQUIRE_DATABASE_TESTS: '1'
         run: pnpm exec vitest run --project db
 
   data-hygiene:

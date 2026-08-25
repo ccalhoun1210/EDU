@@ -44,17 +44,21 @@ import type { Database } from './client.js';
 const DATABASE_URL = process.env.DATABASE_URL;
 
 /**
- * Skipping is right on a developer machine and wrong in CI.
+ * Skipping is right on a developer machine and wrong in the job that provisions a database.
  *
- * Tenant isolation is the severest threat this platform has, and these are the only tests
- * that exercise the controls preventing it. A misconfigured service container would turn the
- * entire suite into a green tick reporting nothing — the worst possible outcome, because it
- * looks exactly like the good one. So in CI the absence of a database is a hard failure.
+ * Tenant isolation is the severest threat this platform has, and these are the only tests that
+ * exercise the controls preventing it. A misconfigured service container would turn the entire
+ * suite into a green tick reporting nothing — the worst outcome available, because it looks
+ * exactly like the good one.
+ *
+ * Keyed off an explicit opt-in rather than off `CI`, because the general verification job runs
+ * this project too and legitimately has no database. `CI` would make that job demand one.
  */
-if (process.env.CI !== undefined && DATABASE_URL === undefined) {
+if (process.env.REQUIRE_DATABASE_TESTS !== undefined && DATABASE_URL === undefined) {
   throw new Error(
-    'The tenant isolation suite requires DATABASE_URL in CI. It skips locally by design, but ' +
-      'a silent skip here would report that isolation holds without having checked it.',
+    'REQUIRE_DATABASE_TESTS is set but DATABASE_URL is not, so the tenant isolation suite ' +
+      'would skip. A silent skip here would report that isolation holds without having ' +
+      'checked it.',
   );
 }
 
