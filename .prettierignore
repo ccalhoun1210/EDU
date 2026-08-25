@@ -2,4 +2,5 @@ pnpm-lock.yaml
 dist/
 coverage/
 .next/
+.vercel/
 next-env.d.ts

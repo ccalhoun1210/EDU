@@ -9,6 +9,9 @@ build/
 .next/
 out/
 
+# vercel cli local project link
+.vercel/
+
 # test / coverage
 coverage/
 .vitest/
