@@ -1,33 +1,37 @@
 import Link from 'next/link';
 import styles from '@/app/sales.module.css';
-import { BrandSeal } from './icons';
 
 export function SiteHeader() {
   return (
     <header className={styles.header}>
+      <a href="#main" className={styles.skipLink}>
+        Skip to main content
+      </a>
       <div className={`${styles.container} ${styles.headerInner}`}>
-        <Link href="/" className={styles.brand} aria-label="ComplianceOS EDU home">
-          <BrandSeal size={42} />
+        <Link href="/" className={styles.brand} aria-label="ComplianceOS EDU, home">
+          <span className={styles.brandMark} aria-hidden>
+            CO
+          </span>
           <span className={styles.brandText}>
             <span className={styles.brandName}>
               ComplianceOS <span>EDU</span>
             </span>
-            <span className={styles.brandSub}>State &amp; Federal Education Compliance</span>
+            <span className={styles.brandSub}>IDEA Part B fiscal compliance</span>
           </span>
         </Link>
 
         <nav className={styles.nav} aria-label="Primary">
-          <a className={styles.navLink} href="#mandate">
-            Mandate
+          <a className={styles.navLink} href="#problem">
+            The problem
           </a>
-          <a className={styles.navLink} href="#safeguards">
-            Safeguards
+          <a className={styles.navLink} href="#result">
+            A worked result
+          </a>
+          <a className={styles.navLink} href="#trust">
+            Trust &amp; security
           </a>
           <a className={styles.navLink} href="#coverage">
             Coverage
-          </a>
-          <a className={styles.navLink} href="#deployment">
-            Deployment
           </a>
         </nav>
 
@@ -36,7 +40,7 @@ export function SiteHeader() {
             Rule registry
           </Link>
           <a className={`${styles.btn} ${styles.btnPrimary}`} href="#contact">
-            Request access
+            Request a demo
           </a>
         </div>
       </div>

@@ -1,19 +1,12 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { Public_Sans, Merriweather } from 'next/font/google';
+import { Public_Sans } from 'next/font/google';
 import './globals.css';
 
 const publicSans = Public_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-sans',
-  display: 'swap',
-});
-
-const merriweather = Merriweather({
-  subsets: ['latin'],
-  weight: ['400', '700', '900'],
-  variable: '--font-serif',
   display: 'swap',
 });
 
@@ -30,12 +23,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: '#162e51',
+  themeColor: '#123a6b',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${publicSans.variable} ${merriweather.variable}`}>
+    <html lang="en" className={publicSans.variable}>
       <body>{children}</body>
     </html>
   );

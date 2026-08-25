@@ -1,42 +1,69 @@
 :root {
-  color-scheme: light dark;
-  --bg: #ffffff;
-  --fg: #16181d;
-  --muted: #5c6270;
-  --line: #e3e6ec;
-  --accent: #1f4ed8;
-}
+  /* Fixed institutional light theme — does NOT follow the OS scheme.
+     This is public-sector procurement software; it must always read as
+     formal, legible, and print-friendly. */
+  color-scheme: light;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f1115;
-    --fg: #e8eaee;
-    --muted: #9aa1af;
-    --line: #262a33;
-    --accent: #7d9bff;
-  }
+  /* Core (contrast ratios verified against the design direction) */
+  --ink: #14171c; /* body text — 17.96 AAA on white */
+  --navy: #123a6b; /* primary — 11.39 AAA on white */
+  --navy-hover: #0e2f57;
+  --muted: #5b6472; /* secondary text — 5.98 AA on white */
+  --surface: #ffffff;
+  --surface-muted: #f5f7fa;
+  --surface-sunken: #eef1f6;
+  --line: #d8dde5; /* DECORATIVE dividers only (1.36 — never on controls) */
+  --border-interactive: #8a93a3; /* control boundaries — 3.10, meets 1.4.11 */
+
+  /* Status — each also has a distinct glyph; color is never the only cue */
+  --pass: #1d6b45;
+  --fail: #a8231c;
+  --risk: #8a5a12;
+  --indeterminate: #4a5568;
+  --manual: #5b3e90;
+  --na: #6b7280;
+
+  /* Aliases kept for the legacy registry page */
+  --bg: var(--surface);
+  --fg: var(--ink);
+  --accent: var(--navy);
+
+  --radius: 8px;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  background: var(--surface-muted);
+}
+
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--fg);
+  background: var(--surface-muted);
+  color: var(--ink);
   font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   font-size: 16px;
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
+/* Visible keyboard focus everywhere (WCAG 2.4.7) */
+:focus-visible {
+  outline: 3px solid var(--navy);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* -------- legacy /registry page styles (kept, retinted) -------- */
 main {
   max-width: 46rem;
   margin: 0 auto;
   padding: 4rem 1.5rem;
 }
 
-h1 {
+main h1 {
   font-size: 1.5rem;
   letter-spacing: -0.01em;
   margin: 0 0 0.25rem;
@@ -47,7 +74,7 @@ h1 {
   margin: 0 0 2.5rem;
 }
 
-h2 {
+main h2 {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -81,12 +108,12 @@ code {
 }
 
 a {
-  color: var(--accent);
+  color: var(--navy);
 }
 
 .tag {
   display: inline-block;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border-interactive);
   border-radius: 999px;
   padding: 0.1rem 0.55rem;
   font-size: 0.75rem;

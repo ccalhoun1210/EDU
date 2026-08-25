@@ -2,392 +2,384 @@ import Link from 'next/link';
 import styles from './sales.module.css';
 import { SiteHeader } from '@/components/marketing/site-header';
 import {
-  AlertIcon,
   ArrowRightIcon,
-  CapitolIcon,
   CheckIcon,
+  FailGlyph,
   FileCheckIcon,
-  HistoryIcon,
-  LayersIcon,
+  IndeterminateGlyph,
   LockIcon,
-  ScaleIcon,
-  ServerIcon,
+  ManualReviewGlyph,
+  NoWriteIcon,
+  NotApplicableGlyph,
+  PassGlyph,
+  RiskGlyph,
   ShieldIcon,
-  UsersIcon,
 } from '@/components/marketing/icons';
 
-const STATUSES = [
+/* The full six-state evaluation vocabulary. Each state has a distinct glyph
+   AND a text label — meaning never rides on color alone (WCAG 1.4.1). */
+const STATUS_LEGEND = [
   {
     label: 'PASS',
-    cls: 'sPass',
-    desc: (
-      <>
-        The requirement was evaluated and the subject <strong>meets it</strong>.
-      </>
-    ),
+    cls: 'stPass',
+    Glyph: PassGlyph,
+    body: 'The requirement was evaluated and the evidence shows it is met.',
   },
   {
     label: 'FAIL',
-    cls: 'sFail',
-    desc: (
-      <>
-        A requirement was <strong>affirmatively not met</strong>, surfaced with its authority.
-      </>
-    ),
+    cls: 'stFail',
+    Glyph: FailGlyph,
+    body: 'A requirement was affirmatively not met. Surfaced with its citation.',
   },
   {
     label: 'RISK',
-    cls: 'sRisk',
-    desc: (
-      <>
-        Conditions trend toward a finding and warrant <strong>review before monitoring</strong>.
-      </>
-    ),
+    cls: 'stRisk',
+    Glyph: RiskGlyph,
+    body: 'A real finding: conditions trend toward non-compliance and warrant review.',
   },
   {
     label: 'INDETERMINATE',
-    cls: 'sIndeterminate',
-    desc: (
-      <>
-        Required evidence never arrived, so the system says so — <strong>never a false PASS</strong>.
-      </>
-    ),
+    cls: 'stIndeterminate',
+    Glyph: IndeterminateGlyph,
+    body: 'Required evidence never arrived. Neutral — not a failure, and never a false PASS.',
+  },
+  {
+    label: 'MANUAL REVIEW',
+    cls: 'stManual',
+    Glyph: ManualReviewGlyph,
+    body: 'The rule needs a human judgment the engine will not fabricate.',
+  },
+  {
+    label: 'NOT APPLICABLE',
+    cls: 'stNa',
+    Glyph: NotApplicableGlyph,
+    body: 'The requirement does not apply to this subject in this period.',
   },
 ];
 
-const CAPABILITIES = [
+const TERMS = [
   {
-    icon: <LayersIcon />,
-    title: 'Versioned rule packs',
-    body: 'Federal, state, and program requirements ship as immutable, dated packs with an effective window. Regulations are never buried in application logic.',
+    name: 'Maintenance of Effort',
+    abbr: 'MOE',
+    desc: 'Did the district maintain required local or state-and-local special-education spending year over year?',
   },
   {
-    icon: <ScaleIcon />,
-    title: 'Every rule cites its authority',
-    body: 'Each rule links to the statute or regulation it enforces, so every finding carries the citation a monitor or hearing officer would ask for.',
+    name: 'Excess Cost',
+    abbr: 'Excess cost',
+    desc: 'Was the minimum average per-pupil amount spent before IDEA funds were applied?',
   },
   {
-    icon: <HistoryIcon />,
-    title: 'Reproducible determinations',
-    body: 'A determination is bound to the exact pack version that produced it. Re-run a prior period and receive that period’s answer — not today’s rules applied backward.',
-  },
-];
-
-const AUDIENCE = [
-  {
-    tier: 'State Education Agencies',
-    icon: <CapitolIcon size={22} />,
-    title: 'Statewide oversight',
-    body: 'Monitor every local agency against a common, versioned rule set and produce defensible determinations for federal reporting.',
+    name: 'Proportionate Share',
+    abbr: 'Prop. share',
+    desc: 'Was the mandated share of IDEA funds reserved for parentally-placed private-school children?',
   },
   {
-    tier: 'Local Education Agencies',
-    icon: <UsersIcon size={22} />,
-    title: 'District readiness',
-    body: 'Know where a program stands against IDEA and Title I requirements before a monitoring visit — with the citation behind every result.',
-  },
-  {
-    tier: 'Early-Intervention Programs',
-    icon: <FileCheckIcon size={22} />,
-    title: 'Part C assurance',
-    body: 'Track requirement-level compliance across served children and surface gaps while there is still time to correct them.',
+    name: 'Coordinated Early Intervening',
+    abbr: 'CEIS',
+    desc: 'Were CEIS funds tracked and capped correctly, including any required set-aside?',
   },
 ];
 
 const COVERAGE = [
-  { name: 'IDEA Part B — Special Education', authority: '34 CFR Part 300', live: true },
+  { name: 'IDEA Part B — Maintenance of Effort', authority: '34 CFR §300.203', live: true },
+  { name: 'IDEA Part B — Excess Cost', authority: '34 CFR §300.16', live: true },
+  { name: 'IDEA Part B — Proportionate Share', authority: '34 CFR §300.133', live: true },
+  { name: 'IDEA Part B — CEIS', authority: '34 CFR §300.226', live: false },
   { name: 'IDEA Part C — Early Intervention', authority: '34 CFR Part 303', live: false },
-  { name: 'Title I, Part A', authority: '20 U.S.C. § 6301 et seq.', live: false },
-  { name: 'State monitoring overlays', authority: 'Per-state regulatory layer', live: false },
 ];
 
-const TIERS = [
+const TRUST = [
   {
-    name: 'Program',
-    desc: 'For a single district or early-intervention program preparing for monitoring.',
-    price: 'Scoped',
-    unit: 'per program',
-    featured: false,
-    features: ['IDEA Part B rule pack', 'Up to 3 monitored entities', 'Determination history', 'Standard support'],
-    cta: 'Contact us',
+    Icon: LockIcon,
+    title: 'FERPA contractual terms',
+    desc: 'Student-level data handled under a data-privacy agreement, isolated by tenant and organization.',
+    status: 'Standard in every contract',
   },
   {
-    name: 'Agency',
-    desc: 'For local and regional agencies monitoring multiple entities across programs.',
-    price: 'Scoped',
-    unit: 'per agency',
-    featured: true,
-    features: [
-      'All federal + state layers',
-      'Unlimited monitored entities',
-      'Per-entity scoped access control',
-      'Audit-export packages',
-      'Priority onboarding',
-    ],
-    cta: 'Request a demonstration',
+    Icon: ShieldIcon,
+    title: 'Student Privacy Pledge',
+    desc: 'We commit to the industry privacy standard districts already screen vendors against.',
+    status: 'Signatory — pending',
   },
   {
-    name: 'Statewide',
-    desc: 'For state education agencies overseeing every local agency in the state.',
-    price: 'Scoped',
-    unit: 'statewide',
-    featured: false,
-    features: ['Statewide rollout', 'Custom state rule layers', 'SSO & data-residency options', 'Dedicated program manager'],
-    cta: 'Contact us',
+    Icon: FileCheckIcon,
+    title: 'Accessibility conformance',
+    desc: 'Built to WCAG 2.1 AA. An Accessibility Conformance Report (VPAT) is authored against our product.',
+    status: 'ACR in progress',
+  },
+  {
+    Icon: CheckIcon,
+    title: 'SOC 2',
+    desc: 'Security controls aligned to SOC 2 Type II criteria for how we store and process agency data.',
+    status: 'Type II — in progress',
+  },
+  {
+    Icon: ShieldIcon,
+    title: 'Data residency',
+    desc: 'U.S.-based data storage with documented sub-processors available on request.',
+    status: 'U.S. region',
+  },
+  {
+    Icon: NoWriteIcon,
+    title: 'Read-only by design',
+    desc: 'We never write back to your SIS or IEP system. Nothing we do can alter your systems of record.',
+    status: 'Architectural guarantee',
   },
 ];
 
 export default function Home() {
   return (
     <div className={styles.page}>
-      {/* Official notice banner */}
-      <div className={styles.govBanner}>
-        <div className={styles.container}>
-          <details className={styles.govDetails}>
-            <summary className={styles.govBannerRow}>
-              <span className={styles.govFlag} aria-hidden>
-                ★
-              </span>
-              <span className={styles.govBannerText}>
-                A compliance platform built for state &amp; local education agencies.
-              </span>
-              <span className={styles.govBannerToggle}>Here’s how it protects you</span>
-            </summary>
-            <div className={styles.govExpand}>
-              <div className={styles.govExpandItem}>
-                <ScaleIcon size={20} />
-                <span>
-                  <strong>Grounded in authority.</strong> Every determination is tied to the
-                  statute or regulation it enforces and the exact rule-pack version that produced
-                  it — reproducible on demand.
-                </span>
-              </div>
-              <div className={styles.govExpandItem}>
-                <LockIcon size={20} />
-                <span>
-                  <strong>Secure &amp; scoped.</strong> Student-level data is isolated by tenant and
-                  organization. Access is granted explicitly, never inherited through hierarchy.
-                </span>
-              </div>
-            </div>
-          </details>
-        </div>
-      </div>
-
       <SiteHeader />
 
-      <main>
-        {/* Hero */}
-        <section className={`${styles.container} ${styles.hero}`}>
-          <div className={styles.heroGrid}>
-            <div>
-              <span className={styles.heroBadge}>
-                Now available — Federal IDEA Part B rule pack
-              </span>
+      <main id="main">
+        {/* ---------- Hero: lead with the question, not a feature ---------- */}
+        <section className={styles.hero}>
+          <div className={styles.container}>
+            <div className={styles.heroGrid}>
+              <div>
+                <span className={styles.heroEyebrow}>For IDEA Part B fiscal compliance</span>
+                <h1 className={styles.heroTitle}>
+                  If this district were <em>monitored today</em>, would it pass?
+                </h1>
+                <p className={styles.heroSub}>
+                  ComplianceOS EDU evaluates your special-education fiscal data against the federal
+                  rules a state monitor applies — Maintenance of Effort, excess cost, proportionate
+                  share — and shows the citation and arithmetic behind every result.
+                </p>
+                <div className={styles.heroActions}>
+                  <a className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`} href="#contact">
+                    Request a demo
+                    <ArrowRightIcon size={18} />
+                  </a>
+                  <a className={`${styles.btn} ${styles.btnGhost} ${styles.btnLg}`} href="#result">
+                    See a worked result
+                  </a>
+                </div>
+                <p className={styles.heroNote}>
+                  <NoWriteIcon size={16} />
+                  Read-only. We never write back to your SIS or IEP system.
+                </p>
 
-              <h1 className={styles.heroTitle}>
-                Prove compliance for <em>publicly funded education</em>.
-              </h1>
-              <p className={styles.heroSub}>
-                ComplianceOS EDU turns the regulations governing special education and other funded
-                programs into versioned, citable rule packs — so districts, agencies, and states can
-                demonstrate compliance with confidence, not guesswork.
-              </p>
-
-              <div className={styles.heroActions}>
-                <a className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`} href="#contact">
-                  Request a demonstration
-                  <ArrowRightIcon size={18} />
-                </a>
-                <Link className={`${styles.btn} ${styles.btnGhost} ${styles.btnLg}`} href="/registry">
-                  View the rule registry
-                </Link>
-              </div>
-
-              <div className={styles.heroAuthorities}>
-                <p className={styles.heroAuthoritiesLabel}>Grounded in federal authority</p>
-                <div className={styles.heroAuthoritiesRow}>
-                  <span className={styles.authorityChip}>
-                    34 CFR Part 300<span>IDEA Part B</span>
-                  </span>
-                  <span className={styles.authorityChip}>
-                    34 CFR Part 303<span>IDEA Part C</span>
-                  </span>
-                  <span className={styles.authorityChip}>
-                    20 U.S.C. § 6301<span>Title I, Part A</span>
-                  </span>
+                <div className={styles.chips}>
+                  <span className={styles.chip}>34 CFR §300.203</span>
+                  <span className={styles.chip}>34 CFR §300.16</span>
+                  <span className={styles.chip}>34 CFR §300.133</span>
                 </div>
               </div>
-            </div>
 
-            {/* Signature: honest determination card */}
-            <aside className={styles.statusPanel} aria-label="Determination outcomes">
-              <div className={styles.statusPanelHead}>
-                <span className={styles.statusPanelTitle}>Determination outcomes</span>
-                <span className={styles.statusPanelMeta}>IDEA-B · v2024.1</span>
-              </div>
-              <div className={styles.statusRows}>
-                {STATUSES.map((s) => (
-                  <div className={styles.statusRow} key={s.label}>
-                    <span className={`${styles.statusPill} ${styles[s.cls]}`}>{s.label}</span>
-                    <span className={styles.statusDesc}>{s.desc}</span>
+              {/* Signature asset: the worked "Why" panel */}
+              <aside className={styles.whyCard} aria-label="Example determination detail">
+                <div className={styles.whyHead}>
+                  <span className={styles.whyHeadLabel}>Why this result</span>
+                  <span className={styles.whyRuleId}>MOE-LOCAL-2024</span>
+                </div>
+                <div className={styles.whyBody}>
+                  <div className={styles.whyRow}>
+                    <span className={styles.whyKey}>Determination</span>
+                    <span className={styles.whyVal}>
+                      <span className={`${styles.statusBadge} ${styles.stFail} ${styles.statusLg}`}>
+                        <FailGlyph size={16} />
+                        FAIL
+                      </span>
+                    </span>
                   </div>
-                ))}
-              </div>
-              <div className={styles.statusFoot}>
-                Unanswerable requirements outrank passing ones in every roll-up. A compliant summary
-                always means the same thing: the evidence was present and it held.
-              </div>
-            </aside>
+                  <div className={styles.whyRow}>
+                    <span className={styles.whyKey}>Authority</span>
+                    <span className={`${styles.whyVal} ${styles.whyMono}`}>34 CFR §300.203(b)</span>
+                  </div>
+                  <div className={styles.whyRow}>
+                    <span className={styles.whyKey}>Rule pack</span>
+                    <span className={`${styles.whyVal} ${styles.whyMono}`}>idea-part-b@2024.1</span>
+                  </div>
+                  <div className={styles.whyRow}>
+                    <span className={styles.whyKey}>Inputs</span>
+                    <span className={styles.whyVal}>
+                      Prior-year local: $4,120,000 · Current-year local: $3,960,000
+                    </span>
+                  </div>
+                  <div className={styles.whyRow}>
+                    <span className={styles.whyKey}>Arithmetic</span>
+                    <span className={styles.whyVal}>
+                      <span className={styles.whyArith}>
+                        required ≥ $4,120,000
+                        <br />
+                        actual&nbsp;&nbsp;&nbsp;= $3,960,000
+                        <br />
+                        shortfall = <b>$160,000</b> → FAIL
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              </aside>
+            </div>
           </div>
         </section>
 
-        {/* Mandate */}
-        <section id="mandate" className={styles.section}>
+        {/* ---------- The problem, in their vocabulary ---------- */}
+        <section id="problem" className={styles.section}>
           <div className={styles.container}>
-            <p className={styles.eyebrow}>The mandate</p>
-            <h2 className={styles.sectionTitle}>Regulations as evidence you can audit — not trust blindly.</h2>
+            <p className={styles.kicker}>The problem</p>
+            <h2 className={styles.sectionTitle}>
+              You already know the vocabulary. So does the engine.
+            </h2>
             <p className={styles.sectionLede}>
-              The engine loads a committed rule pack, evaluates a subject against it, and reports
-              exactly what it could and could not conclude. No rule is applied without the authority
-              behind it traveling with the result.
+              These are the tests a state monitor runs against IDEA Part B fiscal data — and the
+              ones a spreadsheet quietly gets wrong. ComplianceOS EDU encodes each one against the
+              regulation it comes from.
             </p>
-
-            <div className={styles.grid}>
-              {CAPABILITIES.map((f) => (
-                <article className={styles.card} key={f.title}>
-                  <div className={styles.cardIcon}>{f.icon}</div>
-                  <h3 className={styles.cardTitle}>{f.title}</h3>
-                  <p className={styles.cardBody}>{f.body}</p>
-                </article>
+            <div className={styles.termGrid}>
+              {TERMS.map((t) => (
+                <div className={styles.term} key={t.abbr}>
+                  <p className={styles.termName}>{t.name}</p>
+                  <span className={styles.termAbbr}>{t.abbr}</span>
+                  <p className={styles.termDesc}>{t.desc}</p>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Honesty callout */}
-        <section className={`${styles.section} ${styles.sectionBand}`}>
+        {/* ---------- Six-state status system ---------- */}
+        <section className={`${styles.section} ${styles.sectionAlt}`}>
           <div className={styles.container}>
-            <div className={styles.callout}>
-              <p className={styles.eyebrow}>
-                <AlertIcon size={14} />
-                The distinction that matters
-              </p>
-              <h3 className={styles.calloutTitle}>
-                Missing data produces INDETERMINATE — never a manufactured PASS.
-              </h3>
-              <p className={styles.sectionLede}>
-                An agency should never be told it is compliant on the strength of data that never
-                arrived. When evidence is absent, the system reports it plainly and treats it as
-                unresolved — so a green result is always something you can defend.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Safeguards */}
-        <section id="safeguards" className={styles.section}>
-          <div className={`${styles.container} ${styles.split}`}>
-            <div>
-              <p className={styles.eyebrow}>Data protection &amp; access</p>
-              <h2 className={styles.sectionTitle}>Access is explicit. Hierarchy is not permission.</h2>
-              <p className={styles.sectionLede}>
-                A state agency positioned above a district does not automatically see that
-                district’s student-level data. Every scope grants access to exactly the organization
-                it names — an invariant enforced in code, not merely by policy.
-              </p>
-              <ul className={styles.checkList}>
-                <li>
-                  <ShieldIcon size={20} />
-                  <span>
-                    <strong>Per-entity scopes.</strong> Access is granted one organization at a
-                    time; parent agencies never inherit a child agency’s data.
-                  </span>
-                </li>
-                <li>
-                  <LockIcon size={20} />
-                  <span>
-                    <strong>Tenant isolation.</strong> Every record is bound to a tenant and an
-                    organization; nothing resolves across that boundary.
-                  </span>
-                </li>
-                <li>
-                  <CheckIcon size={20} />
-                  <span>
-                    <strong>Auditable by design.</strong> Determinations, authorities, and pack
-                    versions travel together, ready to hand to a monitor.
-                  </span>
-                </li>
-              </ul>
-            </div>
-
-            <div className={styles.specPanel} aria-label="System safeguards">
-              <div className={styles.specHead}>
-                <ServerIcon size={20} />
-                System safeguards
-              </div>
-              <div className={styles.specRow}>
-                <span className={styles.specLabel}>Student data confidentiality</span>
-                <span className={styles.specValue}>FERPA-aligned</span>
-              </div>
-              <div className={styles.specRow}>
-                <span className={styles.specLabel}>Accessibility conformance</span>
-                <span className={styles.specValue}>WCAG 2.1 AA · §508</span>
-              </div>
-              <div className={styles.specRow}>
-                <span className={styles.specLabel}>Tenant &amp; organization isolation</span>
-                <span className={`${styles.specValue} ${styles.ok}`}>Enforced</span>
-              </div>
-              <div className={styles.specRow}>
-                <span className={styles.specLabel}>Determination audit trail</span>
-                <span className={`${styles.specValue} ${styles.ok}`}>Retained</span>
-              </div>
-              <div className={styles.specRow}>
-                <span className={styles.specLabel}>Rule-pack legal review</span>
-                <span className={styles.specValue}>Required pre-release</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Audience */}
-        <section className={`${styles.section} ${styles.sectionBand}`}>
-          <div className={styles.container}>
-            <p className={styles.eyebrow}>Who it serves</p>
-            <h2 className={styles.sectionTitle}>Built for every level of education oversight.</h2>
+            <p className={styles.kicker}>Honest determinations</p>
+            <h2 className={styles.sectionTitle}>
+              Six outcomes — and INDETERMINATE is not a failure.
+            </h2>
             <p className={styles.sectionLede}>
-              From a single program to a statewide rollout, the same versioned rule packs and honest
-              determinations apply — scoped to what each agency is responsible for.
+              A spreadsheet gives you two answers and hides the third. This is the outcome the
+              product exists to protect: when required evidence is missing, it says so plainly
+              instead of manufacturing a passing result you cannot defend.
             </p>
-
-            <div className={styles.audience}>
-              {AUDIENCE.map((a) => (
-                <article className={styles.audienceCard} key={a.tier}>
-                  <div className={styles.cardIcon}>{a.icon}</div>
-                  <p className={styles.audienceTier}>{a.tier}</p>
-                  <h3>{a.title}</h3>
-                  <p>{a.body}</p>
-                </article>
+            <div className={styles.legend}>
+              {STATUS_LEGEND.map(({ label, cls, Glyph, body }) => (
+                <div className={styles.legendItem} key={label}>
+                  <span className={`${styles.statusBadge} ${styles[cls]}`}>
+                    <Glyph size={16} />
+                    {label}
+                  </span>
+                  <span className={styles.legendText}>
+                    <strong>{label}</strong>
+                    {body}
+                  </span>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Coverage */}
-        <section id="coverage" className={styles.section}>
+        {/* ---------- A worked result (anchor target) ---------- */}
+        <section id="result" className={styles.section}>
           <div className={styles.container}>
-            <p className={styles.eyebrow}>Program coverage</p>
-            <h2 className={styles.sectionTitle}>Federal packs today, more layers on the way.</h2>
+            <p className={styles.kicker}>A worked result</p>
+            <h2 className={styles.sectionTitle}>
+              Every determination shows its work — like the panel above.
+            </h2>
             <p className={styles.sectionLede}>
-              We begin where audit risk is highest and expand outward. Each pack undergoes legal
-              review before its rules leave the registry.
+              Status, the citation a hearing officer would ask for, the exact rule-pack version that
+              produced it, the inputs, the arithmetic, and the source rows. No competitor screenshot
+              looks like this because no competitor binds the answer to its authority. Explore live
+              determinations in the rule registry.
             </p>
+            <div className={styles.heroActions} style={{ marginTop: '1.75rem' }}>
+              <Link className={`${styles.btn} ${styles.btnGhost} ${styles.btnLg}`} href="/registry">
+                Open the rule registry
+                <ArrowRightIcon size={18} />
+              </Link>
+            </div>
+          </div>
+        </section>
 
-            <div className={styles.tableWrap}>
-              <table className={styles.covTable}>
+        {/* ---------- What it does NOT do ---------- */}
+        <section className={`${styles.section} ${styles.sectionAlt}`}>
+          <div className={styles.container}>
+            <p className={styles.kicker}>What it does not do</p>
+            <h2 className={styles.sectionTitle}>The limits are the point.</h2>
+            <p className={styles.sectionLede}>
+              A compliance tool earns trust by what it refuses to touch. These are guarantees, not
+              gaps.
+            </p>
+            <div className={styles.notGrid}>
+              <div className={styles.notCard}>
+                <span className={styles.notIcon}>
+                  <NoWriteIcon size={22} />
+                </span>
+                <h3>It never writes to your systems of record</h3>
+                <p>
+                  ComplianceOS EDU reads a copy of your fiscal and student data. It cannot alter your
+                  SIS, your IEP system, or your general ledger. Nothing it does can create a new
+                  compliance problem in the systems you rely on.
+                </p>
+              </div>
+              <div className={styles.notCard}>
+                <span className={styles.notIcon}>
+                  <IndeterminateGlyph size={22} />
+                </span>
+                <h3>It never guesses to fill a gap</h3>
+                <p>
+                  When a required input is missing, the engine returns INDETERMINATE and names what
+                  it needs. It will not infer, interpolate, or round a shortfall away to produce a
+                  cleaner-looking report.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ---------- Trust row ---------- */}
+        <section id="trust" className={styles.section}>
+          <div className={styles.container}>
+            <p className={styles.kicker}>Trust &amp; security</p>
+            <h2 className={styles.sectionTitle}>The row a district reads before anything else.</h2>
+            <p className={styles.sectionLede}>
+              Everything here is stated at its true status. We would rather show an honest
+              &ldquo;in progress&rdquo; than an unbacked badge — the same standard we hold your
+              determinations to.
+            </p>
+            <div className={styles.trustGrid}>
+              {TRUST.map(({ Icon, title, desc, status }) => (
+                <div className={styles.trustCard} key={title}>
+                  <span className={styles.trustIcon}>
+                    <Icon size={22} />
+                  </span>
+                  <div>
+                    <p className={styles.trustTitle}>{title}</p>
+                    <p className={styles.trustDesc}>{desc}</p>
+                    <span className={styles.trustStatus}>{status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Proof slot — designed, left unpublished until a named pilot exists */}
+            <figure className={styles.proof}>
+              <p className={styles.proofLabel}>Practitioner proof — reserved for a named pilot</p>
+              <blockquote className={styles.proofQuote}>
+                &ldquo;A district director, attributed by name and district, describes catching a
+                finding before their state monitoring visit.&rdquo;
+              </blockquote>
+              <figcaption className={styles.proofAttr}>
+                We leave this slot empty rather than fill it with a stock quote.
+              </figcaption>
+            </figure>
+          </div>
+        </section>
+
+        {/* ---------- Coverage ---------- */}
+        <section id="coverage" className={`${styles.section} ${styles.sectionAlt}`}>
+          <div className={styles.container}>
+            <p className={styles.kicker}>Coverage</p>
+            <h2 className={styles.sectionTitle}>Federal IDEA Part B fiscal rules today.</h2>
+            <p className={styles.sectionLede}>
+              We begin where audit risk is highest and expand outward. Each rule pack undergoes legal
+              review before it leaves the registry.
+            </p>
+            <div className={styles.coverageWrap}>
+              <table className={styles.coverageTable}>
                 <thead>
                   <tr>
-                    <th scope="col">Program</th>
+                    <th scope="col">Requirement</th>
                     <th scope="col">Authority</th>
                     <th scope="col">Status</th>
                   </tr>
@@ -395,10 +387,11 @@ export default function Home() {
                 <tbody>
                   {COVERAGE.map((c) => (
                     <tr key={c.name}>
-                      <td className={styles.covProgram}>{c.name}</td>
-                      <td className={styles.covAuthority}>{c.authority}</td>
+                      <td>{c.name}</td>
+                      <td className={styles.coverageCite}>{c.authority}</td>
                       <td>
-                        <span className={c.live ? styles.badgeLive : styles.badgeSoon}>
+                        <span className={`${styles.statusBadge} ${c.live ? styles.stPass : styles.stNa}`}>
+                          {c.live ? <PassGlyph size={15} /> : <NotApplicableGlyph size={15} />}
                           {c.live ? 'Available' : 'On roadmap'}
                         </span>
                       </td>
@@ -410,73 +403,34 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Deployment tiers */}
-        <section id="deployment" className={`${styles.section} ${styles.sectionBand}`}>
+        {/* ---------- CTA ---------- */}
+        <section id="contact" className={`${styles.section} ${styles.cta}`}>
           <div className={styles.container}>
-            <p className={styles.eyebrow}>Deployment</p>
-            <h2 className={styles.sectionTitle}>Scoped to the oversight you carry.</h2>
-            <p className={styles.sectionLede}>
-              Every engagement is sized to the number of entities you monitor and the regulatory
-              layers you need. We scope it with you — no per-seat surprises.
-            </p>
-
-            <div className={styles.pricing}>
-              {TIERS.map((p) => (
-                <div
-                  className={`${styles.priceCard} ${p.featured ? styles.priceCardFeatured : ''}`}
-                  key={p.name}
-                >
-                  {p.featured && <span className={styles.priceTag}>Most common</span>}
-                  <h3 className={styles.priceName}>{p.name}</h3>
-                  <p className={styles.priceDesc}>{p.desc}</p>
-                  <div className={styles.priceValue}>
-                    <strong>{p.price}</strong>
-                    <span>{p.unit}</span>
-                  </div>
-                  <ul className={styles.priceFeatures}>
-                    {p.features.map((feat) => (
-                      <li key={feat}>
-                        <CheckIcon size={16} />
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className={styles.priceCta}>
-                    <a
-                      className={`${styles.btn} ${p.featured ? styles.btnPrimary : styles.btnGhost}`}
-                      href="#contact"
-                    >
-                      {p.cta}
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section id="contact" className={styles.section}>
-          <div className={styles.container}>
-            <div className={styles.ctaBanner}>
-              <h2 className={styles.ctaTitle}>See a determination you could hand to a monitor.</h2>
-              <p className={styles.ctaSub}>
-                Bring a program you oversee and we will walk it through the IDEA Part B rule pack
-                live — citations, statuses, and audit trail included.
-              </p>
+            <div className={styles.ctaInner}>
+              <div>
+                <h2 className={styles.ctaTitle}>See a determination you could hand to a monitor.</h2>
+                <p className={styles.ctaSub}>
+                  Bring a program you oversee and we will walk it through the IDEA Part B rule pack
+                  live — citations, statuses, and the arithmetic behind each result.
+                </p>
+              </div>
               <div className={styles.ctaActions}>
                 <a
-                  className={`${styles.btn} ${styles.btnOnDark} ${styles.btnLg}`}
-                  href="mailto:contact@complianceos.edu"
+                  className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`}
+                  href="mailto:demo@complianceos.edu?subject=ComplianceOS%20EDU%20demo"
                 >
-                  Request a demonstration
+                  Request a demo
                 </a>
-                <Link
-                  className={`${styles.btn} ${styles.btnGhostDark} ${styles.btnLg}`}
-                  href="/registry"
+                <a
+                  className={`${styles.btn} ${styles.btnGhost} ${styles.btnLg}`}
+                  href="mailto:states@complianceos.edu?subject=State%20rules%20conversation"
                 >
-                  Explore the rule registry
-                </Link>
+                  Talk to us about your state
+                </a>
+                <p className={styles.ctaFine}>
+                  State rules differ. The second conversation is for SEA-adjacent buyers who need to
+                  know we can model theirs.
+                </p>
               </div>
             </div>
           </div>
@@ -485,27 +439,27 @@ export default function Home() {
 
       <footer className={styles.footer}>
         <div className={styles.container}>
-          <div className={styles.footerTop}>
+          <div className={styles.footerGrid}>
             <div className={styles.footerBrand}>
               <span className={styles.brandName}>
                 ComplianceOS <span>EDU</span>
               </span>
-              <p>
+              <p className={styles.footerBlurb}>
                 Compliance assurance for publicly funded education programs. Versioned rule packs,
-                cited authorities, and honest determinations for agencies at every level.
+                cited authorities, and determinations you can defend in a monitoring visit.
               </p>
             </div>
             <div className={styles.footerCol}>
-              <h4>Platform</h4>
+              <h4>Product</h4>
               <ul>
                 <li>
-                  <a href="#mandate">The mandate</a>
+                  <a href="#problem">The problem</a>
                 </li>
                 <li>
-                  <a href="#safeguards">Data protection</a>
+                  <a href="#result">A worked result</a>
                 </li>
                 <li>
-                  <a href="#coverage">Program coverage</a>
+                  <a href="#coverage">Coverage</a>
                 </li>
                 <li>
                   <Link href="/registry">Rule registry</Link>
@@ -513,30 +467,31 @@ export default function Home() {
               </ul>
             </div>
             <div className={styles.footerCol}>
-              <h4>Engage</h4>
+              <h4>Trust</h4>
               <ul>
                 <li>
-                  <a href="#deployment">Deployment tiers</a>
+                  <a href="#trust">Security &amp; privacy</a>
                 </li>
                 <li>
-                  <a href="#contact">Request access</a>
+                  <a href="#trust">Accessibility statement</a>
                 </li>
                 <li>
-                  <a href="mailto:contact@complianceos.edu">contact@complianceos.edu</a>
+                  <a href="mailto:demo@complianceos.edu">Request a demo</a>
+                </li>
+                <li>
+                  <a href="mailto:states@complianceos.edu">Talk to us about your state</a>
                 </li>
               </ul>
             </div>
           </div>
-          <div className={styles.footerLegal}>
-            <p>
-              Phase 0 baseline. Rule packs are pending legal review prior to evaluation; nothing on
-              this site constitutes legal advice or a compliance determination.
+          <div className={styles.footerBar}>
+            <p className={styles.footerStatement}>
+              ComplianceOS EDU is an independent software vendor and is not a government agency. It
+              conforms to WCAG 2.1 Level AA; an Accessibility Conformance Report is available on
+              request. Statutory citations are provided for reference and do not constitute legal
+              advice.
             </p>
-            <div className={styles.footerBadges}>
-              <span className={styles.footerBadge}>FERPA-aligned</span>
-              <span className={styles.footerBadge}>WCAG 2.1 AA</span>
-              <span className={styles.footerBadge}>Section 508</span>
-            </div>
+            <span>© {new Date().getFullYear()} ComplianceOS EDU</span>
           </div>
         </div>
       </footer>
