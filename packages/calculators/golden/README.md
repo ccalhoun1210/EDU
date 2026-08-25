@@ -1,7 +1,7 @@
 # Golden test corpora
 
-Spec: Master Technical Buildout §26.1 — *"This is the most important test suite in the
-company."*
+Spec: Master Technical Buildout §26.1 — _"This is the most important test suite in the
+company."_
 
 One YAML file per calculator. `src/golden.test.ts` loads every `.yaml` here and runs each case
 against the registered calculator; `src/golden.ts` holds the schema.
