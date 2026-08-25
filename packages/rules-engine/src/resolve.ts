@@ -117,6 +117,20 @@ export function resolveRulePacks(packs: readonly LoadedRulePack[], asOf: string)
     }
   }
 
+  // Which rule ids belong to a statutory layer, computed across every rule in the stack and
+  // deliberately BEFORE any effective-date filtering.
+  //
+  // Ownership is a property of the content, not of the date a run happens to be asking about.
+  // Checking it after the filter would let a local pack claim a federal rule id whose window
+  // has not opened yet — and the collision would then surface on the day the federal rule
+  // becomes effective, as a failed run rather than a rejected publication.
+  const statutoryOwners = new Map<string, PackRef>();
+  for (const pack of ordered) {
+    if (pack.manifest.layer === 'LOCAL') continue;
+    const ref = packRef(pack);
+    for (const rule of pack.rules) statutoryOwners.set(rule.ruleId, ref);
+  }
+
   const byRuleId = new Map<string, ResolvedRule>();
   const notYetEffective = new Set<string>();
   const expired = new Set<string>();
@@ -125,6 +139,18 @@ export function resolveRulePacks(packs: readonly LoadedRulePack[], asOf: string)
     const ref = packRef(pack);
 
     for (const rule of pack.rules) {
+      if (ref.layer === 'LOCAL') {
+        const owner = statutoryOwners.get(rule.ruleId);
+        if (owner !== undefined) {
+          throw new RuleResolutionError(
+            `local pack ${ref.packId} redefines "${rule.ruleId}", which ${owner.packId} ` +
+              `(${owner.layer}) defines. A local pack may add its own controls and earlier ` +
+              'warning thresholds, but it may not rewrite a statutory requirement. Give the ' +
+              'local rule its own id.',
+          );
+        }
+      }
+
       if (!isEffectiveOn(rule, asOf)) {
         if (asOf < rule.effective.start) notYetEffective.add(rule.ruleId);
         else expired.add(rule.ruleId);
@@ -132,16 +158,6 @@ export function resolveRulePacks(packs: readonly LoadedRulePack[], asOf: string)
       }
 
       const existing = byRuleId.get(rule.ruleId);
-
-      if (existing !== undefined && ref.layer === 'LOCAL') {
-        throw new RuleResolutionError(
-          `local pack ${ref.packId} redefines "${rule.ruleId}", which ${existing.pack.packId} ` +
-            `(${existing.pack.layer}) already defines. A local pack may add its own controls ` +
-            'and earlier warning thresholds, but it may not rewrite a statutory requirement — ' +
-            'give the local rule its own id.',
-        );
-      }
-
       byRuleId.set(
         rule.ruleId,
         existing === undefined

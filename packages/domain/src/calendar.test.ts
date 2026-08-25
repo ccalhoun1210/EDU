@@ -276,31 +276,11 @@ describe('addDays', () => {
   });
 
   /**
-   * DEFECT (do not fix here — reported to the orchestrator).
-   *
-   * `addDays` and `addMonths` validate their input string but never validate the numeric
-   * offset, and `formatCalendarDate` never checks that the components it is handed are
-   * integers. The result is a *malformed output string*:
-   *
-   *   addDays('2027-01-01', 1.5)   === '2027-01-2.5'
-   *   addDays('2027-01-01', NaN)   === '0NaN-NaN-NaN'
-   *   addMonths('2027-01-01', 1.5) === '2027-2.5-00'
-   *
-   * A non-integer or NaN offset is reachable in practice: a duration read from JSON, a
-   * rulepack parameter, or `Number(undefined)`. The module's entire premise is that a value
-   * which is not a calendar date is refused at the boundary rather than passed on; here it
-   * manufactures one and hands it downstream, where it will be written to a DATE column or
-   * shown as a statutory deadline.
-   *
-   * The same missing output check lets arithmetic walk out of the year range the parser
-   * declares: `addDays('9999-12-31', 1)` is '10000-01-01' and `addMonths('1583-01-01', -1)`
-   * is '1582-12-01', both of which `parseCalendarDate` rejects — so the module emits values
-   * it would refuse to read back.
-   *
-   * Correct behaviour: reject an offset that is not a finite integer (a `RangeError`, or a
-   * `CalendarDateError`-style error naming the offset), and validate the computed result
-   * before returning it, so that no caller can ever receive a string this module would
-   * refuse to parse.
+   * An unvalidated offset used to reach `formatCalendarDate` and come back out as a string
+   * that is not a date at all — `addDays('2027-01-01', 1.5)` was '2027-01-2.5', and an offset
+   * of `NaN` was '0NaN-NaN-NaN'. Both are reachable from a duration read out of JSON, a
+   * rulepack parameter, or `Number(undefined)`. A module whose premise is that a non-date is
+   * refused at the boundary must not manufacture one on the way out.
    */
   it('rejects a non-integer or non-finite offset instead of emitting a malformed date', () => {
     expect(() => addDays('2026-06-30', 1.5)).toThrow(CalendarDateError);
@@ -309,6 +289,31 @@ describe('addDays', () => {
     expect(() => addMonths('2026-06-30', 0.5)).toThrow(CalendarDateError);
     expect(() => addYears('2026-06-30', 1.5)).toThrow(CalendarDateError);
   });
+
+  it('accepts a zero offset of either sign as a legitimate no-op', () => {
+    // `-0` is a safe integer; the offset guard must not mistake it for a malformed value.
+    expect(addDays('2026-06-30', -0)).toBe('2026-06-30');
+  });
+
+  /**
+   * DEFECT (do not fix here — reported to the orchestrator).
+   *
+   * The offset guard closed one half of this; the other half is open. `parseCalendarDate`
+   * declares an accepted year range of 1583-9999, but no add function validates its computed
+   * result against that range, so the module emits dates it would refuse to read back:
+   *
+   *   addDays('9999-12-31', 1)    === '10000-01-01'  // five-digit year, fails the regex
+   *   addMonths('1583-01-01', -1) === '1582-12-01'   // below the plausibility bound
+   *   addYears('9999-01-01', 1)   === '10000-01-01'
+   *
+   * `isCalendarDate` returns false for all three. A value that cannot be parsed back is not
+   * a calendar date, and shipping one into a DATE column or a finding breaks the round-trip
+   * the rest of the platform assumes — the same class of silent-bad-value the parser's year
+   * bound was added to prevent, just on the way out instead of in. Correct behaviour:
+   * validate the formatted result before returning it and throw a `CalendarDateError` naming
+   * the out-of-range year, so that every string this module returns is one it would accept.
+   */
+  it.todo('refuses to return a date outside the year range parseCalendarDate accepts');
 });
 
 describe('addWeeks', () => {
@@ -450,20 +455,11 @@ describe('diffYears', () => {
   });
 
   /**
-   * DEFECT (do not fix here — reported to the orchestrator).
-   *
-   * `diffYears` and `diffWeeks` round a negative fraction with `Math.ceil`, so a span shorter
-   * than one whole unit in the backwards direction returns `-0` rather than `0`:
-   *
-   *   diffYears('2027-01-01', '2026-02-01')  is -0
-   *   diffWeeks('2027-01-07', '2027-01-01')  is -0
-   *
-   * Harmless under `===`, `<` and `>`, but `Object.is(-0, 0)` is false, so it breaks equality
-   * checks, snapshot and golden-corpus comparisons, and `Map`/`Set` keying — the places a
-   * regulatory calculator's expected output actually gets compared. `diffMonths`, which does
-   * its arithmetic in integers, correctly returns `+0` for the same span, so the three
-   * functions disagree. Correct behaviour: normalise the result to `+0` (e.g. `result || 0`)
-   * so that a zero-length span has one representation across all three.
+   * `Math.ceil` of a small negative fraction is `-0`. That is harmless under `===`, `<` and
+   * `>`, but `Object.is(-0, 0)` is false, so it breaks golden-corpus equality, snapshots and
+   * Map/Set keying — the places a calculator's expected output actually gets compared.
+   * `diffMonths` works in integers and returns `+0`, so all three differs have to agree on
+   * one spelling of "no whole units between these dates".
    */
   it('returns positive zero, not negative zero, for a backwards span shorter than a year', () => {
     expect(Object.is(diffYears('2027-01-01', '2026-02-01'), 0)).toBe(true);
@@ -482,8 +478,8 @@ describe('diffWeeks', () => {
     expect(diffWeeks('2027-01-01', '2027-01-15')).toBe(2);
     expect(diffWeeks('2027-01-13', '2027-01-01')).toBe(-1);
     expect(diffWeeks('2027-01-01', '2027-01-07')).toBe(0);
-    // Magnitude, not sign: the backwards short span currently yields -0. See diffYears.
-    expect(Math.abs(diffWeeks('2027-01-07', '2027-01-01'))).toBe(0);
+    // Sign-sensitive: a zero-length span must not read as though it had a direction.
+    expect(Object.is(diffWeeks('2027-01-07', '2027-01-01'), 0)).toBe(true);
   });
 });
 

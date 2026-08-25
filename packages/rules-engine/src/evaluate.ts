@@ -235,7 +235,23 @@ function orderValues(left: Value, right: Value, trace: EvaluationTrace): Compari
     if (isAmountString(left) && isAmountString(right)) {
       return amount(left).comparedTo(amount(right));
     }
-    if (isCalendarDate(left) && isCalendarDate(right)) return compareCalendarDates(left, right);
+
+    const leftIsDate = isCalendarDate(left);
+    const rightIsDate = isCalendarDate(right);
+    if (leftIsDate && rightIsDate) return compareCalendarDates(left, right);
+
+    // Exactly one side is a real date. The other is date-shaped but names no day —
+    // `2027-13-45`, or a US-format date that never went through the mapping's date parser.
+    // Falling through to the lexical branch would order it confidently ("2027-13-45" sorts
+    // after "2027-01-01") and return a TRUE or FALSE built on a date that does not exist.
+    if (leftIsDate !== rightIsDate) {
+      trace.note(
+        `cannot order the calendar date against "${leftIsDate ? right : left}", which is not a ` +
+          'calendar date. Fix the mapping that produced it rather than comparing it as text.',
+      );
+      return undefined;
+    }
+
     return left < right ? -1 : left > right ? 1 : 0;
   }
 

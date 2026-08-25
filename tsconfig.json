@@ -12,6 +12,9 @@
     },
     {
       "path": "./packages/rules-engine"
+    },
+    {
+      "path": "./packages/ingest"
     }
   ]
 }
