@@ -94,17 +94,7 @@ describe('applyFieldMapping — a column the file does not have', () => {
     expect(issues[0]?.code).toBe('MISSING_COLUMN');
   });
 
-  // One absent column currently yields two issues for the same root cause: MISSING_COLUMN
-  // from the lookup, then MISSING_REQUIRED_VALUE because the merged value is null.
-  // `reconcile` counts both codes into `missingRequiredFields`, so a district is told two
-  // fields are missing when one column was renamed — and the same summary is their only
-  // evidence of what the platform did with their file (§10.5). The transform-failure branch
-  // already guards against this with `else if`; the missing-column branch does not.
-  // Correct behaviour: a row that has already reported MISSING_COLUMN for a field must not
-  // also report MISSING_REQUIRED_VALUE for that field.
-  it.todo('reports one absent required column as a single issue, not two');
-
-  it('currently reports both MISSING_COLUMN and MISSING_REQUIRED_VALUE (double count)', () => {
+  it('reports one absent required column as a single issue, not two', () => {
     const { header, row } = rowOf(EXPENDITURES);
     const mapping = field({
       target: 'federal_actual_expenditure',
@@ -117,7 +107,10 @@ describe('applyFieldMapping — a column the file does not have', () => {
       (issue) => issue.code,
     );
 
-    expect(codes).toEqual(['MISSING_COLUMN', 'MISSING_REQUIRED_VALUE']);
+    // One renamed column producing two entries in `missingRequiredFields` tells a district
+    // two fields are missing when one is — and that summary is their only evidence of what
+    // the platform did with their file (spec 10.5).
+    expect(codes).toEqual(['MISSING_COLUMN']);
   });
 
   it('is only a WARNING when the field is optional', () => {
@@ -177,24 +170,19 @@ describe('applyFieldMapping — a column the file does not have', () => {
     expect(value.provenance.sourceValues).toEqual([null, null]);
   });
 
-  // The file DOES have the column; the row is short, so `cellAt` returns undefined for a
-  // different reason and the mapper cannot tell the two apart. Reported as
-  // MISSING_COLUMN ("the file has no column CHILD_COUNT"), which sends a business officer to
-  // edit a template that is in fact correct. Correct behaviour: when the column exists in
-  // the header but the row has too few cells, raise a distinct code (the row is short /
-  // truncated) naming the row, so the remedy points at the export rather than the mapping.
-  it.todo('distinguishes a short row from a column the file genuinely lacks');
-
-  it('still reports the column as absent when the row is short (current behaviour)', () => {
-    // Documents the conflation above so the fix has a baseline to change.
+  it('distinguishes a short row from a column the file genuinely lacks', () => {
+    // "The file has no column CHILD_COUNT" and "row 1 stops before it" have different
+    // remedies. Reporting the first for the second sends a business officer to edit a
+    // template that was correct all along.
     const ragged = `LEA_ID,FISCAL_YEAR,CHILD_COUNT\nLEA-4412,FY2028\n`;
     const { header, row } = rowOf(ragged);
     const mapping = field({ target: 'child_count', sources: ['CHILD_COUNT'], required: true });
 
     const { issues } = applyFieldMapping(mapping, row, header, template([mapping]), CONTEXT);
 
-    expect(issues[0]?.code).toBe('MISSING_COLUMN');
     expect(header).toContain('CHILD_COUNT');
+    expect(issues.map((issue) => issue.code)).toEqual(['ROW_TOO_SHORT']);
+    expect(issues[0]?.resolution).toMatch(/export/);
   });
 });
 
@@ -346,7 +334,9 @@ describe('required fields', () => {
       transforms: [{ transform: 'nullIfBlank' }],
     });
 
-    expect(applyFieldMapping(mapping, row, header, template([mapping]), CONTEXT).issues).toEqual([]);
+    expect(applyFieldMapping(mapping, row, header, template([mapping]), CONTEXT).issues).toEqual(
+      [],
+    );
   });
 
   // transform.ts is explicit that null means "no value" and the empty string is a value, so a
@@ -571,9 +561,9 @@ describe('applyMapping', () => {
       classification: 'CONFIDENTIAL',
     };
 
-    expect(
-      applyMapping(template([mapping]), row, header, CONTEXT).values[0]?.classification,
-    ).toBe('CONFIDENTIAL');
+    expect(applyMapping(template([mapping]), row, header, CONTEXT).values[0]?.classification).toBe(
+      'CONFIDENTIAL',
+    );
   });
 });
 

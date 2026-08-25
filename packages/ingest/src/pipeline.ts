@@ -21,7 +21,7 @@
  * Everything from PARSE to DATA SNAPSHOT is here and is real.
  */
 
-import type { CanonicalValue } from '@complianceos/domain';
+import { isAmountString, isCalendarDate, type CanonicalValue } from '@complianceos/domain';
 import { parseCsv, type CsvParseOptions } from './csv.js';
 import {
   applyMapping,
@@ -30,7 +30,7 @@ import {
   type MappingContext,
   type MappingTemplate,
 } from './mapping.js';
-import type { FactProvenance, SourceFileRef } from './provenance.js';
+import type { SourceFileRef } from './provenance.js';
 import { reconcile, type ReconciliationSummary } from './reconcile.js';
 import { buildSnapshot, type CanonicalFact, type DataSnapshot } from './snapshot.js';
 import { quarantines, type ValidationIssue } from './validate.js';
@@ -85,26 +85,78 @@ export interface ImportOutcome {
 }
 
 /**
+ * The three ways a mapped value can turn into a canonical one.
+ *
+ * `INVALID` is the case that matters. A value the pipeline cannot convert used to vanish —
+ * the fact never reached the snapshot, the row was still counted as accepted, and no issue
+ * was raised anywhere, so the reconciliation summary told the district their row was fine.
+ * That is exactly the silent discard section 10.5 forbids.
+ */
+type Conversion =
+  | { readonly kind: 'ABSENT' }
+  | { readonly kind: 'VALUE'; readonly value: CanonicalValue }
+  | { readonly kind: 'INVALID'; readonly reason: string };
+
+/**
  * Convert a mapped string into its canonical value.
  *
  * Money stays a decimal string all the way into the snapshot, never a number at any point
  * (invariant 5). A count becomes an integer because that is what it is, and because
  * `canonicalize` accepts whole numbers precisely so counts need not be stringly typed.
+ *
+ * Each type is validated rather than coerced. `Number('')` is `0`, so a count field whose
+ * template happens to omit `parseInteger` would otherwise turn an empty cell into a child
+ * count of zero — a figure the district never supplied, recorded as fact, with provenance
+ * pointing at an empty cell.
  */
-function toCanonicalValue(mapped: MappedValue): CanonicalValue | undefined {
-  if (mapped.value === null) return undefined;
+function toCanonicalValue(mapped: MappedValue): Conversion {
+  if (mapped.value === null) return { kind: 'ABSENT' };
 
   switch (mapped.valueType) {
     case 'count': {
-      const parsed = Number(mapped.value);
-      return Number.isSafeInteger(parsed) ? parsed : undefined;
+      const text = mapped.value.trim();
+      if (!/^\d+$/.test(text)) {
+        return { kind: 'INVALID', reason: `"${mapped.value}" is not a whole, non-negative count` };
+      }
+      const parsed = Number(text);
+      if (!Number.isSafeInteger(parsed)) {
+        return { kind: 'INVALID', reason: `"${mapped.value}" is too large to count exactly` };
+      }
+      return { kind: 'VALUE', value: parsed };
     }
-    case 'boolean':
-      return mapped.value === 'true';
-    case 'money':
-    case 'date':
+
+    case 'boolean': {
+      if (mapped.value === 'true') return { kind: 'VALUE', value: true };
+      if (mapped.value === 'false') return { kind: 'VALUE', value: false };
+      return { kind: 'INVALID', reason: `"${mapped.value}" is neither true nor false` };
+    }
+
+    case 'money': {
+      if (!isAmountString(mapped.value)) {
+        return {
+          kind: 'INVALID',
+          reason:
+            `"${mapped.value}" is not a canonical amount. The mapping for this field needs a ` +
+            'currency-parsing step.',
+        };
+      }
+      return { kind: 'VALUE', value: mapped.value };
+    }
+
+    case 'date': {
+      if (!isCalendarDate(mapped.value)) {
+        return {
+          kind: 'INVALID',
+          reason:
+            `"${mapped.value}" is not a YYYY-MM-DD calendar date. The mapping for this field ` +
+            'needs a date-parsing step.',
+        };
+      }
+      return { kind: 'VALUE', value: mapped.value };
+    }
+
     case 'text':
-      return mapped.value;
+      return { kind: 'VALUE', value: mapped.value };
   }
 }
 
@@ -116,6 +168,11 @@ function subjectKey(values: readonly MappedValue[], binding: SubjectBinding): st
     parts.push(value);
   }
   return parts.join(binding.separator ?? '/');
+}
+
+interface FactCandidate {
+  readonly identity: string;
+  readonly fact: CanonicalFact;
 }
 
 export function runImport(request: ImportRequest): ImportOutcome {
@@ -141,16 +198,57 @@ export function runImport(request: ImportRequest): ImportOutcome {
 
   // PARSE.
   const parsed = parseCsv(request.content, request.parseOptions);
-  const issues: ValidationIssue[] = parsed.issues.map((issue) => ({
-    severity: issue.code === 'RAGGED_ROW' ? 'ERROR' : 'WARNING',
-    code: issue.code,
-    message: issue.message,
-    ...(issue.lineNumber === undefined ? {} : { sourceLine: issue.lineNumber }),
-    ...(issue.rowNumber === undefined ? {} : { sourceRow: issue.rowNumber }),
-    ...(issue.column === undefined ? {} : { sourceColumn: issue.column }),
-  }));
+
+  const issues: ValidationIssue[] = [];
+  // Parse problems that name a row are held back and merged into that row's own issue list,
+  // so they reach the quarantine decision. Pushing them straight onto the outcome meant a
+  // ragged row could be reported as an ERROR and then accepted anyway — the summary condemning
+  // a row whose figures the platform went on to use.
+  const parseIssuesByRow = new Map<number, ValidationIssue[]>();
+
+  for (const issue of parsed.issues) {
+    const mapped: ValidationIssue = {
+      severity: issue.code === 'RAGGED_ROW' ? 'ERROR' : 'WARNING',
+      code: issue.code,
+      message: issue.message,
+      ...(issue.code === 'RAGGED_ROW'
+        ? {
+            resolution:
+              'A row whose field count differs from the header usually means an unquoted ' +
+              'delimiter, which shifts every column after it. Fix the export and re-import.',
+          }
+        : {}),
+      ...(issue.lineNumber === undefined ? {} : { sourceLine: issue.lineNumber }),
+      ...(issue.rowNumber === undefined ? {} : { sourceRow: issue.rowNumber }),
+      ...(issue.column === undefined ? {} : { sourceColumn: issue.column }),
+    };
+
+    if (issue.rowNumber === undefined) issues.push(mapped);
+    else {
+      const existing = parseIssuesByRow.get(issue.rowNumber);
+      if (existing === undefined) parseIssuesByRow.set(issue.rowNumber, [mapped]);
+      else existing.push(mapped);
+    }
+  }
 
   if (parsed.header.length === 0 || parsed.rows.length === 0) {
+    // Never a bare failure. A district shown a failed import with no stated reason has been
+    // told less than nothing. Only added when the parser said nothing of its own — an empty
+    // file already reports EMPTY_FILE, and repeating it under a second code would inflate the
+    // problem count in the one summary the district uses to judge what happened to their file.
+    if (issues.length === 0) {
+      issues.push({
+        severity: 'ERROR',
+        code: parsed.header.length === 0 ? 'NO_HEADER_ROW' : 'NO_DATA_ROWS',
+        message:
+          parsed.header.length === 0
+            ? `${request.file.originalFilename} has no header row, so no column can be mapped`
+            : `${request.file.originalFilename} has a header row but no data rows`,
+        resolution:
+          'Check that the export ran over the intended fiscal period and produced records, ' +
+          'then upload it again.',
+      });
+    }
     return { kind: 'PARSE_FAILED', importJobId: request.importJobId, issues };
   }
 
@@ -161,8 +259,11 @@ export function runImport(request: ImportRequest): ImportOutcome {
   };
 
   // FIELD MAPPING, VALIDATION, NORMALIZATION.
-  const facts: CanonicalFact[] = [];
-  const seen = new Map<string, { value: CanonicalValue; provenance: FactProvenance }>();
+  const committed = new Map<string, CanonicalFact>();
+  // Facts the file states two different values for. Withdrawn entirely at the end rather than
+  // resolved: see the note at the conflict branch.
+  const disputed = new Set<string>();
+
   let accepted = 0;
   let quarantined = 0;
   let duplicateCandidates = 0;
@@ -171,7 +272,10 @@ export function runImport(request: ImportRequest): ImportOutcome {
 
   for (const row of parsed.rows) {
     const mapped = applyMapping(request.template, row, parsed.header, context);
-    const rowIssues = [...mapped.issues];
+    const rowIssues: ValidationIssue[] = [
+      ...mapped.issues,
+      ...(parseIssuesByRow.get(row.rowNumber) ?? []),
+    ];
 
     const key = subjectKey(mapped.values, request.subject);
     if (key === undefined) {
@@ -187,64 +291,97 @@ export function runImport(request: ImportRequest): ImportOutcome {
       });
     }
 
-    const rowRejected = rowIssues.some(quarantines);
+    // Build this row's facts without committing any of them. Nothing a row produces reaches
+    // the snapshot until the whole row is known to be acceptable — otherwise a row rejected
+    // half way through leaves the facts it had already emitted behind.
+    const candidates: FactCandidate[] = [];
+
+    if (key !== undefined) {
+      for (const value of mapped.values) {
+        if (keyFieldSet.has(value.target)) continue;
+
+        const conversion = toCanonicalValue(value);
+        if (conversion.kind === 'ABSENT') continue;
+
+        if (conversion.kind === 'INVALID') {
+          rowIssues.push({
+            severity: 'ERROR',
+            code: 'UNCONVERTIBLE_VALUE',
+            message: `${value.target}: ${conversion.reason}`,
+            resolution:
+              'Correct the value in the source export, or add the transformation the mapping ' +
+              'is missing. Nothing was substituted for it.',
+            sourceRow: row.rowNumber,
+            sourceLine: row.lineNumber,
+            targetField: value.target,
+          });
+          continue;
+        }
+
+        candidates.push({
+          identity: `${key} ${value.target}`,
+          fact: {
+            subjectType: request.subject.subjectType,
+            subjectId: key,
+            field: value.target,
+            value: conversion.value,
+            classification: value.classification,
+            provenance: value.provenance,
+          },
+        });
+      }
+    }
+
+    let rowDuplicates = 0;
+
+    for (const candidate of candidates) {
+      const previous = committed.get(candidate.identity);
+      if (previous === undefined) continue;
+
+      if (previous.value === candidate.fact.value) {
+        // The same figure stated twice. Harmless, but reported: section 10.5 counts duplicate
+        // candidates so a district can tell whether their export repeats itself.
+        rowDuplicates += 1;
+        continue;
+      }
+
+      // Two different values for one fact. The field is withdrawn entirely — not resolved by
+      // keeping whichever arrived first, which is choosing, just choosing badly. With no fact
+      // at all the rule evaluates to INDETERMINATE for want of data (invariant 9) instead of
+      // returning a confident answer computed from an arbitrary half of the district's file.
+      disputed.add(candidate.identity);
+      rowIssues.push({
+        severity: 'ERROR',
+        code: 'CONFLICTING_VALUE',
+        message:
+          `row ${row.rowNumber} sets ${candidate.fact.field} for ${key} to a value that ` +
+          `disagrees with row ${previous.provenance.sourceRow}`,
+        resolution:
+          'Decide which row is correct in the source export and re-import. The platform will ' +
+          'not choose between them, so this figure is absent until you do.',
+        sourceRow: row.rowNumber,
+        sourceLine: row.lineNumber,
+        targetField: candidate.fact.field,
+      });
+    }
+
     issues.push(...rowIssues);
 
-    if (rowRejected || key === undefined) {
+    if (key === undefined || rowIssues.some(quarantines)) {
       quarantined += 1;
       continue;
     }
 
-    let conflicted = false;
-
-    for (const value of mapped.values) {
-      if (keyFieldSet.has(value.target)) continue;
-      const canonical = toCanonicalValue(value);
-      if (canonical === undefined) continue;
-
-      const identity = `${key} ${value.target}`;
-      const previous = seen.get(identity);
-
-      if (previous !== undefined) {
-        if (previous.value === canonical) {
-          // The same figure stated twice. Harmless, but reported: section 10.5 counts
-          // duplicate candidates so a district can tell whether their export repeats itself.
-          duplicateCandidates += 1;
-          continue;
-        }
-        // Two different values for one fact. Never resolved by picking one: the finding
-        // would be internally consistent and computed from an arbitrary half of the data.
-        conflicted = true;
-        issues.push({
-          severity: 'ERROR',
-          code: 'CONFLICTING_VALUE',
-          message:
-            `row ${row.rowNumber} sets ${value.target} for ${key} to a value that disagrees ` +
-            `with row ${previous.provenance.sourceRow}`,
-          resolution:
-            'Decide which row is correct in the source export and re-import. The platform ' +
-            'will not choose between them.',
-          sourceRow: row.rowNumber,
-          sourceLine: row.lineNumber,
-          targetField: value.target,
-        });
-        continue;
-      }
-
-      seen.set(identity, { value: canonical, provenance: value.provenance });
-      facts.push({
-        subjectType: request.subject.subjectType,
-        subjectId: key,
-        field: value.target,
-        value: canonical,
-        classification: value.classification,
-        provenance: value.provenance,
-      });
+    for (const candidate of candidates) {
+      if (!committed.has(candidate.identity)) committed.set(candidate.identity, candidate.fact);
     }
-
-    if (conflicted) quarantined += 1;
-    else accepted += 1;
+    duplicateCandidates += rowDuplicates;
+    accepted += 1;
   }
+
+  // Withdraw every disputed field, including the value committed by the row that arrived
+  // first. Done after the loop because the disagreement is only visible once both rows exist.
+  for (const identity of disputed) committed.delete(identity);
 
   // RECONCILIATION. Throws if the arithmetic does not balance.
   const reconciliation = reconcile({
@@ -264,7 +401,7 @@ export function runImport(request: ImportRequest): ImportOutcome {
     organizationId: request.organizationId,
     createdAt: request.createdAt,
     sourceFiles: [request.file],
-    facts,
+    facts: [...committed.values()],
   });
 
   return { kind: 'COMPLETED', importJobId: request.importJobId, issues, reconciliation, snapshot };

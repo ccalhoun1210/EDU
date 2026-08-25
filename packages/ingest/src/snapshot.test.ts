@@ -143,7 +143,10 @@ describe('computeSnapshotHash — stability', () => {
   });
 
   it('is the same for two independently constructed but identical fact sets', () => {
-    const rebuilt = FACTS.map((original) => ({ ...original, provenance: { ...original.provenance } }));
+    const rebuilt = FACTS.map((original) => ({
+      ...original,
+      provenance: { ...original.provenance },
+    }));
 
     expect(computeSnapshotHash(rebuilt, [FILE])).toBe(computeSnapshotHash(FACTS, [FILE]));
   });
@@ -228,16 +231,11 @@ describe('computeSnapshotHash — sensitivity', () => {
     expect(computeSnapshotHash(edited, [FILE])).not.toBe(baseline);
   });
 
-  // The raw source text and the physical line are provenance too — they are what a monitor is
-  // shown on the finding-detail screen — but they are excluded from the hashed projection, so
-  // a sealed snapshot can be edited to claim the district's cell said something it never said
-  // and `verifySnapshot` still returns true. Same hole for `provenance.sourceHash`, which can
-  // be desynced from the SourceFileRef it names. Correct behaviour: hash every provenance
-  // field that is displayed as evidence — sourceValues, sourceLine and sourceHash included.
-  it.todo('changes when the RAW source values recorded on a fact are edited');
-
-  it('does not currently change when sourceValues, sourceLine or sourceHash are edited', () => {
-    // Documents the hole above; delete this test when the todo above is implemented.
+  it('changes when the RAW source values recorded on a fact are edited', () => {
+    // The raw source text and the physical line are what a monitor is shown on the
+    // finding-detail screen, so they are evidence. Excluded from the hash, a sealed snapshot
+    // could be edited to claim a district's cell said something it never said, with
+    // `verifySnapshot` still returning true.
     const edited = [
       {
         ...LOCAL_ACTUAL,
@@ -251,7 +249,7 @@ describe('computeSnapshotHash — sensitivity', () => {
       STATE_ACTUAL,
     ];
 
-    expect(computeSnapshotHash(edited, [FILE])).toBe(baseline);
+    expect(computeSnapshotHash(edited, [FILE])).not.toBe(baseline);
   });
 
   it('ignores the importJobId, so re-importing identical bytes is the same snapshot', () => {
@@ -490,9 +488,7 @@ describe('projectFactBag', () => {
   });
 
   it('does not throw when the duplicate belongs to another subject', () => {
-    expect(() =>
-      projectFactBag(MULTI_SUBJECT, 'lea_fiscal_year', 'LEA-4412:2028'),
-    ).not.toThrow();
+    expect(() => projectFactBag(MULTI_SUBJECT, 'lea_fiscal_year', 'LEA-4412:2028')).not.toThrow();
   });
 
   it('is not confused by a field named like an Object.prototype member', () => {

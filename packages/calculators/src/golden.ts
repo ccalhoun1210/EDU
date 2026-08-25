@@ -31,6 +31,7 @@ import path from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { z } from 'zod';
 import { EVALUATION_STATUSES } from '@complianceos/domain';
+import type { CalculatorValue } from './types.js';
 
 /** Section 26.1's required case kinds. */
 export const CASE_INTENTS = [
@@ -57,7 +58,25 @@ export type CaseIntent = (typeof CASE_INTENTS)[number];
  */
 export const REQUIRED_INTENTS: readonly CaseIntent[] = ['pass', 'fail', 'boundary', 'missing-data'];
 
-const CaseValue: z.ZodType<unknown> = z.unknown();
+/**
+ * A value a case may supply or expect.
+ *
+ * Typed as `CalculatorValue` rather than `unknown` so the corpus cannot state an input a
+ * calculator could not actually be handed — a Date, a function, a fractional number written
+ * as YAML float. Money in a case is a quoted decimal string, and this is what makes YAML
+ * quietly turning `5250000.00` into a float a schema error rather than a silent precision
+ * loss in the specification itself.
+ */
+const CaseValue: z.ZodType<CalculatorValue> = z.lazy(() =>
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(CaseValue),
+    z.record(z.string(), CaseValue),
+  ]),
+);
 
 export const GoldenCaseSchema = z.object({
   case: z.string().min(1),

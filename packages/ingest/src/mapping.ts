@@ -16,7 +16,7 @@
 
 import { z } from 'zod';
 import { DATA_CLASSIFICATIONS, type DataClassification } from '@complianceos/domain';
-import { cellAt, type ParsedRow } from './csv.js';
+import { lookupCell, type ParsedRow } from './csv.js';
 import { applyTransforms, describeTransforms, type TransformStep } from './transform.js';
 import type { FactProvenance } from './provenance.js';
 import type { ValidationIssue } from './validate.js';
@@ -139,12 +139,20 @@ export function applyFieldMapping(
 ): { value: MappedValue; issues: readonly ValidationIssue[] } {
   const issues: ValidationIssue[] = [];
 
+  // Set when the value could not be read at all, so the required-value check below does not
+  // report the same absence a second time under a different code. One renamed column
+  // producing two entries in `missingRequiredFields` tells a district two fields are missing
+  // when one is — and the reconciliation summary is their only evidence of what the platform
+  // did with their file (spec 10.5).
+  let unreadable = false;
+
   const rawValues = mapping.sources.map((column) => {
-    const cell = cellAt(row, header, column);
-    if (cell === undefined) {
-      // The column named by the mapping is not in this file. Reported once per row rather
-      // than swallowed, because a renamed column in a district's export is the single most
-      // common cause of a silently empty compliance figure.
+    const lookup = lookupCell(row, header, column);
+
+    if (lookup.status === 'NO_SUCH_COLUMN') {
+      // A renamed column in a district's export is the single most common cause of a
+      // silently empty compliance figure, so this is reported rather than swallowed.
+      unreadable = true;
       issues.push({
         severity: mapping.required ? 'ERROR' : 'WARNING',
         code: 'MISSING_COLUMN',
@@ -159,7 +167,27 @@ export function applyFieldMapping(
       });
       return null;
     }
-    return cell;
+
+    if (lookup.status === 'ROW_TOO_SHORT') {
+      unreadable = true;
+      issues.push({
+        severity: mapping.required ? 'ERROR' : 'WARNING',
+        code: 'ROW_TOO_SHORT',
+        message:
+          `row ${row.rowNumber} has ${lookup.present} fields and stops before "${column}", ` +
+          `which the header places at ${lookup.declared} columns wide`,
+        resolution:
+          'The mapping is correct; the export is not. A row shorter than its header usually ' +
+          'means an unquoted delimiter or a truncated write. Fix the export and re-import.',
+        sourceRow: row.rowNumber,
+        sourceLine: row.lineNumber,
+        sourceColumn: column,
+        targetField: mapping.target,
+      });
+      return null;
+    }
+
+    return lookup.value;
   });
 
   const merged = combine(rawValues, mapping.merge ?? 'first', mapping.separator ?? ' ');
@@ -178,7 +206,7 @@ export function applyFieldMapping(
       sourceColumn: mapping.sources.join(', '),
       targetField: mapping.target,
     });
-  } else if (mapping.required && outcome.value === null) {
+  } else if (mapping.required && outcome.value === null && !unreadable) {
     issues.push({
       severity: 'ERROR',
       code: 'MISSING_REQUIRED_VALUE',

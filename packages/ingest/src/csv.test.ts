@@ -150,14 +150,19 @@ describe('line endings', () => {
     expect(parsed.recordsRead).toBe(2);
   });
 
-  // A lone CR is a record terminator outside quotes (see the module comment), so in a
-  // classic-Mac file a CR inside a quoted field is a physical line break too. The line
-  // counter is only advanced for '\n' while inQuotes, so every record after a quoted
-  // embedded CR reports a line number that is short by one per embedded CR. Correct
-  // behaviour: while inQuotes, a '\r' not followed by '\n' advances the line counter, the
-  // same way '\n' does — otherwise the §10.6 promise that a cell keeps its physical position
-  // fails on exactly the files the CR branch exists to support.
-  it.todo('counts a CR inside a quoted field as a physical line in a lone-CR file');
+  it('counts a CR inside a quoted field as a physical line in a lone-CR file', () => {
+    // A lone CR terminates a record outside quotes (classic-Mac district exports), so inside
+    // one it is a physical line break too. Not counting it left every record after a quoted
+    // embedded CR reporting a line number short by one — breaking the section 10.6 promise
+    // that a cell keeps its position in the file the district uploaded.
+    const parsed = parseCsv('a,b\r"x\ry",2\rnext,3\rlast,4\r');
+
+    expect(parsed.rows.map((row) => [row.rowNumber, row.lineNumber])).toEqual([
+      [1, 2],
+      [2, 4],
+      [3, 5],
+    ]);
+  });
 
   it('does not split a quoted field on an embedded CRLF', () => {
     const parsed = parseCsv('code,note\r\n100,"line one\r\nline two"\r\n200,plain\r\n');

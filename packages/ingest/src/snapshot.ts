@@ -77,10 +77,24 @@ export function computeSnapshotHash(
       subjectId: fact.subjectId,
       field: fact.field,
       value: fact.value,
+      // Every provenance field, not a selection of them.
+      //
+      // The raw source text and the physical line are what a monitor is shown on the
+      // finding-detail screen, so they are evidence. Leaving them out of the hash let a
+      // sealed snapshot be edited to claim a district's cell said something it never said,
+      // with `verifySnapshot` still returning true — which is precisely the tampering the
+      // hash exists to detect. `sourceHash` is included for the same reason: it could
+      // otherwise be desynced from the source file it names.
+      // `importJobId` is deliberately absent: it identifies the job, not the district's data.
+      // Hashing it would make re-importing identical bytes a different snapshot, and every
+      // run comparison would then report change where nothing changed.
       provenance: {
         sourceFileId: fact.provenance.sourceFileId,
+        sourceHash: fact.provenance.sourceHash,
         sourceRow: fact.provenance.sourceRow,
+        sourceLine: fact.provenance.sourceLine,
         sourceFields: fact.provenance.sourceFields,
+        sourceValues: fact.provenance.sourceValues,
         mappingTemplateId: fact.provenance.mappingTemplateId,
         mappingVersion: fact.provenance.mappingVersion,
         transformation: fact.provenance.transformation,

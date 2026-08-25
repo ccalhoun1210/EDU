@@ -375,13 +375,20 @@ describe('mapEnum', () => {
     expect(one('', step).issue?.code).toBe('UNMAPPED_VALUE');
   });
 
-  // `step.values[text]` reaches Object.prototype, so a cell whose text is an inherited member
-  // name — "constructor", "toString", "valueOf", "hasOwnProperty" — finds a function instead
-  // of undefined, skips the UNMAPPED_VALUE branch, and emits a non-string as the mapped
-  // value. Correct behaviour: only own enumerable keys of `values` count as mappings, so
-  // every one of those inputs is an UNMAPPED_VALUE issue. `crosswalk` has the same defect on
-  // `step.codes`, where the pass-through branch is skipped too.
-  it.todo('treats an inherited Object.prototype member name as unmapped, not as a mapping');
+  it('treats an inherited Object.prototype member name as unmapped, not as a mapping', () => {
+    // A bare index read finds a function on Object.prototype, returns it as the mapped value
+    // with no issue, and sends a non-string into the provenance record — the wrong-denominator
+    // failure this branch exists to prevent, with a type hole attached.
+    for (const name of ['toString', 'constructor', 'valueOf', 'hasOwnProperty']) {
+      const mapped = applyTransforms(name, [{ transform: 'mapEnum', values: { A: 'X' } }]);
+      expect(mapped.value).toBeNull();
+      expect(mapped.issue?.code).toBe('UNMAPPED_VALUE');
+
+      const crossed = applyTransforms(name, [{ transform: 'crosswalk', codes: { A: 'X' } }]);
+      expect(crossed.value).toBeNull();
+      expect(crossed.issue?.code).toBe('UNKNOWN_CODE');
+    }
+  });
 });
 
 describe('crosswalk', () => {
@@ -489,12 +496,15 @@ describe('string shaping', () => {
     expect(one('1250.50', { transform: 'stripSuffix', suffix: '.00' }).value).toBe('1250.50');
   });
 
-  // `text.slice(0, -step.suffix.length)` is `slice(0, -0)` when the suffix is the empty
-  // string, and `-0` is `0`, so the whole value is discarded: an administrator who leaves the
-  // suffix field blank silently empties the column, and §10.5's "nothing is silently
-  // discarded" fails without an issue being raised. Correct behaviour: an empty suffix
-  // strips nothing, leaving the value unchanged.
-  it.todo('leaves the value unchanged when stripSuffix is given an empty suffix');
+  it('leaves the value unchanged when stripSuffix is given an empty suffix', () => {
+    // `-0 === 0`, so `slice(0, -0)` is `slice(0, 0)` and returns the empty string. An
+    // administrator leaving the suffix box blank in the mapping UI would silently empty the
+    // whole column, with no issue raised.
+    const outcome = applyTransforms('1250.00', [{ transform: 'stripSuffix', suffix: '' }]);
+
+    expect(outcome.value).toBe('1250.00');
+    expect(outcome.issue).toBeUndefined();
+  });
 
   it('pads to a fixed width without truncating a value that is already long enough', () => {
     expect(one('42', { transform: 'padStart', length: 5, fill: '0' }).value).toBe('00042');
@@ -531,9 +541,7 @@ describe('null handling', () => {
     const outcome = one(null, { transform: 'defaultValue', value: 'UNKNOWN' });
 
     expect(outcome.value).toBe('UNKNOWN');
-    expect(outcome.applied).toEqual([
-      { transform: 'defaultValue', from: null, to: 'UNKNOWN' },
-    ]);
+    expect(outcome.applied).toEqual([{ transform: 'defaultValue', from: null, to: 'UNKNOWN' }]);
   });
 
   it('fills a blank or whitespace-only cell with defaultValue but leaves a real value', () => {
@@ -717,22 +725,9 @@ describe('the closed set of transforms', () => {
   it('never throws, whatever the input, because a failure is a value not an exception', () => {
     for (const name of TRANSFORM_NAMES) {
       const step = SAMPLES[name];
-      for (const input of [null, '', '   ', 'abc', '1,2,3', '(())', ' ']) {
+      for (const input of [null, '', '   ', 'abc', '1,2,3', '(())', '\u0000']) {
         expect(() => applyTransforms(input, [step])).not.toThrow();
       }
     }
-  });
-});
-
-describe('scratch', () => {
-  it('scratch', () => {
-    const proto = one('toString', { transform: 'mapEnum', values: { A: 'X' } });
-    console.log('mapEnum toString ->', typeof proto.value, JSON.stringify(String(proto.value)).slice(0, 60), 'issue:', proto.issue?.code);
-    const ctor = one('constructor', { transform: 'crosswalk', codes: { A: 'X' }, passThroughUnknown: true });
-    console.log('crosswalk constructor ->', typeof ctor.value, 'issue:', ctor.issue?.code);
-    console.log('stripSuffix empty ->', JSON.stringify(one('1250.00', { transform: 'stripSuffix', suffix: '' }).value));
-    console.log('stripPrefix empty ->', JSON.stringify(one('1250.00', { transform: 'stripPrefix', prefix: '' }).value));
-    console.log('-$1,250.00 ->', JSON.stringify(one('-$1,250.00', currency).value), one('-$1,250.00', currency).issue?.code);
-    console.log('$-1250 ->', JSON.stringify(one('$-1250', currency).value));
   });
 });

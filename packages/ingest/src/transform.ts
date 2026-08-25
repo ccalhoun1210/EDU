@@ -260,6 +260,11 @@ function applyStep(
     case 'stripPrefix':
       return { value: text.startsWith(step.prefix) ? text.slice(step.prefix.length) : text };
     case 'stripSuffix':
+      // The empty-suffix guard is not pedantry: `-0 === 0`, so `slice(0, -0)` is `slice(0, 0)`
+      // and returns the empty string. An administrator who leaves the suffix box blank in the
+      // mapping UI would silently empty the entire column, with no issue raised — spec 10.5's
+      // "nothing is silently discarded" failing in the quietest possible way.
+      if (step.suffix === '') return { value: text };
       return { value: text.endsWith(step.suffix) ? text.slice(0, -step.suffix.length) : text };
     case 'padStart':
       return { value: text.padStart(step.length, step.fill) };
@@ -313,7 +318,13 @@ function applyStep(
     }
 
     case 'mapEnum': {
-      const mapped = step.values[text.trim()];
+      // `Object.hasOwn` rather than a bare index read. A cell containing `toString`,
+      // `constructor` or `valueOf` would otherwise find a function on `Object.prototype`,
+      // return it as the mapped value with no UNMAPPED_VALUE issue, and send a non-string
+      // into the provenance record — the "wrong denominator" this branch exists to prevent,
+      // with a type hole attached.
+      const key = text.trim();
+      const mapped = Object.hasOwn(step.values, key) ? step.values[key] : undefined;
       if (mapped === undefined) {
         return {
           value: null,
@@ -329,7 +340,8 @@ function applyStep(
     }
 
     case 'crosswalk': {
-      const mapped = step.codes[text.trim()];
+      const key = text.trim();
+      const mapped = Object.hasOwn(step.codes, key) ? step.codes[key] : undefined;
       if (mapped !== undefined) return { value: mapped };
       if (step.passThroughUnknown === true) return { value: text };
       return {

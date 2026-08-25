@@ -126,7 +126,13 @@ function splitRecords(
           inQuotes = false;
         }
       } else {
+        // A lone CR terminates a record outside quotes, so in a classic-Mac file it is a
+        // physical line break inside one too. Counting only '\n' here leaves every record
+        // after a quoted embedded CR reporting a line number short by one — and the section
+        // 10.6 promise that a cell keeps its physical position would fail on exactly the
+        // files the lone-CR branch exists to support.
         if (char === '\n') line += 1;
+        else if (char === '\r' && text[index + 1] !== '\n') line += 1;
         cell += char;
       }
       continue;
@@ -288,13 +294,36 @@ export function parseCsv(text: string, options: CsvParseOptions = {}): ParsedCsv
   return { header, rows, issues, recordsRead: records.length };
 }
 
-/** Look a cell up by column name. Returns undefined when the row is short. */
+/**
+ * The three ways looking a cell up can turn out.
+ *
+ * "The file has no column CHILD_COUNT" and "row 412 stops before it reaches CHILD_COUNT" are
+ * different problems with different remedies — the first sends a business officer to fix the
+ * mapping, the second to fix the export. Collapsing them into one absent value sends half of
+ * them to edit a template that was correct all along.
+ */
+export type CellLookup =
+  | { readonly status: 'FOUND'; readonly value: string }
+  | { readonly status: 'NO_SUCH_COLUMN' }
+  | { readonly status: 'ROW_TOO_SHORT'; readonly declared: number; readonly present: number };
+
+export function lookupCell(row: ParsedRow, header: readonly string[], column: string): CellLookup {
+  const index = header.indexOf(column);
+  if (index < 0) return { status: 'NO_SUCH_COLUMN' };
+
+  const value = row.cells[index];
+  if (value === undefined) {
+    return { status: 'ROW_TOO_SHORT', declared: header.length, present: row.cells.length };
+  }
+  return { status: 'FOUND', value };
+}
+
+/** Look a cell up by column name. Returns undefined when the column or the cell is absent. */
 export function cellAt(
   row: ParsedRow,
   header: readonly string[],
   column: string,
 ): string | undefined {
-  const index = header.indexOf(column);
-  if (index < 0) return undefined;
-  return row.cells[index];
+  const lookup = lookupCell(row, header, column);
+  return lookup.status === 'FOUND' ? lookup.value : undefined;
 }
