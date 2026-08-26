@@ -45,7 +45,10 @@ const SETTLED: ReadonlySet<EvaluationStatus> = new Set<EvaluationStatus>([
  * be told that is deliberate.
  */
 export function rollUpSentence(
-  results: readonly EvaluationResult[],
+  // Structural rather than `EvaluationResult`: the same sentence has to be written about a
+  // run read back out of the database, where all that survives of a result is its status.
+  // Widening the parameter is how one wording serves both, instead of two that drift.
+  results: readonly { readonly status: EvaluationStatus }[],
   status: EvaluationStatus,
 ): string {
   const counts = new Map<EvaluationStatus, number>();
@@ -95,7 +98,9 @@ export function outstanding(result: EvaluationResult): string | undefined {
  * Stable across runs on purpose: a monitor reading two assessments side by side compares like
  * with like, and an order that depended on how the packs happened to resolve would not.
  */
-export function byAttention(results: readonly EvaluationResult[]): readonly EvaluationResult[] {
+export function byAttention<
+  T extends { readonly status: EvaluationStatus; readonly ruleId: string },
+>(results: readonly T[]): readonly T[] {
   return [...results].sort((left, right) => {
     const leftSettled = SETTLED.has(left.status) ? 1 : 0;
     const rightSettled = SETTLED.has(right.status) ? 1 : 0;

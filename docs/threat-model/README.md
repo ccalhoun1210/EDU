@@ -63,8 +63,19 @@ grants or checks support access yet, because there is no vendor console.
 the parser (`packages/ingest/src/pipeline.ts`). The scan is a precondition the type system
 enforces rather than a step in a diagram nothing checks.
 
-**Gap.** No scanner is wired up. The gate is real; the thing behind it is not. A caller must
-currently state what the scan concluded, which is honest but is not protection.
+A deployment with no scanner cannot honestly claim `CLEAN`, and claiming `PENDING` would
+promise a scan nobody will run. `NOT_SCANNED` is the terminal status for that case
+(`IMPORT_SCAN_STATUSES`), and it does not pass the gate on its own: `runImport` refuses it
+unless the caller sets `acknowledgeUnscanned`, and the web upload path sets that only when
+the deployment has set `UPLOAD_ACCEPT_UNSCANNED=true`. An import admitted that way carries a
+`FILE_NOT_SCANNED` warning, and the verdict is stored on `import_files` — status, scanner and
+time together, by CHECK — so a monitor asking eighteen months later whether this general
+ledger was ever scanned gets an answer instead of a silence.
+
+**Gap.** No scanner is wired up. The gate is real; the thing behind it is not. What has
+changed is that the absence is now recorded rather than papered over, and that a deployment
+has to write down that it is accepting the risk. That is honesty, not protection: a
+deployment taking uploads from outside the operator's own organization needs a scanner.
 
 ## 4. Import poisoning
 

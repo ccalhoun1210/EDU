@@ -40,7 +40,7 @@ import {
   type DataClassification,
   type FactOrigin,
 } from '@complianceos/domain';
-import type { CanonicalFact, DeterminationProvenance } from '@complianceos/ingest';
+import type { CanonicalFact, DeterminationProvenance, ValueType } from '@complianceos/ingest';
 import { isDeterminationProvenance } from '@complianceos/ingest';
 import type { EvaluationResult } from '@complianceos/rules-engine';
 
@@ -75,6 +75,14 @@ export interface CarryForwardRequest {
   readonly subjectType: string;
   readonly subjectId: string;
   readonly classification: DataClassification;
+  /**
+   * The kind of value being carried forward.
+   *
+   * Stated by the caller rather than inferred from the prior result, whose outputs are typed
+   * for the calculator that produced them and not for storage. A status is `text`; a dollar
+   * figure carried forward is `money` and has to stay money all the way into NUMERIC.
+   */
+  readonly valueType: ValueType;
   /** Defaults to the platform's own determination, which is what a prior run is. */
   readonly origin?: FactOrigin;
 }
@@ -147,6 +155,7 @@ export function carryForward(request: CarryForwardRequest): CanonicalFact {
     subjectId: request.subjectId,
     field,
     value,
+    valueType: request.valueType,
     classification: request.classification,
     origin,
     provenance,

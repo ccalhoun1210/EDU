@@ -43,6 +43,7 @@ import {
   EVIDENCE_SOURCES,
   FINDING_DISPOSITION_KINDS,
   FINDING_SUBJECT_TYPES,
+  IMPORT_SCAN_STATUSES,
   MALWARE_SCAN_STATUSES,
   ORGANIZATION_TYPES,
   REMEDIATION_SCOPES,
@@ -150,6 +151,8 @@ interface Column {
   readonly name: string;
   readonly type: string;
   readonly raw: string;
+  /** The migration that added it, when it was not in the CREATE TABLE. */
+  readonly addedBy?: string;
 }
 
 interface ForeignKey {
@@ -162,7 +165,7 @@ interface ForeignKey {
 interface Table {
   readonly name: string;
   readonly file: string;
-  readonly columns: readonly Column[];
+  readonly columns: Column[];
   readonly primaryKey: readonly string[] | undefined;
   readonly foreignKeys: readonly ForeignKey[];
   readonly raw: string;
@@ -284,6 +287,35 @@ const sources = files.map((file) => ({
 
 const tables: Table[] = sources.flatMap(({ file, sql }) => parseTables(sql, file));
 const byName = new Map(tables.map((table) => [table.name, table]));
+
+// A column added by a later migration is part of the table, and every guard below that reads
+// a column has to see it. Without this the corpus view froze at CREATE TABLE: an ALTER that
+// added a column with a CHECK — exactly what an expand/contract migration does — was
+// invisible, so the vocabulary guard silently stopped covering it. Silent loss of coverage in
+// the test whose whole job is to catch drift is the worst kind.
+for (const { file, sql } of sources) {
+  for (const match of sql.matchAll(/ALTER\s+TABLE\s+([a-z_][a-z0-9_]*)\s+([\s\S]*?);/gi)) {
+    const [, tableName, body] = match;
+    if (tableName === undefined || body === undefined) continue;
+    const table = byName.get(tableName);
+    if (table === undefined) continue;
+
+    for (const item of splitTopLevel(body)) {
+      const added = /^ADD\s+(?:COLUMN\s+)?(?!CONSTRAINT\b)([a-z_][a-z0-9_]*)\s+([\s\S]+)$/i.exec(
+        item,
+      );
+      if (added?.[1] === undefined || added[2] === undefined) continue;
+
+      const type = (TYPE_AT_START.exec(added[2])?.[1] ?? '').replace(/\s+/g, ' ').toLowerCase();
+      table.columns.push({
+        name: added[1],
+        type,
+        raw: `${added[1]} ${added[2]}`,
+        addedBy: file,
+      });
+    }
+  }
+}
 
 const alterForeignKeys: ForeignKey[] = [];
 const rlsEnabled = new Set<string>();
@@ -569,6 +601,33 @@ describe('privileges granted to the application role', () => {
       expect(isTenantOwned(byName.get(table)), `${table} should be global content`).toBe(false);
     }
   });
+
+  it('keeps the identity bindings global, readable, and not writable by the app', () => {
+    // This table is the one deliberate exception to "a row that names a tenant is tenant
+    // data", and it is asserted rather than merely permitted. A sign-in must read it before
+    // tenant context exists, so it cannot be behind the GUC — which makes it worth pinning
+    // that it is also the narrowest thing it can be.
+    const table = 'identity_organization_bindings';
+    const declared = byName.get(table);
+    expect(declared, `${table} should be declared`).toBeDefined();
+
+    // Not tenant-owned, by construction: the column is `bound_tenant_id`, because a row here
+    // points at a district rather than belonging to one. If someone renames it to
+    // `tenant_id`, the isolation guards above start applying and will fail — which is the
+    // correct outcome, since a table called that must be isolated.
+    expect(isTenantOwned(declared), `${table} names a tenant but does not belong to one`).toBe(
+      false,
+    );
+    expect(
+      declared?.columns.some((column) => column.name === 'bound_tenant_id'),
+      `${table} should carry bound_tenant_id`,
+    ).toBe(true);
+
+    // Read only. Onboarding a district is an administrative act performed by the owner; if
+    // the application could write this table, a bug in a tenant-facing path could rebind a
+    // federated connection to a different district.
+    expect([...privilegesFor(table)], table).toEqual(['SELECT']);
+  });
 });
 
 describe('money and dates (invariants 5 and 6)', () => {
@@ -749,6 +808,7 @@ describe('the schema vocabulary matches @complianceos/domain', () => {
     ['evidence_items', 'document_class', EVIDENCE_DOCUMENT_CLASSES],
     ['evidence_items', 'retention_class', RETENTION_CLASSES],
     ['evidence_items', 'malware_scan_status', MALWARE_SCAN_STATUSES],
+    ['import_files', 'scan_status', IMPORT_SCAN_STATUSES],
     ['evidence_items', 'text_extraction_status', TEXT_EXTRACTION_STATUSES],
     ['evidence_items', 'period_kind', EVIDENCE_PERIOD_KINDS],
     ['corrective_actions', 'state', CORRECTIVE_ACTION_STATES],

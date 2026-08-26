@@ -428,6 +428,8 @@ const CARRIED = {
   subjectType: 'lea_fiscal_year',
   subjectId: 'LEA-0417:2026',
   classification: 'CONFIDENTIAL',
+  // Every carried determination here is an enum or a list, not a figure.
+  valueType: 'text',
   result: NORTHFIELD_PRIOR_RESULT,
 } as const;
 

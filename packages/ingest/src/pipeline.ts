@@ -21,7 +21,13 @@
  * Everything from PARSE to DATA SNAPSHOT is here and is real.
  */
 
-import { isAmountString, isCalendarDate, type CanonicalValue } from '@complianceos/domain';
+import {
+  IMPORT_SCAN_STATUSES,
+  isAmountString,
+  isCalendarDate,
+  type CanonicalValue,
+  type ImportScanStatus,
+} from '@complianceos/domain';
 import { parseCsv, type CsvParseOptions } from './csv.js';
 import {
   applyMapping,
@@ -35,11 +41,12 @@ import { reconcile, type ReconciliationSummary } from './reconcile.js';
 import { buildSnapshot, type CanonicalFact, type DataSnapshot } from './snapshot.js';
 import { quarantines, type ValidationIssue } from './validate.js';
 
-export const SCAN_STATUSES = ['CLEAN', 'INFECTED', 'FAILED', 'PENDING'] as const;
-export type ScanStatus = (typeof SCAN_STATUSES)[number];
+export const SCAN_STATUSES = IMPORT_SCAN_STATUSES;
+export type ScanStatus = ImportScanStatus;
 
 export interface ScanResult {
   readonly status: ScanStatus;
+  /** What did the scanning, or `none-configured` where nothing did. Recorded, not inferred. */
   readonly scanner: string;
   readonly scannedAt: string;
 }
@@ -71,6 +78,23 @@ export interface ImportRequest {
   readonly template: MappingTemplate;
   readonly subject: SubjectBinding;
   readonly parseOptions?: CsvParseOptions;
+  /**
+   * Proceed with a file that was never scanned.
+   *
+   * Absent or false, a `NOT_SCANNED` file is refused exactly like an infected one — the
+   * default is the safe one, and a caller that simply forgot to configure a scanner gets a
+   * refusal rather than a silent pass.
+   *
+   * Set true, the import proceeds and carries a WARNING saying so, which reaches the
+   * reconciliation summary and every screen that renders the import. The flag is named for
+   * what it acknowledges rather than what it enables, for the same reason
+   * `DemoIdentityProvider` takes `acknowledgeNoAuthentication`: an operator disabling a
+   * control should have to write down that that is what they are doing.
+   *
+   * It never applies to INFECTED, FAILED or PENDING. Those are verdicts, and one of them is
+   * "we have not finished looking" — proceeding past any of them is not a policy choice.
+   */
+  readonly acknowledgeUnscanned?: boolean;
 }
 
 export const IMPORT_OUTCOMES = ['REJECTED_AT_SCAN', 'PARSE_FAILED', 'COMPLETED'] as const;
@@ -82,6 +106,20 @@ export interface ImportOutcome {
   readonly issues: readonly ValidationIssue[];
   readonly reconciliation?: ReconciliationSummary;
   readonly snapshot?: DataSnapshot;
+  /**
+   * The data rows exactly as this run parsed them, header-keyed, in file order.
+   *
+   * Present whenever parsing produced rows — including a run that then failed, because the
+   * rows are what the issues are *about*. A caller storing the import writes these to
+   * `raw_records`, and every fact's `sourceRow` is a 1-based index into this array.
+   *
+   * Exposed rather than left for the caller to re-parse. A second call to `parseCsv` would
+   * be a second implementation of "which row is row 4", and the day it disagreed — a quoted
+   * newline, a different option — provenance would point at the wrong row while looking
+   * perfectly intact. That is the failure invariant 3 exists to prevent, so the pipeline
+   * hands back what it actually read.
+   */
+  readonly rows?: readonly Readonly<Record<string, string>>[];
 }
 
 /**
@@ -186,10 +224,33 @@ interface FactCandidate {
   readonly fact: FileRowFact;
 }
 
+/**
+ * The parsed rows as header-keyed records.
+ *
+ * A ragged row is kept, not dropped: it is already reported as an ERROR and quarantined, and
+ * a stored import whose `raw_records` silently omitted it would misnumber every later row.
+ * Cells beyond the header are keyed by their 1-based position so nothing read is discarded.
+ */
+function headerKeyed(
+  header: readonly string[],
+  rows: readonly { readonly cells: readonly string[] }[],
+): readonly Readonly<Record<string, string>>[] {
+  return rows.map((row) => {
+    const record: Record<string, string> = {};
+    for (const [index, cell] of row.cells.entries()) {
+      record[header[index] ?? `column_${String(index + 1)}`] = cell;
+    }
+    return record;
+  });
+}
+
 export function runImport(request: ImportRequest): ImportOutcome {
   // MALWARE SCAN gate. A file that has not been cleared never reaches the parser, and the
   // refusal names the status rather than reporting a generic failure.
-  if (request.scan.status !== 'CLEAN') {
+  const unscannedButAccepted =
+    request.scan.status === 'NOT_SCANNED' && request.acknowledgeUnscanned === true;
+
+  if (request.scan.status !== 'CLEAN' && !unscannedButAccepted) {
     return {
       kind: 'REJECTED_AT_SCAN',
       importJobId: request.importJobId,
@@ -201,7 +262,10 @@ export function runImport(request: ImportRequest): ImportOutcome {
           resolution:
             request.scan.status === 'PENDING'
               ? 'The scan has not finished. Retry the import once it has.'
-              : 'The file cannot be imported. Upload a clean export.',
+              : request.scan.status === 'NOT_SCANNED'
+                ? 'No malware scanner is configured for this deployment. Configure one, or ' +
+                  'accept unscanned uploads explicitly.'
+                : 'The file cannot be imported. Upload a clean export.',
         },
       ],
     };
@@ -211,6 +275,22 @@ export function runImport(request: ImportRequest): ImportOutcome {
   const parsed = parseCsv(request.content, request.parseOptions);
 
   const issues: ValidationIssue[] = [];
+
+  if (unscannedButAccepted) {
+    // Raised here rather than left to the caller, so that a deployment which accepted the
+    // risk cannot then render an import that looks like every other one. Every surface
+    // showing this import shows this line.
+    issues.push({
+      severity: 'WARNING',
+      code: 'FILE_NOT_SCANNED',
+      message:
+        `${request.file.originalFilename} was accepted without a malware scan, because this ` +
+        'deployment has no scanner configured',
+      resolution:
+        'Configure a scanner before this deployment accepts uploads from outside your ' +
+        'organization. See the threat model, "Malicious file".',
+    });
+  }
   // Parse problems that name a row are held back and merged into that row's own issue list,
   // so they reach the quarantine decision. Pushing them straight onto the outcome meant a
   // ragged row could be reported as an ERROR and then accepted anyway — the summary condemning
@@ -260,7 +340,12 @@ export function runImport(request: ImportRequest): ImportOutcome {
           'then upload it again.',
       });
     }
-    return { kind: 'PARSE_FAILED', importJobId: request.importJobId, issues };
+    return {
+      kind: 'PARSE_FAILED',
+      importJobId: request.importJobId,
+      issues,
+      rows: headerKeyed(parsed.header, parsed.rows),
+    };
   }
 
   const context: MappingContext = {
@@ -336,6 +421,7 @@ export function runImport(request: ImportRequest): ImportOutcome {
             subjectId: key,
             field: value.target,
             value: conversion.value,
+            valueType: value.valueType,
             classification: value.classification,
             // Everything this pipeline produces came out of a file a district uploaded. It is
             // not a parameter: an import cannot elect to speak with the platform's authority,
@@ -419,5 +505,12 @@ export function runImport(request: ImportRequest): ImportOutcome {
     facts: [...committed.values()],
   });
 
-  return { kind: 'COMPLETED', importJobId: request.importJobId, issues, reconciliation, snapshot };
+  return {
+    kind: 'COMPLETED',
+    importJobId: request.importJobId,
+    issues,
+    reconciliation,
+    snapshot,
+    rows: headerKeyed(parsed.header, parsed.rows),
+  };
 }

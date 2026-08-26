@@ -48,6 +48,7 @@ const SUBJECT = {
   subjectType: 'lea_fiscal_year',
   subjectId: 'LEA-1:2026',
   classification: 'CONFIDENTIAL',
+  valueType: 'text',
 } as const;
 
 describe('carryForward', () => {

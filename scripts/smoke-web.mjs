@@ -34,6 +34,9 @@ const ROUTES = [
       'PLATFORM_DETERMINATION',
       // The run is advisory and the page says so.
       'Not a determination',
+      // Signed out, so the worked example says that rather than claiming the deployment
+      // has no authentication at all — which stopped being true when identity landed.
+      'because nobody is signed in',
     ],
   },
   {
@@ -73,6 +76,18 @@ const ROUTES = [
     ],
   },
   { path: '/registry', status: 200, contains: ['Rule registry', 'IDEA-MOE-COMPLIANCE-001'] },
+  {
+    // The smoke build has no DATABASE_URL, so this is the unconnected branch. It must say so
+    // rather than rendering a form that posts nowhere — and it must NOT offer a roster,
+    // because a sign-in list on a build with no database would mean the config seam leaked.
+    path: '/sign-in',
+    status: 200,
+    // The page renders the configuration's own reason rather than fixed prose, because
+    // there is more than one way to be unconnected. This build has no DATABASE_URL, so the
+    // reason must name that — and must not be the one about a missing SESSION_SECRET, which
+    // would send a deploying engineer to fix something that was never broken.
+    contains: ['Sign-in is not available on this deployment', 'no DATABASE_URL'],
+  },
   { path: '/assessment/finding/NOT-A-RULE', status: 404, contains: ['No such page'] },
   // The marketing site now owns the root. Both surfaces are smoked, because a route group
   // split is exactly the change that leaves one of them rendering into the void.

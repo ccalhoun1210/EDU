@@ -41,8 +41,22 @@ import type { Client as PgClient } from 'pg';
 
 const { Client } = pg;
 
-/** The migrations directory, resolved relative to this module in both src and dist. */
-export const MIGRATIONS_DIR = path.resolve(import.meta.dirname, '../migrations');
+/**
+ * The migrations directory, resolved relative to this module in both src and dist.
+ *
+ * A function rather than a constant, and that is not a style choice. As a constant it ran at
+ * module load, which meant the resolution happened wherever this module was *imported* —
+ * including inside a webpack bundle, where `import.meta.dirname` is rewritten to `undefined`
+ * and `path.resolve` throws before a single line of application code runs. The web app
+ * imports `@complianceos/db` for its client and has no business running migrations; it
+ * should not have to care that the migration runner is in the same package.
+ *
+ * Deferring the resolution to the first caller keeps the failure where it belongs: in a
+ * process that actually asked to read migrations.
+ */
+export function migrationsDir(): string {
+  return path.resolve(import.meta.dirname, '../migrations');
+}
 
 /** `0003_audit_log.sql` — a four-digit version, an underscore, a lower_snake name. */
 const MIGRATION_FILE = /^(\d{4})_([a-z0-9_]+)\.sql$/;
@@ -106,8 +120,9 @@ export function checksumOf(sql: string): string {
  * they are tolerated is that the two databases end up with different histories that both
  * look complete.
  */
-export async function readMigrations(directory: string = MIGRATIONS_DIR): Promise<Migration[]> {
-  const entries = await readdir(directory);
+export async function readMigrations(directory?: string): Promise<Migration[]> {
+  const root = directory ?? migrationsDir();
+  const entries = await readdir(root);
   const migrations: Migration[] = [];
 
   for (const filename of entries.sort()) {
@@ -123,7 +138,7 @@ export async function readMigrations(directory: string = MIGRATIONS_DIR): Promis
     if (version === undefined || name === undefined) {
       throw new MigrationError(`${filename}: could not read the version and name`);
     }
-    const sql = await readFile(path.join(directory, filename), 'utf8');
+    const sql = await readFile(path.join(root, filename), 'utf8');
     migrations.push({ version, name, filename, sql, checksum: checksumOf(sql) });
   }
 
@@ -154,7 +169,7 @@ export async function migrate(options: MigrateOptions): Promise<MigrateResult> {
     throw new MigrationError(`Not a valid schema name: ${schema}`);
   }
 
-  const migrations = await readMigrations(options.directory ?? MIGRATIONS_DIR);
+  const migrations = await readMigrations(options.directory);
   const client: PgClient = new Client({ connectionString: options.connectionString });
   await client.connect();
 

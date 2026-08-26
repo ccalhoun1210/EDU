@@ -19,14 +19,18 @@ export default tseslint.config(
      *
      * TypeScript files get their globals from `lib`, so `no-undef` is off for them; a plain
      * `.mjs` has no such source of truth and every Node global reads as undefined. Listed by
-     * name rather than pulled from a `globals` package: five names is not worth a dependency,
+     * name rather than pulled from a `globals` package: a short list is not worth a dependency,
      * and an explicit list makes it visible when a script starts reaching for more.
      */
     files: ['scripts/**/*.mjs'],
     languageOptions: {
       globals: {
         AbortSignal: 'readonly',
+        Buffer: 'readonly',
+        File: 'readonly',
+        FormData: 'readonly',
         URL: 'readonly',
+        URLSearchParams: 'readonly',
         console: 'readonly',
         fetch: 'readonly',
         process: 'readonly',

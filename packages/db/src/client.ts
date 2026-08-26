@@ -25,8 +25,26 @@
  * completely different backend than the query that follows it.
  *
  * Hence: `withTenant` opens a transaction, sets the GUC inside it, and every query the
- * callback makes runs in that transaction. There is no supported way to reach the database
- * through this module without tenant context, which is the point.
+ * callback makes runs in that transaction.
+ *
+ * ## The one read that cannot have tenant context
+ *
+ * `withTenant` was for a long time the only way in, and that was the point. Signing in broke
+ * it: resolving "which tenant does this federated organization belong to" has to happen
+ * before tenant context exists, and `tenants` is behind a policy keyed on exactly the
+ * context the lookup is trying to establish.
+ *
+ * `readGlobal` is that exception, and it is narrow in ways that are enforced rather than
+ * promised. It opens a READ ONLY transaction, so nothing reached through it can write, at
+ * the database's insistence rather than the caller's discipline. And it sets no GUC, which
+ * means `current_tenant_id()` is NULL and every RLS policy in this schema — all of them
+ * spelled `tenant_id = current_tenant_id()` — matches no row at all. A query that reaches
+ * for tenant data through it returns nothing; the isolation is enforced by the policies, not
+ * by the shape of this API.
+ *
+ * So it is safe for the global tables that hold platform configuration —
+ * `identity_organization_bindings`, the rule packs — and useless for anything else, which is
+ * the property that makes it safe to have.
  *
  * ## Why the tenant id is a bound parameter
  *
@@ -86,6 +104,19 @@ export class TenantContextError extends Error {
  */
 export interface TenantConnection {
   readonly tenantId: string;
+  query<R extends QueryResultRow = QueryResultRow>(
+    text: string,
+    values?: readonly unknown[],
+  ): Promise<QueryResult<R>>;
+}
+
+/**
+ * A connection with NO tenant context, for reads of global tables.
+ *
+ * Carries no `tenantId`, unlike {@link TenantConnection}, because there isn't one — and a
+ * caller that finds itself wanting one here is in the wrong method.
+ */
+export interface GlobalConnection {
   query<R extends QueryResultRow = QueryResultRow>(
     text: string,
     values?: readonly unknown[],
@@ -199,6 +230,50 @@ export class Database {
     } finally {
       // Guarded: pg throws if a client is released twice, and the rollback path above may
       // already have destroyed this one.
+      if (!destroyed) client.release();
+    }
+  }
+
+  /**
+   * A read with no tenant context, inside a READ ONLY transaction.
+   *
+   * For the global tables only — the ones a request must consult before it knows which
+   * tenant it belongs to. See the note at the top of this file for why that is safe: with no
+   * GUC set, `current_tenant_id()` is NULL and every tenant policy matches nothing, so this
+   * cannot see tenant data even if someone points it at a tenant table.
+   *
+   * READ ONLY is the enforced half. `withTenant` is still the only way to write anything.
+   */
+  async readGlobal<T>(fn: (db: GlobalConnection) => Promise<T>): Promise<T> {
+    const client = await this.#pool.connect();
+    let opened = false;
+    let destroyed = false;
+    try {
+      await client.query('BEGIN READ ONLY');
+      opened = true;
+
+      if (this.#schema !== undefined) {
+        await client.query('SELECT set_config($1, $2, true)', ['search_path', this.#schema]);
+      }
+
+      const result = await fn({
+        query: (text, values) =>
+          values === undefined ? client.query(text) : client.query(text, [...values]),
+      });
+      await client.query('COMMIT');
+      opened = false;
+      return result;
+    } catch (error) {
+      if (opened) {
+        try {
+          await client.query('ROLLBACK');
+        } catch {
+          destroyed = true;
+          client.release(true);
+        }
+      }
+      throw error;
+    } finally {
       if (!destroyed) client.release();
     }
   }
