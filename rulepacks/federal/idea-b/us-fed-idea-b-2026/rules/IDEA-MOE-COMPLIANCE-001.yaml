@@ -46,6 +46,8 @@ inputs:
 calculator: idea_moe_compliance_v1
 
 outputSchema:
+  # The determination the following year reads as `comparison_year_moe_status`.
+  moeStatus: string
   qualifyingMethods: array
   methodStatus: object
   marginByMethod: object

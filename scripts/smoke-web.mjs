@@ -48,6 +48,9 @@ const ROUTES = [
       'northfield-fiscal-fy2026.csv',
       'Comparison Local Actual',
       '34 CFR 300.203(b)',
+      // A carried-forward determination cites the run that made it, not a spreadsheet row.
+      'in finalized run RUN-MOE-COMPLIANCE-2025-0001',
+      'output.moeStatus',
     ],
   },
   {

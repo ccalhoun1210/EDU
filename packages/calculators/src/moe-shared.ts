@@ -300,6 +300,19 @@ export type MoeRepaymentBounds = {
  * per-child magnitude. Both forms come from the same exact cross-product, each rounded once;
  * neither is derived from the other's rounded value.
  */
+/**
+ * The determination in the vocabulary the *following* year reads it in.
+ *
+ * `comparison_year_moe_status` is declared as `MET | NOT_MET | UNKNOWN`, and an evaluation
+ * status is `PASS | FAIL | INDETERMINATE | …`. Those are different vocabularies for the same
+ * conclusion, and until this existed the translation between them happened wherever somebody
+ * carried a value forward — which is to say, by hand, in prose, unverifiable.
+ *
+ * Stating it in the output makes the carry-forward mechanical: the next year reads
+ * `output.moeStatus` out of the finalized result, and nothing has to reinterpret a status.
+ */
+export type MoeDeterminedStatus = 'MET' | 'NOT_MET' | 'UNKNOWN';
+
 export type MoeOutput = {
   readonly qualifyingMethods: readonly MoeMethod[];
   readonly methodStatus: Readonly<Record<MoeMethod, EvaluationStatus>>;
@@ -313,6 +326,15 @@ export type MoeOutput = {
   readonly projectedShortfallByMethod?: Readonly<Record<MoeMethod, string | null>> | null;
   readonly projectedShortfallPerChildByMethod?: Readonly<Record<MoeMethod, string | null>> | null;
   readonly qualifiesOnlyOnExpectedReductions?: boolean;
+  /**
+   * Present on the compliance variant only.
+   *
+   * The eligibility standard asks whether an LEA *budgets* at least the required level for the
+   * year ahead. That is a projection, not a determination about a year that has closed, and
+   * 34 CFR 300.203(c) carries forward the latter. Emitting it from both would let a budget
+   * projection become the bar the next year is measured against.
+   */
+  readonly moeStatus?: MoeDeterminedStatus;
   readonly smallestShortfall?: string | null;
   readonly largestShortfall?: string | null;
   readonly repaymentExposureBounds?: MoeRepaymentBounds | null;
@@ -2390,6 +2412,22 @@ interface FinalizeSpec {
   readonly setAsideInputs: readonly string[];
 }
 
+/**
+ * An evaluation status as the determination the following year reads.
+ *
+ * Only `PASS` and `FAIL` are conclusions about whether effort was maintained. `INDETERMINATE`
+ * and `MANUAL_REVIEW` mean the question was not answered, and `UNKNOWN` is exactly that in the
+ * next year's vocabulary — a value the eligibility calculator handles explicitly, and not a
+ * gap. Mapping either of them to `NOT_MET` would invent a failure; mapping them to `MET` would
+ * invent compliance. `NOT_APPLICABLE` and `RISK` cannot arise from this calculator, and the
+ * honest reading of anything that is not a decided pass or fail is the same: not known.
+ */
+function determinedStatus(status: EvaluationStatus): MoeDeterminedStatus {
+  if (status === 'PASS') return 'MET';
+  if (status === 'FAIL') return 'NOT_MET';
+  return 'UNKNOWN';
+}
+
 function finalize(spec: FinalizeSpec): CalculatorResult<MoeOutput> {
   const { config, outcomes, shadow } = spec;
   const warnings = [...spec.warnings];
@@ -2522,6 +2560,7 @@ function finalize(spec: FinalizeSpec): CalculatorResult<MoeOutput> {
         }
       : {
           ...base,
+          moeStatus: determinedStatus(status),
           smallestShortfall,
           largestShortfall,
           repaymentExposureBounds: bounds,
@@ -2576,6 +2615,11 @@ function conclude(
         }
       : {
           ...base,
+          // A run that stopped at a gate concluded nothing about whether effort was
+          // maintained, and the field has to say so rather than be absent. An absent
+          // `moeStatus` would let a caller carrying determinations forward find nothing and
+          // move on, when what happened is that the question was never answered.
+          moeStatus: determinedStatus(status),
           smallestShortfall: null,
           largestShortfall: null,
           repaymentExposureBounds: null,

@@ -23,10 +23,23 @@
  * That is not a modelling compromise. It is what a district's own maintenance-of-effort
  * worksheet looks like: the comparison figures next to the current ones, so a business officer
  * can read the test across the page.
+ *
+ * ## Why the prior determinations are built, not written
+ *
+ * The eight inputs a district may not assert do not appear in the file. They come from a
+ * finalized run, and `carryForward` derives each one from that run's own record — value,
+ * identifiers and evaluation hash together. Writing `MET` beside a run id by hand was how this
+ * fixture used to work, and a hand-copied determination is indistinguishable from a fabricated
+ * one. Now the fixture cannot state a prior status the recorded run did not reach.
  */
 
-import type { CanonicalFact } from '@complianceos/ingest';
-import type { MappingTemplate } from '@complianceos/ingest';
+import type { CanonicalFact, MappingTemplate } from '@complianceos/ingest';
+import {
+  computeEvaluationHash,
+  ENGINE_VERSION,
+  type EvaluationResult,
+} from '@complianceos/rules-engine';
+import { carryForward } from './carry-forward.js';
 
 /**
  * The uploaded file, byte for byte.
@@ -220,58 +233,127 @@ export const IMPORT_JOB_ID = 'job_northfield_fy2026_0001';
 export const PRIOR_RUN_ID = 'RUN-MOE-COMPLIANCE-2025-0001';
 
 /**
+ * Last year's determination, as the platform actually recorded it.
+ *
+ * Written out rather than computed by running FY2025, because that run would need FY2024's
+ * determination, which would need FY2023's, and so on: every district has a first year on the
+ * platform and this fixture is Northfield's. What is *not* fabricated is the binding — the
+ * evaluation hash below is computed by the engine's own `computeEvaluationHash` over this
+ * record, so `verifyCarriedForward` genuinely checks something. Change a figure here without
+ * re-deriving and the chain breaks, which is the property the whole mechanism exists for.
+ *
+ * FY2025 met the standard on all four measures, which is why FY2026 is measured against
+ * FY2025's actual expenditure rather than against a level carried forward under
+ * 34 CFR 300.203(c).
+ */
+const PRIOR_WITHOUT_HASH = {
+  tenantId: 'tenant_northfield',
+  organizationId: 'LEA-0417',
+  subjectType: 'lea_fiscal_year',
+  subjectId: 'LEA-0417:2025',
+  dataSnapshotId: 'snap_northfield_fy2025',
+  engineVersion: ENGINE_VERSION,
+  ruleId: 'IDEA-MOE-COMPLIANCE-001',
+  ruleTitle: 'IDEA Part B — LEA maintenance of effort, compliance standard',
+  ruleLifecycle: 'DRAFT',
+  pack: { packId: 'US-FED-IDEA-B-2026', version: '0.1.0', layer: 'FEDERAL' },
+  authority: {
+    citation: '34 CFR 300.203(b)',
+    sourceId: 'REG-US-IDEA-300-203',
+  },
+  computedInputs: {
+    comparison_actual_local: '4750000.00',
+    comparison_actual_state_local: '7600000.00',
+    comparison_child_count: 978,
+    comparison_fiscal_year_start: '2023-07-01',
+    current_actual_local: '4900000.00',
+    current_actual_state_local: '7850000.00',
+    current_child_count: 991,
+    current_fiscal_year_start: '2024-07-01',
+  },
+  status: 'PASS',
+  severityOnFailure: 'CRITICAL',
+  output: {
+    moeStatus: 'MET',
+    qualifyingMethods: [
+      'LOCAL_ONLY',
+      'STATE_AND_LOCAL',
+      'LOCAL_PER_CAPITA',
+      'STATE_AND_LOCAL_PER_CAPITA',
+    ],
+  },
+  steps: [],
+  warnings: [],
+  missingInputs: [],
+  notes: [],
+  explanation: 'Result: PASS.',
+} satisfies Omit<EvaluationResult, 'evaluationHash' | 'evaluatedAt' | 'assessmentRunId'>;
+
+export const NORTHFIELD_PRIOR_RESULT: EvaluationResult = {
+  ...PRIOR_WITHOUT_HASH,
+  assessmentRunId: PRIOR_RUN_ID,
+  evaluatedAt: '2025-09-15T00:00:00.000Z',
+  evaluationHash: computeEvaluationHash(PRIOR_WITHOUT_HASH),
+};
+
+const CARRIED = {
+  subjectType: 'lea_fiscal_year',
+  subjectId: 'LEA-0417:2026',
+  classification: 'CONFIDENTIAL',
+  result: NORTHFIELD_PRIOR_RESULT,
+} as const;
+
+/**
  * The prior determinations, as facts.
  *
- * These come from a finalized run of this platform, not from the district. Their provenance
- * points at that run rather than at an uploaded file — and the shape strains, because
- * `FactProvenance` was designed for a row in a spreadsheet. `sourceRow` and `sourceLine` mean
- * nothing here. That is a real modelling gap and it is recorded rather than papered over: a
- * determination-shaped provenance variant is the next thing this needs.
+ * Built by `carryForward` rather than written out, so each value is read from the finalized
+ * result it cites and carries that result's evaluation hash. There is no way to state a status
+ * here that the prior run did not reach — which is the point, because a district-facing finding
+ * computed against a fabricated prior year would look flawless.
+ *
+ * `moe_status_source_run_id` is the odd one out: it is not a determination, it is the *name* of
+ * the run the others came from, which the calculator requires whenever a prior status is
+ * asserted. It is derived from the same result so the two cannot drift apart.
  */
-export const NORTHFIELD_PRIOR_DETERMINATIONS: readonly CanonicalFact[] = (
-  [
-    ['comparison_year_moe_status', 'MET'],
-    ['moe_status_source_run_id', PRIOR_RUN_ID],
-  ] as const
-).map(([field, value]) => ({
-  subjectType: 'lea_fiscal_year',
-  subjectId: 'LEA-0417:2026',
-  field,
-  value,
-  classification: 'CONFIDENTIAL' as const,
-  origin: 'PLATFORM_DETERMINATION' as const,
-  provenance: {
-    importJobId: IMPORT_JOB_ID,
-    sourceFileId: PRIOR_RUN_ID,
-    sourceHash: NORTHFIELD_SOURCE_HASH,
-    sourceRow: 1,
-    sourceLine: 1,
-    sourceFields: [field],
-    sourceValues: [value],
-    mappingTemplateId: 'PLATFORM-DETERMINATION-CARRY-FORWARD',
-    mappingVersion: '1.0.0',
-    transformation: `carried forward from finalized run ${PRIOR_RUN_ID}`,
-  },
-}));
+export const NORTHFIELD_PRIOR_DETERMINATIONS: readonly CanonicalFact[] = [
+  carryForward({
+    ...CARRIED,
+    field: 'comparison_year_moe_status',
+    derivedFrom: 'output.moeStatus',
+  }),
+];
 
 /** The four measures the comparison year was met under, also a determination. */
-export const NORTHFIELD_METHODS_MET: CanonicalFact = {
-  subjectType: 'lea_fiscal_year',
-  subjectId: 'LEA-0417:2026',
+export const NORTHFIELD_METHODS_MET: CanonicalFact = carryForward({
+  ...CARRIED,
   field: 'comparison_year_methods_met',
-  value: ['LOCAL_ONLY', 'STATE_AND_LOCAL', 'LOCAL_PER_CAPITA', 'STATE_AND_LOCAL_PER_CAPITA'],
+  derivedFrom: 'output.qualifyingMethods',
+});
+
+/**
+ * The run that established the prior status.
+ *
+ * Not carried forward from a path in the result, because it is not part of what the result
+ * concluded — it is the result's own identity. It still travels with determination provenance
+ * so the chain is uniform, and its value is taken from the same record rather than typed.
+ */
+export const NORTHFIELD_STATUS_SOURCE: CanonicalFact = {
+  subjectType: CARRIED.subjectType,
+  subjectId: CARRIED.subjectId,
+  field: 'moe_status_source_run_id',
+  value: NORTHFIELD_PRIOR_RESULT.assessmentRunId,
   classification: 'CONFIDENTIAL',
   origin: 'PLATFORM_DETERMINATION',
   provenance: {
-    importJobId: IMPORT_JOB_ID,
-    sourceFileId: PRIOR_RUN_ID,
-    sourceHash: NORTHFIELD_SOURCE_HASH,
-    sourceRow: 1,
-    sourceLine: 1,
-    sourceFields: ['comparison_year_methods_met'],
-    sourceValues: ['ALL'],
-    mappingTemplateId: 'PLATFORM-DETERMINATION-CARRY-FORWARD',
-    mappingVersion: '1.0.0',
-    transformation: `carried forward from finalized run ${PRIOR_RUN_ID}`,
+    kind: 'DETERMINATION',
+    assessmentRunId: NORTHFIELD_PRIOR_RESULT.assessmentRunId,
+    ruleId: NORTHFIELD_PRIOR_RESULT.ruleId,
+    rulePackId: NORTHFIELD_PRIOR_RESULT.pack.packId,
+    rulePackVersion: NORTHFIELD_PRIOR_RESULT.pack.version,
+    dataSnapshotId: NORTHFIELD_PRIOR_RESULT.dataSnapshotId,
+    engineVersion: NORTHFIELD_PRIOR_RESULT.engineVersion,
+    evaluationHash: NORTHFIELD_PRIOR_RESULT.evaluationHash,
+    derivedFrom: 'assessmentRunId',
+    determinedAt: NORTHFIELD_PRIOR_RESULT.evaluatedAt,
   },
 };

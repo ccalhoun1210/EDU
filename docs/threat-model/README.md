@@ -122,10 +122,50 @@ row is well-formed, the reconciliation balances.
   registry entry or as a line in its district-may-assert list. A new platform-owned input that
   nobody classifies fails the build rather than shipping as a hole.
 
-Still open: the origins above are asserted by whichever component builds the fact, and nothing
-yet cryptographically binds a `PLATFORM_DETERMINATION` fact to the finalized run it claims to
-come from. `moe_status_source_run_id` names that run, but the link is by reference, not by
-signature. That is the next thing to close here.
+### Shape
+
+Origin says who asserted a fact; it does not say what kind of source is behind it, and until
+those came apart the record could describe the wrong one. `FactProvenance` had exactly one
+shape — a row in an uploaded file — so a prior-year determination carried forward from a
+finalized run was recorded with `sourceRow: 1` and a `sourceHash` naming an unrelated upload.
+Not merely unhelpful: a finding-detail screen citing row 1, column
+`comparison_year_moe_status` sends a business officer looking for a cell that does not exist,
+and a monitor who goes looking finds a citation that is false.
+
+Worse, nothing bound the fact to the run it named. `moe_status_source_run_id` was a string
+beside another string; any value could sit next to any run id and the chain would look
+complete all the way back to a finalized run that concluded the opposite.
+
+- `FactProvenance` is a discriminated union. `FILE_ROW` describes a cell in an export;
+  `DETERMINATION` describes a computation, naming the run, the rule, the pack version, the
+  engine, the snapshot it read and the **evaluation hash** of the result carried forward
+  (`packages/ingest/src/provenance.ts`).
+- `buildSnapshot` refuses a fact whose provenance shape does not match what its origin claims
+  — checked at sealing, because once an incoherent chain is inside the content hash the hash
+  certifies the incoherence.
+- Three origins — `DISTRICT_ATTESTATION`, `SEA_DETERMINATION`, `PLATFORM_REFERENCE` — have no
+  shape designed yet and are **refused** rather than squeezed into one of the two that exist.
+  Nothing produces them today, so nothing is blocked; the first producer gets an error naming
+  what has to be built. Reusing a shape for something it does not describe is what produced
+  this entry.
+- `carryForward` is the only sanctioned way to build a determination fact. It reads the value
+  out of the finalized `EvaluationResult` — there is no parameter for it — and stamps that
+  result's own identifiers on. A carried-forward fact cannot state a status the run it cites
+  did not reach (`packages/assurance/src/carry-forward.ts`).
+- `verifyCarriedForward` closes the loop from the other side: the named run and rule must be
+  among the finalized results, the evaluation hash must match, and the value must still read
+  out of the recorded path. The hash covers the rule, pack version, engine, snapshot, inputs
+  and result, and excludes the timestamp and run id — so it survives re-running a prior year
+  unchanged and breaks the moment that conclusion is different.
+- The whole determination record is inside the snapshot content hash, evaluation hash
+  included. Outside it, the binding could be repointed at a run that concluded the opposite
+  and `verifySnapshot` would certify the result.
+
+Still open: the binding is a hash comparison against results the caller supplies, not a
+signature. A caller that supplies a fabricated `EvaluationResult` alongside a fabricated fact
+gets a consistent pair. Closing that means finalized results being read from storage that the
+application cannot rewrite — an append-only table with its own integrity chain (§21) — rather
+than passed in.
 
 ## 5. Prompt injection
 

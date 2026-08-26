@@ -11,10 +11,17 @@
 
 import { describe, expect, it } from 'vitest';
 import type { CanonicalValue, DataClassification, FactOrigin } from '@complianceos/domain';
-import type { FactProvenance, SourceFileRef } from './provenance.js';
+import {
+  isFileRowProvenance,
+  type DeterminationProvenance,
+  type FactProvenance,
+  type FileRowProvenance,
+  type SourceFileRef,
+} from './provenance.js';
 import {
   DuplicateFactError,
   FactOriginError,
+  ProvenanceShapeError,
   buildSnapshot,
   computeSnapshotHash,
   projectFactBag,
@@ -54,8 +61,22 @@ interface ProvenanceSpec {
   readonly transformation?: string;
 }
 
-function provenance(spec: ProvenanceSpec = {}): FactProvenance {
+/**
+ * Narrow to the file-row form.
+ *
+ * Everything the import pipeline produces is one. A determination reaching here would be a
+ * bug worth failing loudly on rather than an optional chain that quietly asserts undefined.
+ */
+function fileRow(provenance: FactProvenance | undefined): FileRowProvenance {
+  if (provenance === undefined || !isFileRowProvenance(provenance)) {
+    throw new Error(`expected file-row provenance, got ${provenance?.kind ?? 'nothing'}`);
+  }
+  return provenance;
+}
+
+function provenance(spec: ProvenanceSpec = {}): FileRowProvenance {
   return {
+    kind: 'FILE_ROW',
     importJobId: spec.importJobId ?? 'job_fy2028_expenditures',
     sourceFileId: spec.sourceFileId ?? FILE.sourceFileId,
     sourceHash: spec.sourceHash ?? FILE.sourceHash,
@@ -79,15 +100,35 @@ interface FactSpec {
   readonly provenance?: FactProvenance;
 }
 
+/** A plausible carry-forward record, for the origins that are not a district's file. */
+function determination(): DeterminationProvenance {
+  return {
+    kind: 'DETERMINATION',
+    assessmentRunId: 'RUN-MOE-COMPLIANCE-2027-0001',
+    ruleId: 'IDEA-MOE-COMPLIANCE-001',
+    rulePackId: 'US-FED-IDEA-B-2026',
+    rulePackVersion: '0.1.0',
+    dataSnapshotId: 'snap_fy2027',
+    engineVersion: '0.1.0',
+    evaluationHash: 'a'.repeat(64),
+    derivedFrom: 'output.moeStatus',
+    determinedAt: '2027-09-01T00:00:00.000Z',
+  };
+}
+
 function fact(spec: FactSpec): CanonicalFact {
+  const origin = spec.origin ?? 'DISTRICT_EXPORT';
   return {
     subjectType: spec.subjectType ?? 'lea_fiscal_year',
     subjectId: spec.subjectId ?? 'LEA-4412:2028',
     field: spec.field,
     value: spec.value,
     classification: spec.classification ?? 'INTERNAL',
-    origin: spec.origin ?? 'DISTRICT_EXPORT',
-    provenance: spec.provenance ?? provenance(),
+    origin,
+    // Defaulted to the shape the origin is entitled to, so a fixture cannot accidentally
+    // describe a determination as a spreadsheet row — which is the incoherence
+    // `buildSnapshot` now refuses, and which these fixtures used to contain.
+    provenance: spec.provenance ?? (origin === 'DISTRICT_EXPORT' ? provenance() : determination()),
   };
 }
 
@@ -353,7 +394,7 @@ describe('verifySnapshot', () => {
 
     const tampered: DataSnapshot = {
       ...sealed,
-      facts: [{ ...first, provenance: { ...first.provenance, sourceRow: 4001 } }, ...rest],
+      facts: [{ ...first, provenance: { ...fileRow(first.provenance), sourceRow: 4001 } }, ...rest],
     };
 
     expect(verifySnapshot(tampered)).toBe(false);
@@ -520,14 +561,15 @@ describe('provenanceFor', () => {
       'local_actual_expenditure',
     );
 
-    expect(found?.sourceFileId).toBe(FILE.sourceFileId);
-    expect(found?.sourceRow).toBe(1);
-    expect(found?.sourceFields).toEqual(['LOCAL_ACTUAL']);
-    expect(found?.sourceValues).toEqual(['1,250,000.00']);
-    expect(found?.transformation).toBe('trim → parseCurrency');
+    const row = fileRow(found);
+    expect(row.sourceFileId).toBe(FILE.sourceFileId);
+    expect(row.sourceRow).toBe(1);
+    expect(row.sourceFields).toEqual(['LOCAL_ACTUAL']);
+    expect(row.sourceValues).toEqual(['1,250,000.00']);
+    expect(row.transformation).toBe('trim → parseCurrency');
     // …and the file the provenance names is present on the snapshot, so the chain reaches an
     // artifact a district can be shown, not a dangling id.
-    expect(sourceFileFor(snapshot, found?.sourceFileId ?? '')?.originalFilename).toBe(
+    expect(sourceFileFor(snapshot, row.sourceFileId)?.originalFilename).toBe(
       'FY2028 Expenditure Export.csv',
     );
   });
@@ -556,8 +598,9 @@ describe('provenanceFor', () => {
     ]);
 
     expect(
-      provenanceFor(snapshot, 'lea_fiscal_year', 'LEA-7781:2028', 'local_actual_expenditure')
-        ?.sourceRow,
+      fileRow(
+        provenanceFor(snapshot, 'lea_fiscal_year', 'LEA-7781:2028', 'local_actual_expenditure'),
+      ).sourceRow,
     ).toBe(4);
   });
 });
@@ -642,20 +685,118 @@ describe('projectFactBag — authority', () => {
 });
 
 describe('the snapshot hash covers who asserted a fact', () => {
-  it('changes when only the origin changes', () => {
-    // If origin sat outside the hash, a sealed snapshot could be edited to relabel a
-    // district's own figure as a platform determination and verifySnapshot would still pass.
-    const asDistrict = snapshotOf([fact({ field: 'current_actual_local', value: '4800000.00' })]);
-    const asPlatform = snapshotOf([
+  it('rejects the relabelled fact after sealing', () => {
+    // The attack, run the way an attacker would: not by calling `buildSnapshot`, which refuses
+    // the mismatch outright, but by editing a stored row. If origin sat outside the hash, a
+    // district's own figure could be relabelled a platform determination — a bar it set for
+    // itself, indistinguishable from one this platform determined — and `verifySnapshot` would
+    // still pass.
+    const sealed = snapshotOf([fact({ field: 'current_actual_local', value: '4800000.00' })]);
+    const [first, ...rest] = sealed.facts;
+    if (first === undefined) throw new Error('fixture must seal a fact');
+
+    const relabelled: DataSnapshot = {
+      ...sealed,
+      facts: [{ ...first, origin: 'PLATFORM_DETERMINATION' }, ...rest],
+    };
+
+    expect(verifySnapshot(sealed)).toBe(true);
+    expect(verifySnapshot(relabelled)).toBe(false);
+  });
+});
+
+describe('provenance has to describe the kind of source the origin claims', () => {
+  it('refuses a determination wearing a spreadsheet row', () => {
+    // The shape this whole variant exists to stop. `sourceRow: 1` on a prior-year status sends
+    // a business officer looking for a cell that does not exist, and the `sourceHash` beside it
+    // names an upload the determination never came from.
+    expect(() =>
+      snapshotOf([
+        fact({
+          field: 'comparison_year_moe_status',
+          value: 'MET',
+          origin: 'PLATFORM_DETERMINATION',
+          provenance: provenance(),
+        }),
+      ]),
+    ).toThrow(ProvenanceShapeError);
+  });
+
+  it('refuses a district figure wearing a determination', () => {
+    expect(() =>
+      snapshotOf([
+        fact({
+          field: 'current_actual_local',
+          value: '4800000.00',
+          origin: 'DISTRICT_EXPORT',
+          provenance: determination(),
+        }),
+      ]),
+    ).toThrow(ProvenanceShapeError);
+  });
+
+  it('refuses an origin no provenance shape has been designed for, and says which', () => {
+    // Not an oversight to route around. An SEA determination of record is a state agency's
+    // document, not a run of this platform and not a row in an export; recording one under
+    // either existing shape would put a false citation into a finding.
+    let thrown: unknown;
+    try {
+      snapshotOf([
+        fact({
+          field: 'sea_prohibition_300_205_ground',
+          value: 'ENFORCEMENT_ACTION_UNDER_SECTION_616',
+          origin: 'SEA_DETERMINATION',
+          provenance: determination(),
+        }),
+      ]);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(ProvenanceShapeError);
+    expect((thrown as ProvenanceShapeError).message).toMatch(/no provenance shape yet/);
+    expect((thrown as ProvenanceShapeError).message).toMatch(/provenance\.ts/);
+  });
+
+  it('seals a determination that carries the right shape', () => {
+    const sealed = snapshotOf([
       fact({
-        field: 'current_actual_local',
-        value: '4800000.00',
+        field: 'comparison_year_moe_status',
+        value: 'MET',
         origin: 'PLATFORM_DETERMINATION',
+        provenance: determination(),
       }),
     ]);
 
-    expect(asPlatform.contentHash).not.toBe(asDistrict.contentHash);
-    expect(verifySnapshot(asDistrict)).toBe(true);
-    expect(verifySnapshot(asPlatform)).toBe(true);
+    expect(verifySnapshot(sealed)).toBe(true);
+    expect(projectFactBag(sealed, 'lea_fiscal_year', 'LEA-4412:2028')).toEqual({
+      comparison_year_moe_status: 'MET',
+    });
+  });
+
+  it('covers the determination fields in the content hash', () => {
+    // A carried-forward fact's evaluation hash is the only thing binding it to the run it
+    // names. Outside the snapshot hash, that binding could be rewritten to point at a run that
+    // concluded the opposite, and `verifySnapshot` would certify the result.
+    const sealed = snapshotOf([
+      fact({
+        field: 'comparison_year_moe_status',
+        value: 'MET',
+        origin: 'PLATFORM_DETERMINATION',
+        provenance: determination(),
+      }),
+    ]);
+    const [first, ...rest] = sealed.facts;
+    if (first === undefined) throw new Error('fixture must seal a fact');
+
+    const repointed: DataSnapshot = {
+      ...sealed,
+      facts: [
+        { ...first, provenance: { ...determination(), evaluationHash: 'b'.repeat(64) } },
+        ...rest,
+      ],
+    };
+
+    expect(verifySnapshot(repointed)).toBe(false);
   });
 });

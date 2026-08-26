@@ -14,6 +14,7 @@ import { describe, expect, it } from 'vitest';
 import { CALCULATORS } from '@complianceos/calculators';
 import {
   FactOriginError,
+  isFileRowProvenance,
   projectFactBag,
   provenanceFor,
   verifySnapshot,
@@ -29,9 +30,12 @@ import {
   NORTHFIELD_EXPORT_CSV,
   NORTHFIELD_METHODS_MET,
   NORTHFIELD_PRIOR_DETERMINATIONS,
+  NORTHFIELD_PRIOR_RESULT,
   NORTHFIELD_SOURCE_HASH,
+  NORTHFIELD_STATUS_SOURCE,
   NORTHFIELD_TEMPLATE,
 } from './northfield-fixture.js';
+import { verifyCarriedForward } from './carry-forward.js';
 
 const pack = await loadRulePack(
   path.join(import.meta.dirname, '../../../rulepacks/federal/idea-b/us-fed-idea-b-2026'),
@@ -67,7 +71,11 @@ function request(
         separator: ':',
       },
     },
-    priorDeterminations: [...NORTHFIELD_PRIOR_DETERMINATIONS, NORTHFIELD_METHODS_MET],
+    priorDeterminations: [
+      ...NORTHFIELD_PRIOR_DETERMINATIONS,
+      NORTHFIELD_METHODS_MET,
+      NORTHFIELD_STATUS_SOURCE,
+    ],
     subject: SUBJECT,
     context: {
       tenantId: 'tenant_northfield',
@@ -144,12 +152,49 @@ describe('ingesting a district export and assessing it', () => {
       'current_actual_local',
     );
     expect(provenance).toBeDefined();
-    expect(provenance?.sourceFileId).toBe('file_northfield_fy2026');
-    expect(provenance?.sourceRow).toBe(1);
+    if (provenance === undefined || !isFileRowProvenance(provenance)) {
+      throw new Error('a district figure must carry file-row provenance');
+    }
+    expect(provenance.sourceFileId).toBe('file_northfield_fy2026');
+    expect(provenance.sourceRow).toBe(1);
     // The raw text as it appeared, before any transformation — currency symbol and all.
-    expect(provenance?.sourceValues).toContain('$4,830,000.00');
-    expect(provenance?.transformation).toBeTruthy();
-    expect(provenance?.mappingTemplateId).toBe('NORTHFIELD-FISCAL-V1');
+    expect(provenance.sourceValues).toContain('$4,830,000.00');
+    expect(provenance.transformation).toBeTruthy();
+    expect(provenance.mappingTemplateId).toBe('NORTHFIELD-FISCAL-V1');
+  });
+
+  it('binds every carried-forward determination to the run that made it', () => {
+    // Invariant 3 for a fact with no spreadsheet cell behind it. Each prior determination in
+    // the snapshot names a finalized run, a rule and an evaluation hash, and the value still
+    // reads out of that result — so the chain is checkable rather than asserted.
+    const snapshot = outcome.snapshot;
+    if (snapshot === undefined) throw new Error('no snapshot');
+
+    const carried = snapshot.facts.filter((fact) => fact.origin === 'PLATFORM_DETERMINATION');
+    expect(carried.length).toBeGreaterThan(0);
+
+    for (const fact of carried) {
+      if (fact.field === 'moe_status_source_run_id') continue; // the run's name, not its result
+      expect(verifyCarriedForward(fact, [NORTHFIELD_PRIOR_RESULT]), fact.field).toEqual({
+        ok: true,
+      });
+    }
+  });
+
+  it('refuses a prior status the finalized run never reached', () => {
+    // The attack this exists for: an LEA that failed last year appearing to have met the
+    // standard, which under 34 CFR 300.203(c) is what decides the bar it is measured against
+    // this year. The value is edited; the hash still names the real run.
+    const snapshot = outcome.snapshot;
+    if (snapshot === undefined) throw new Error('no snapshot');
+
+    const status = snapshot.facts.find((fact) => fact.field === 'comparison_year_moe_status');
+    if (status === undefined) throw new Error('fixture must carry a prior status');
+
+    const verdict = verifyCarriedForward({ ...status, value: 'NOT_MET' }, [
+      NORTHFIELD_PRIOR_RESULT,
+    ]);
+    expect(verdict.ok).toBe(false);
   });
 
   it('records the two fact origins separately in one snapshot', () => {

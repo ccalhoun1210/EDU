@@ -32,6 +32,7 @@ import {
   NORTHFIELD_METHODS_MET,
   NORTHFIELD_PRIOR_DETERMINATIONS,
   NORTHFIELD_SOURCE_HASH,
+  NORTHFIELD_STATUS_SOURCE,
   NORTHFIELD_TEMPLATE,
   type AssessDistrictExportOutcome,
 } from '@complianceos/assurance';
@@ -106,7 +107,11 @@ export const workedExample = cache(async (): Promise<WorkedExample> => {
         separator: ':',
       },
     },
-    priorDeterminations: [...NORTHFIELD_PRIOR_DETERMINATIONS, NORTHFIELD_METHODS_MET],
+    priorDeterminations: [
+      ...NORTHFIELD_PRIOR_DETERMINATIONS,
+      NORTHFIELD_METHODS_MET,
+      NORTHFIELD_STATUS_SOURCE,
+    ],
     subject: { subjectType: SUBJECT.subjectType, subjectId: SUBJECT.subjectId },
     context: {
       tenantId: 'tenant_northfield',

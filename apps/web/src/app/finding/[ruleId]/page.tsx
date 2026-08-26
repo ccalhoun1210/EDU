@@ -18,7 +18,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { CalculationStep, CalculatorValue } from '@complianceos/calculators';
 import type { FactOrigin } from '@complianceos/domain';
-import { describeProvenance, sourceFileFor, type DataSnapshot } from '@complianceos/ingest';
+import {
+  describeProvenance,
+  isFileRowProvenance,
+  sourceFileFor,
+  type DataSnapshot,
+} from '@complianceos/ingest';
 import { ABSENT, formatStepValue, renderValue } from '@complianceos/rules-engine';
 import { StatusBadge } from '../../../components/status-badge.js';
 import { humanizeKey } from '../../../lib/display.js';
@@ -26,12 +31,6 @@ import { inputSpecs } from '../../../lib/inputs.js';
 import { SUBJECT, workedExample } from '../../../lib/worked-example.js';
 
 export const dynamic = 'force-dynamic';
-
-/** Origins whose provenance genuinely points at a row in an uploaded file. */
-const FROM_A_FILE: ReadonlySet<FactOrigin> = new Set<FactOrigin>([
-  'DISTRICT_EXPORT',
-  'DISTRICT_ATTESTATION',
-]);
 
 interface Sourced {
   readonly origin: FactOrigin | undefined;
@@ -41,12 +40,9 @@ interface Sourced {
 /**
  * Where one value came from, in a sentence a business officer can act on.
  *
- * A row-and-column citation is only meaningful for a fact that arrived in a row. A prior-year
- * determination carried forward from a finalized run has a `sourceRow` because
- * `FactProvenance` was shaped for a spreadsheet, and printing "row 1, column
- * comparison_year_moe_status" would send a district looking for a cell that does not exist.
- * Until provenance gains a determination-shaped variant, the origin decides which sentence is
- * honest.
+ * The provenance record says which kind of source it describes, so the page does not have to
+ * infer it from the origin. A file-row record resolves to a filename a district can go and
+ * open; a determination has no file to resolve and names the finalized run instead.
  */
 function sourceOf(snapshot: DataSnapshot, field: string): Sourced {
   const fact = snapshot.facts.find(
@@ -57,16 +53,11 @@ function sourceOf(snapshot: DataSnapshot, field: string): Sourced {
   );
   if (fact === undefined) return { origin: undefined, where: 'Not supplied.' };
 
-  if (FROM_A_FILE.has(fact.origin)) {
-    return {
-      origin: fact.origin,
-      where: describeProvenance(
-        fact.provenance,
-        sourceFileFor(snapshot, fact.provenance.sourceFileId),
-      ),
-    };
-  }
-  return { origin: fact.origin, where: `${fact.provenance.transformation}.` };
+  const file = isFileRowProvenance(fact.provenance)
+    ? sourceFileFor(snapshot, fact.provenance.sourceFileId)
+    : undefined;
+
+  return { origin: fact.origin, where: describeProvenance(fact.provenance, file) };
 }
 
 /** A calculator output value. Nested records become their own small table. */

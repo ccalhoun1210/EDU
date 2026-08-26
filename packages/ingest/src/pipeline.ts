@@ -30,7 +30,7 @@ import {
   type MappingContext,
   type MappingTemplate,
 } from './mapping.js';
-import type { SourceFileRef } from './provenance.js';
+import type { FileRowProvenance, SourceFileRef } from './provenance.js';
 import { reconcile, type ReconciliationSummary } from './reconcile.js';
 import { buildSnapshot, type CanonicalFact, type DataSnapshot } from './snapshot.js';
 import { quarantines, type ValidationIssue } from './validate.js';
@@ -170,9 +170,20 @@ function subjectKey(values: readonly MappedValue[], binding: SubjectBinding): st
   return parts.join(binding.separator ?? '/');
 }
 
+/**
+ * A fact this pipeline produced, narrowed to the only provenance shape it can produce.
+ *
+ * Stated in the type rather than assumed. Everything here comes out of a row in an uploaded
+ * file, so the row number is always available — which is what lets a conflict between two
+ * rows name both of them.
+ */
+interface FileRowFact extends CanonicalFact {
+  readonly provenance: FileRowProvenance;
+}
+
 interface FactCandidate {
   readonly identity: string;
-  readonly fact: CanonicalFact;
+  readonly fact: FileRowFact;
 }
 
 export function runImport(request: ImportRequest): ImportOutcome {
@@ -259,7 +270,7 @@ export function runImport(request: ImportRequest): ImportOutcome {
   };
 
   // FIELD MAPPING, VALIDATION, NORMALIZATION.
-  const committed = new Map<string, CanonicalFact>();
+  const committed = new Map<string, FileRowFact>();
   // Facts the file states two different values for. Withdrawn entirely at the end rather than
   // resolved: see the note at the conflict branch.
   const disputed = new Set<string>();

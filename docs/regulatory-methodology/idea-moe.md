@@ -407,6 +407,27 @@ allocation names in `missingInputs`. The same logic governs an absent
 `INDETERMINATE` with `REPAYMENT_CANNOT_BE_BOUNDED`, because the finding is the failure and
 its consequence together and the platform does not publish half of it.
 
+**The determination the next year reads.** On the compliance side the roll-up is also an
+answer to the question the _following_ year asks: did this LEA maintain effort? The next
+year's run consumes that as `comparison_year_moe_status`, whose vocabulary is
+`MET | NOT_MET | UNKNOWN` and not `PASS | FAIL | …`. So the calculator states it in that
+vocabulary itself, as `output.moeStatus`: `PASS` → `MET`, `FAIL` → `NOT_MET`, everything else
+→ `UNKNOWN`.
+
+`UNKNOWN` is deliberate and is a value rather than a gap — the eligibility calculator handles
+it explicitly and routes the run to review with a named remedy. Mapping an unanswered question
+to `NOT_MET` would invent a failure and, through 300.203(c), a bar the LEA never earned;
+mapping it to `MET` would invent compliance. The eligibility calculator emits no `moeStatus` at
+all: it tests a _budget_ for the year ahead, which is a projection, and 300.203(c) carries
+forward a determination about a year that has closed.
+
+Stating it here is what makes the carry-forward mechanical rather than editorial. The value a
+later year reads is taken from the finalized result by
+`carryForward` (`packages/assurance/src/carry-forward.ts`), which stamps that result's own
+evaluation hash onto the fact, so a prior-year status can be checked against the run that
+produced it instead of trusted. Before this, translating `PASS` into `MET` happened wherever
+somebody carried a value across — by hand, and unverifiably.
+
 ### 11. Consequence — compliance only
 
 On `FAIL`, the calculator reports `shortfallByMethod` for all four methods,
