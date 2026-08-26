@@ -12,6 +12,7 @@
 import Link from 'next/link';
 import { StatusBadge } from '@/components/status-badge';
 import { byAttention, outstanding, rollUpSentence } from '@/lib/summary';
+import { currentSession } from '@/lib/session';
 import { SUBJECT, UPLOAD, workedExample } from '@/lib/worked-example';
 
 // Recomputed per request so a deployment missing its regulatory content fails here, visibly,
@@ -19,6 +20,7 @@ import { SUBJECT, UPLOAD, workedExample } from '@/lib/worked-example';
 export const dynamic = 'force-dynamic';
 
 export default async function AssessmentPage() {
+  const session = await currentSession();
   const { outcome, pack } = await workedExample();
   const { assessment, snapshot } = outcome;
 
@@ -60,12 +62,25 @@ export default async function AssessmentPage() {
         <code>{pack.manifest.packId}</code> {pack.manifest.version}
       </p>
 
+      {/* The reason this is a worked example differs by deployment, and saying the wrong one
+          is worse than saying none. An unconnected build genuinely has nowhere to read a
+          district from; a signed-in officer on a connected one has somewhere, and is owed the
+          more specific sentence — that this is not their district and why. */}
       <p className="note note-warn">
         <strong>Synthetic data.</strong> Northfield Consolidated is invented and every figure below
-        is made up. This deployment has no authentication, no tenant onboarding and no database, so
-        there is no real district export to read. What runs here is the real path — the bytes are
-        parsed, mapped through a versioned template, sealed into a content-hashed snapshot, and
-        evaluated by the engine against the rule pack that shipped with this build.
+        is made up.{' '}
+        {session.signedIn ? (
+          <>
+            You are signed in as <strong>{session.principal.displayName}</strong>, but no district
+            export has been uploaded for your organization yet, so there is no assessment run of
+            your own to show and this worked example stands in its place.
+          </>
+        ) : (
+          'This deployment has no district export to read for you, because nobody is signed in.'
+        )}{' '}
+        What runs here is the real path — the bytes are parsed, mapped through a versioned template,
+        sealed into a content-hashed snapshot, and evaluated by the engine against the rule pack
+        that shipped with this build.
       </p>
 
       <h2>Result</h2>

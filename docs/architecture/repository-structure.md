@@ -62,7 +62,7 @@ packages/
   integrations/          Connector abstractions (SIS, IEP, ERP)
   documents/             Evidence and document processing
   reporting/             Report templates and exporters
-  auth/                  Identity, RBAC, ABAC helpers
+  identity/              The principal, session sealing, and the provider port (RBAC + ABAC)
   ui/                    Shared design system
   observability/         Logs, traces, metrics
   security/              Encryption, redaction, audit helpers

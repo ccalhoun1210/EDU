@@ -101,6 +101,18 @@ jobs:
         # and both of those are claims only a real Postgres can settle.
         run: pnpm exec vitest run --project db --project identity
 
+      # The unit suites prove each piece; only this proves they are wired to each other. A
+      # sealer that verifies correctly and a page that never calls it both pass their own
+      # tests. Needs a build, because it drives the production server over real HTTP.
+      - name: Build the web application
+        run: pnpm --filter @complianceos/web build
+
+      - name: Connected sign-in path, end to end
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/complianceos_test
+          REQUIRE_DATABASE_TESTS: '1'
+        run: pnpm smoke:auth
+
   data-hygiene:
     runs-on: ubuntu-latest
     steps:

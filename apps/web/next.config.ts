@@ -36,7 +36,19 @@ const config: NextConfig = {
     '@complianceos/rules-engine',
     '@complianceos/ingest',
     '@complianceos/assurance',
+    '@complianceos/db',
+    '@complianceos/identity',
   ],
+
+  /**
+   * `pg` is bundled by webpack unless it is named here, and bundling it breaks the build.
+   *
+   * The driver resolves optional native and platform pieces through dynamic requires that a
+   * bundler cannot follow; webpack rewrites them, and the result fails at module load while
+   * Next is collecting page data — `path.join` on a value the rewritten code never supplied.
+   * Left external, it is required at runtime from node_modules the way it expects to be.
+   */
+  serverExternalPackages: ['pg'],
 
   outputFileTracingRoot: new URL('../../', import.meta.url).pathname,
 
