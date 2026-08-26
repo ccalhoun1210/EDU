@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import styles from './sales.module.css';
 import { SiteHeader } from '@/components/marketing/site-header';
+import { Docket } from '@/components/marketing/docket';
 import {
   ArrowRightIcon,
   CheckIcon,
@@ -93,7 +94,7 @@ const TRUST = [
     Icon: LockIcon,
     title: 'FERPA contractual terms',
     desc: 'Student-level data handled under a data-privacy agreement, isolated by tenant and organization.',
-    status: 'Standard in every contract',
+    status: 'In every contract',
   },
   {
     Icon: ShieldIcon,
@@ -123,29 +124,42 @@ const TRUST = [
     Icon: NoWriteIcon,
     title: 'Read-only by design',
     desc: 'We never write back to your SIS or IEP system. Nothing we do can alter your systems of record.',
-    status: 'Architectural guarantee',
+    status: 'Architectural',
   },
 ];
 
 export default function Home() {
   return (
     <div className={styles.page}>
+      <a className={styles.skipLink} href="#main">
+        Skip to content
+      </a>
       <SiteHeader />
 
       <main id="main">
-        {/* ---------- Hero: lead with the question, not a feature ---------- */}
+        {/* ---------- Hero: lead with the question, exhibit as proof ---------- */}
         <section className={styles.hero}>
           <div className={styles.container}>
             <div className={styles.heroGrid}>
               <div>
-                <span className={styles.heroEyebrow}>For IDEA Part B fiscal compliance</span>
+                <p className={styles.heroDocket}>
+                  <span>
+                    Scope: <b>IDEA Part B fiscal</b>
+                  </span>
+                  <span>
+                    Authority: <b>34 CFR §300</b>
+                  </span>
+                  <span>
+                    Rule pack: <b>idea-part-b@2024.1</b>
+                  </span>
+                </p>
                 <h1 className={styles.heroTitle}>
                   If this district were <em>monitored today</em>, would it pass?
                 </h1>
                 <p className={styles.heroSub}>
                   ComplianceOS EDU evaluates your special-education fiscal data against the federal
                   rules a state monitor applies — Maintenance of Effort, excess cost, proportionate
-                  share — and shows the citation and arithmetic behind every result.
+                  share — and returns a determination with the citation and arithmetic behind it.
                 </p>
                 <div className={styles.heroActions}>
                   <a className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`} href="#contact">
@@ -158,58 +172,50 @@ export default function Home() {
                 </div>
                 <p className={styles.heroNote}>
                   <NoWriteIcon size={16} />
-                  Read-only. We never write back to your SIS or IEP system.
+                  Read-only — we never write back to your SIS or IEP system.
                 </p>
-
-                <div className={styles.chips}>
-                  <span className={styles.chip}>34 CFR §300.203</span>
-                  <span className={styles.chip}>34 CFR §300.16</span>
-                  <span className={styles.chip}>34 CFR §300.133</span>
-                </div>
               </div>
 
-              {/* Signature asset: the worked "Why" panel */}
-              <aside className={styles.whyCard} aria-label="Example determination detail">
-                <div className={styles.whyHead}>
-                  <span className={styles.whyHeadLabel}>Why this result</span>
-                  <span className={styles.whyRuleId}>MOE-LOCAL-2024</span>
+              {/* Signature asset: a determination rendered as a formal exhibit */}
+              <aside className={styles.exhibit} aria-label="Example determination exhibit">
+                <div className={styles.exhibitHead}>
+                  <b>Exhibit A — Determination</b>
+                  <span>DET-2024-0417</span>
                 </div>
-                <div className={styles.whyBody}>
-                  <div className={styles.whyRow}>
-                    <span className={styles.whyKey}>Determination</span>
-                    <span className={styles.whyVal}>
-                      <span className={`${styles.statusBadge} ${styles.stFail} ${styles.statusLg}`}>
-                        <FailGlyph size={16} />
-                        FAIL
-                      </span>
-                    </span>
+                <div className={styles.exhibitStamp}>
+                  <span className={styles.stampMark}>
+                    <FailGlyph size={20} />
+                    FAIL
+                  </span>
+                  <span className={styles.exhibitStampCaption}>
+                    <b>Maintenance of Effort not met</b>
+                    Local expenditure fell below the prior-year floor.
+                  </span>
+                </div>
+                <div className={styles.exLedger}>
+                  <div className={styles.exRow}>
+                    <span className={styles.exKey}>Authority</span>
+                    <span className={styles.exVal}>34 CFR §300.203(b)</span>
                   </div>
-                  <div className={styles.whyRow}>
-                    <span className={styles.whyKey}>Authority</span>
-                    <span className={`${styles.whyVal} ${styles.whyMono}`}>34 CFR §300.203(b)</span>
+                  <div className={styles.exRow}>
+                    <span className={styles.exKey}>Rule pack</span>
+                    <span className={styles.exVal}>idea-part-b@2024.1</span>
                   </div>
-                  <div className={styles.whyRow}>
-                    <span className={styles.whyKey}>Rule pack</span>
-                    <span className={`${styles.whyVal} ${styles.whyMono}`}>idea-part-b@2024.1</span>
+                  <div className={styles.exRow}>
+                    <span className={styles.exKey}>Subject</span>
+                    <span className={styles.exVal}>LEA 04170 · FY2024</span>
                   </div>
-                  <div className={styles.whyRow}>
-                    <span className={styles.whyKey}>Inputs</span>
-                    <span className={styles.whyVal}>
-                      Prior-year local: $4,120,000 · Current-year local: $3,960,000
-                    </span>
-                  </div>
-                  <div className={styles.whyRow}>
-                    <span className={styles.whyKey}>Arithmetic</span>
-                    <span className={styles.whyVal}>
-                      <span className={styles.whyArith}>
-                        required ≥ $4,120,000
-                        <br />
-                        actual&nbsp;&nbsp;&nbsp;= $3,960,000
-                        <br />
-                        shortfall = <b>$160,000</b> → FAIL
-                      </span>
-                    </span>
-                  </div>
+                </div>
+                <div className={styles.exArith}>
+                  required&nbsp;≥ $4,120,000
+                  <br />
+                  actual&nbsp;&nbsp;&nbsp;&nbsp;= $3,960,000
+                  <br />
+                  shortfall&nbsp;= <span className={styles.neg}>$160,000</span> → FAIL
+                </div>
+                <div className={styles.exFoot}>
+                  <CheckIcon size={14} />
+                  Machine-evaluated · reproducible from the pinned rule pack
                 </div>
               </aside>
             </div>
@@ -217,22 +223,22 @@ export default function Home() {
         </section>
 
         {/* ---------- The problem, in their vocabulary ---------- */}
-        <section id="problem" className={styles.section}>
+        <section id="problem" className={`${styles.section} ${styles.sectionRule}`}>
           <div className={styles.container}>
-            <p className={styles.kicker}>The problem</p>
-            <h2 className={styles.sectionTitle}>
-              You already know the vocabulary. So does the engine.
-            </h2>
-            <p className={styles.sectionLede}>
-              These are the tests a state monitor runs against IDEA Part B fiscal data — and the
-              ones a spreadsheet quietly gets wrong. ComplianceOS EDU encodes each one against the
-              regulation it comes from.
-            </p>
-            <div className={styles.termGrid}>
-              {TERMS.map((t) => (
-                <div className={styles.term} key={t.abbr}>
-                  <p className={styles.termName}>{t.name}</p>
-                  <span className={styles.termAbbr}>{t.abbr}</span>
+            <Docket
+              no="§ 01"
+              tag="The vocabulary"
+              title="You already know the tests. So does the engine."
+              lede="These are the checks a state monitor runs against IDEA Part B fiscal data — and the ones a spreadsheet quietly gets wrong. Each is encoded against the regulation it comes from."
+            />
+            <div className={styles.termList}>
+              {TERMS.map((t, i) => (
+                <div className={styles.termRow} key={t.abbr}>
+                  <span className={styles.termIndex}>{String(i + 1).padStart(2, '0')}</span>
+                  <span className={styles.termHead}>
+                    <span className={styles.termName}>{t.name}</span>
+                    <span className={styles.termAbbr}>{t.abbr}</span>
+                  </span>
                   <p className={styles.termDesc}>{t.desc}</p>
                 </div>
               ))}
@@ -241,28 +247,22 @@ export default function Home() {
         </section>
 
         {/* ---------- Six-state status system ---------- */}
-        <section className={`${styles.section} ${styles.sectionAlt}`}>
+        <section className={`${styles.section} ${styles.sectionAlt} ${styles.sectionRule}`}>
           <div className={styles.container}>
-            <p className={styles.kicker}>Honest determinations</p>
-            <h2 className={styles.sectionTitle}>
-              Six outcomes — and INDETERMINATE is not a failure.
-            </h2>
-            <p className={styles.sectionLede}>
-              A spreadsheet gives you two answers and hides the third. This is the outcome the
-              product exists to protect: when required evidence is missing, it says so plainly
-              instead of manufacturing a passing result you cannot defend.
-            </p>
+            <Docket
+              no="§ 02"
+              tag="Determination states"
+              title="Six outcomes — and INDETERMINATE is not a failure."
+              lede="A spreadsheet gives you two answers and hides the third. This is the outcome the product exists to protect: when required evidence is missing, it says so plainly instead of manufacturing a passing result you cannot defend."
+            />
             <div className={styles.legend}>
               {STATUS_LEGEND.map(({ label, cls, Glyph, body }) => (
-                <div className={styles.legendItem} key={label}>
+                <div className={styles.legendRow} key={label}>
                   <span className={`${styles.statusBadge} ${styles[cls]}`}>
-                    <Glyph size={16} />
+                    <Glyph size={15} />
                     {label}
                   </span>
-                  <span className={styles.legendText}>
-                    <strong>{label}</strong>
-                    {body}
-                  </span>
+                  <p className={styles.legendText}>{body}</p>
                 </div>
               ))}
             </div>
@@ -270,19 +270,15 @@ export default function Home() {
         </section>
 
         {/* ---------- A worked result (anchor target) ---------- */}
-        <section id="result" className={styles.section}>
+        <section id="result" className={`${styles.section} ${styles.sectionRule}`}>
           <div className={styles.container}>
-            <p className={styles.kicker}>A worked result</p>
-            <h2 className={styles.sectionTitle}>
-              Every determination shows its work — like the panel above.
-            </h2>
-            <p className={styles.sectionLede}>
-              Status, the citation a hearing officer would ask for, the exact rule-pack version that
-              produced it, the inputs, the arithmetic, and the source rows. No competitor screenshot
-              looks like this because no competitor binds the answer to its authority. Explore live
-              determinations in the rule registry.
-            </p>
-            <div className={styles.heroActions} style={{ marginTop: '1.75rem' }}>
+            <Docket
+              no="§ 03"
+              tag="A worked result"
+              title="Every determination shows its work — like Exhibit A."
+              lede="Status, the citation a hearing officer would ask for, the exact rule-pack version that produced it, the inputs, and the arithmetic. No competitor screenshot looks like this, because no competitor binds the answer to its authority."
+            />
+            <div className={styles.heroActions}>
               <Link className={`${styles.btn} ${styles.btnGhost} ${styles.btnLg}`} href="/registry">
                 Open the rule registry
                 <ArrowRightIcon size={18} />
@@ -292,18 +288,18 @@ export default function Home() {
         </section>
 
         {/* ---------- What it does NOT do ---------- */}
-        <section className={`${styles.section} ${styles.sectionAlt}`}>
+        <section className={`${styles.section} ${styles.sectionAlt} ${styles.sectionRule}`}>
           <div className={styles.container}>
-            <p className={styles.kicker}>What it does not do</p>
-            <h2 className={styles.sectionTitle}>The limits are the point.</h2>
-            <p className={styles.sectionLede}>
-              A compliance tool earns trust by what it refuses to touch. These are guarantees, not
-              gaps.
-            </p>
+            <Docket
+              no="§ 04"
+              tag="Limits & guarantees"
+              title="The limits are the point."
+              lede="A compliance tool earns trust by what it refuses to touch. These are guarantees, not gaps."
+            />
             <div className={styles.notGrid}>
               <div className={styles.notCard}>
                 <span className={styles.notIcon}>
-                  <NoWriteIcon size={22} />
+                  <NoWriteIcon size={20} />
                 </span>
                 <h3>It never writes to your systems of record</h3>
                 <p>
@@ -314,7 +310,7 @@ export default function Home() {
               </div>
               <div className={styles.notCard}>
                 <span className={styles.notIcon}>
-                  <IndeterminateGlyph size={22} />
+                  <IndeterminateGlyph size={20} />
                 </span>
                 <h3>It never guesses to fill a gap</h3>
                 <p>
@@ -328,26 +324,23 @@ export default function Home() {
         </section>
 
         {/* ---------- Trust row ---------- */}
-        <section id="trust" className={styles.section}>
+        <section id="trust" className={`${styles.section} ${styles.sectionRule}`}>
           <div className={styles.container}>
-            <p className={styles.kicker}>Trust &amp; security</p>
-            <h2 className={styles.sectionTitle}>The row a district reads before anything else.</h2>
-            <p className={styles.sectionLede}>
-              Everything here is stated at its true status. We would rather show an honest
-              &ldquo;in progress&rdquo; than an unbacked badge — the same standard we hold your
-              determinations to.
-            </p>
-            <div className={styles.trustGrid}>
+            <Docket
+              no="§ 05"
+              tag="Trust & security"
+              title="The row a district reads before anything else."
+              lede="Everything here is stated at its true status. We would rather show an honest “in progress” than an unbacked badge — the same standard we hold your determinations to."
+            />
+            <div className={styles.trustList}>
               {TRUST.map(({ Icon, title, desc, status }) => (
-                <div className={styles.trustCard} key={title}>
+                <div className={styles.trustRow} key={title}>
                   <span className={styles.trustIcon}>
-                    <Icon size={22} />
+                    <Icon size={20} />
                   </span>
-                  <div>
-                    <p className={styles.trustTitle}>{title}</p>
-                    <p className={styles.trustDesc}>{desc}</p>
-                    <span className={styles.trustStatus}>{status}</span>
-                  </div>
+                  <p className={styles.trustTitle}>{title}</p>
+                  <p className={styles.trustDesc}>{desc}</p>
+                  <span className={styles.trustStatus}>{status}</span>
                 </div>
               ))}
             </div>
@@ -356,8 +349,8 @@ export default function Home() {
             <figure className={styles.proof}>
               <p className={styles.proofLabel}>Practitioner proof — reserved for a named pilot</p>
               <blockquote className={styles.proofQuote}>
-                &ldquo;A district director, attributed by name and district, describes catching a
-                finding before their state monitoring visit.&rdquo;
+                “A district director, attributed by name and district, describes catching a finding
+                before their state monitoring visit.”
               </blockquote>
               <figcaption className={styles.proofAttr}>
                 We leave this slot empty rather than fill it with a stock quote.
@@ -367,14 +360,14 @@ export default function Home() {
         </section>
 
         {/* ---------- Coverage ---------- */}
-        <section id="coverage" className={`${styles.section} ${styles.sectionAlt}`}>
+        <section id="coverage" className={`${styles.section} ${styles.sectionAlt} ${styles.sectionRule}`}>
           <div className={styles.container}>
-            <p className={styles.kicker}>Coverage</p>
-            <h2 className={styles.sectionTitle}>Federal IDEA Part B fiscal rules today.</h2>
-            <p className={styles.sectionLede}>
-              We begin where audit risk is highest and expand outward. Each rule pack undergoes legal
-              review before it leaves the registry.
-            </p>
+            <Docket
+              no="§ 06"
+              tag="Coverage register"
+              title="Federal IDEA Part B fiscal rules today."
+              lede="We begin where audit risk is highest and expand outward. Each rule pack undergoes legal review before it leaves the registry."
+            />
             <div className={styles.coverageWrap}>
               <table className={styles.coverageTable}>
                 <thead>
@@ -391,7 +384,7 @@ export default function Home() {
                       <td className={styles.coverageCite}>{c.authority}</td>
                       <td>
                         <span className={`${styles.statusBadge} ${c.live ? styles.stPass : styles.stNa}`}>
-                          {c.live ? <PassGlyph size={15} /> : <NotApplicableGlyph size={15} />}
+                          {c.live ? <PassGlyph size={14} /> : <NotApplicableGlyph size={14} />}
                           {c.live ? 'Available' : 'On roadmap'}
                         </span>
                       </td>
@@ -406,31 +399,33 @@ export default function Home() {
         {/* ---------- CTA ---------- */}
         <section id="contact" className={`${styles.section} ${styles.cta}`}>
           <div className={styles.container}>
-            <div className={styles.ctaInner}>
-              <div>
-                <h2 className={styles.ctaTitle}>See a determination you could hand to a monitor.</h2>
-                <p className={styles.ctaSub}>
-                  Bring a program you oversee and we will walk it through the IDEA Part B rule pack
-                  live — citations, statuses, and the arithmetic behind each result.
-                </p>
-              </div>
-              <div className={styles.ctaActions}>
-                <a
-                  className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`}
-                  href="mailto:demo@complianceos.edu?subject=ComplianceOS%20EDU%20demo"
-                >
-                  Request a demo
-                </a>
-                <a
-                  className={`${styles.btn} ${styles.btnGhost} ${styles.btnLg}`}
-                  href="mailto:states@complianceos.edu?subject=State%20rules%20conversation"
-                >
-                  Talk to us about your state
-                </a>
-                <p className={styles.ctaFine}>
-                  State rules differ. The second conversation is for SEA-adjacent buyers who need to
-                  know we can model theirs.
-                </p>
+            <div className={styles.sectionRule} style={{ paddingTop: '1.25rem' }}>
+              <div className={styles.ctaInner}>
+                <div>
+                  <h2 className={styles.ctaTitle}>See a determination you could hand to a monitor.</h2>
+                  <p className={styles.ctaSub}>
+                    Bring a program you oversee and we will walk it through the IDEA Part B rule pack
+                    live — citations, statuses, and the arithmetic behind each result.
+                  </p>
+                </div>
+                <div className={styles.ctaActions}>
+                  <a
+                    className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`}
+                    href="mailto:demo@complianceos.edu?subject=ComplianceOS%20EDU%20demo"
+                  >
+                    Request a demo
+                  </a>
+                  <a
+                    className={`${styles.btn} ${styles.btnGhost} ${styles.btnLg}`}
+                    href="mailto:states@complianceos.edu?subject=State%20rules%20conversation"
+                  >
+                    Talk to us about your state
+                  </a>
+                  <p className={styles.ctaFine}>
+                    State rules differ. The second conversation is for SEA-adjacent buyers who need to
+                    know we can model theirs.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -453,7 +448,7 @@ export default function Home() {
               <h4>Product</h4>
               <ul>
                 <li>
-                  <a href="#problem">The problem</a>
+                  <a href="#problem">The vocabulary</a>
                 </li>
                 <li>
                   <a href="#result">A worked result</a>
@@ -463,6 +458,9 @@ export default function Home() {
                 </li>
                 <li>
                   <Link href="/registry">Rule registry</Link>
+                </li>
+                <li>
+                  <Link href="/pricing">Pricing</Link>
                 </li>
               </ul>
             </div>
@@ -486,12 +484,11 @@ export default function Home() {
           </div>
           <div className={styles.footerBar}>
             <p className={styles.footerStatement}>
-              ComplianceOS EDU is an independent software vendor and is not a government agency. It
-              conforms to WCAG 2.1 Level AA; an Accessibility Conformance Report is available on
-              request. Statutory citations are provided for reference and do not constitute legal
-              advice.
+              ComplianceOS EDU is an independent software vendor and is not a government agency. Our
+              rule packs cite the controlling authority and are reviewed before release; a
+              determination is decision-support, not legal advice.
             </p>
-            <span>© {new Date().getFullYear()} ComplianceOS EDU</span>
+            <span>© 2026 ComplianceOS EDU</span>
           </div>
         </div>
       </footer>

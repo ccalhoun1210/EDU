@@ -23,12 +23,15 @@
   --manual: #5b3e90;
   --na: #6b7280;
 
+  /* Machine-record voice: citations, rule-pack IDs, statuses, figures. */
+  --mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
   /* Aliases kept for the legacy registry page */
   --bg: var(--surface);
   --fg: var(--ink);
   --accent: var(--navy);
 
-  --radius: 8px;
+  --radius: 4px;
 }
 
 * {

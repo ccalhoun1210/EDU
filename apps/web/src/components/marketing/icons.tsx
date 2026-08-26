@@ -143,3 +143,24 @@ export function NoWriteIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function StampIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M12 3a3 3 0 0 0-3 3c0 1.5 1 2.2 1 3.5S9 12 7.5 12H6a2 2 0 0 0-2 2v1h16v-1a2 2 0 0 0-2-2h-1.5c-1.5 0-2.5-.7-2.5-2.5S14 7.5 14 6a3 3 0 0 0-2-3Z" />
+      <path d="M4 19h16" />
+    </svg>
+  );
+}
+
+export function ScaleIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M12 3v18" />
+      <path d="M7 21h10" />
+      <path d="M5 7h14" />
+      <path d="M5 7 2.5 13a3 3 0 0 0 5 0Z" />
+      <path d="M19 7l-2.5 6a3 3 0 0 0 5 0Z" />
+    </svg>
+  );
+}

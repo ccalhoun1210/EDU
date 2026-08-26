@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/marketing/site-header';
+import { Docket } from '@/components/marketing/docket';
 import { PriceCalculator } from '@/components/marketing/price-calculator';
 import {
   ArrowRightIcon,
@@ -81,6 +82,9 @@ export default function PricingPage() {
 
   return (
     <div className={sales.page}>
+      <a className={sales.skipLink} href="#main">
+        Skip to content
+      </a>
       <SiteHeader />
 
       <main id="main">
@@ -89,7 +93,11 @@ export default function PricingPage() {
           <div className={sales.container}>
             <div className={styles.heroInner}>
               <div className={styles.heroCopy}>
-                <span className={sales.kicker}>Pricing</span>
+                <p className={sales.heroDocket} style={{ border: 0, paddingBottom: 0, marginBottom: '0.5rem' }}>
+                  <span>
+                    Schedule: <b>Fiscal module</b>
+                  </span>
+                </p>
                 <h1 className={styles.heroTitle}>
                   Priced against the grant it protects — and we publish the number.
                 </h1>
@@ -105,16 +113,14 @@ export default function PricingPage() {
         </section>
 
         {/* ---------- Published band table ---------- */}
-        <section id="bands" className={`${sales.section} ${sales.sectionAlt}`}>
+        <section id="bands" className={`${sales.section} ${sales.sectionAlt} ${sales.sectionRule}`}>
           <div className={sales.container}>
-            <span className={sales.kicker}>The model</span>
-            <h2 className={sales.sectionTitle}>Marginal bands on the allocation</h2>
-            <p className={sales.sectionLede}>
-              Each band of your IDEA Part B allocation is charged at a declining
-              rate, the way tax brackets work. This guarantees the price always
-              rises with size while the effective rate always falls — no
-              tier-boundary inversions, verified computationally.
-            </p>
+            <Docket
+              no="§ P1"
+              tag="The model"
+              title="Marginal bands on the allocation"
+              lede="Each band of your IDEA Part B allocation is charged at a declining rate, the way tax brackets work. The price always rises with size while the effective rate always falls — no tier-boundary inversions, verified computationally."
+            />
 
             <ul className={styles.bandRates}>
               {BANDS.map((b, i) => (
@@ -177,15 +183,14 @@ export default function PricingPage() {
         </section>
 
         {/* ---------- What's included ---------- */}
-        <section id="included" className={sales.section}>
+        <section id="included" className={`${sales.section} ${sales.sectionRule}`}>
           <div className={sales.container}>
-            <span className={sales.kicker}>What&apos;s included</span>
-            <h2 className={sales.sectionTitle}>Every district gets the whole fiscal module</h2>
-            <p className={sales.sectionLede}>
-              No feature gating by tier. Gating a statutory compliance check
-              behind a price tier is indefensible when the check is the law —
-              so we don&apos;t. The price scales with the grant; the product does not.
-            </p>
+            <Docket
+              no="§ P2"
+              tag="What's included"
+              title="Every district gets the whole fiscal module"
+              lede="No feature gating by tier. Gating a statutory compliance check behind a price tier is indefensible when the check is the law — so we don't. The price scales with the grant; the product does not."
+            />
             <ul className={styles.includedGrid}>
               {included.map((item) => (
                 <li key={item.title} className={styles.includedItem}>
@@ -201,17 +206,14 @@ export default function PricingPage() {
         </section>
 
         {/* ---------- How districts pay ---------- */}
-        <section id="funding" className={`${sales.section} ${sales.sectionAlt}`}>
+        <section id="funding" className={`${sales.section} ${sales.sectionAlt} ${sales.sectionRule}`}>
           <div className={sales.container}>
-            <span className={sales.kicker}>How districts pay for it</span>
-            <h2 className={sales.sectionTitle}>
-              The first question is which pot of money pays
-            </h2>
-            <p className={sales.sectionLede} style={{ marginBottom: '1.5rem' }}>
-              Getting this right matters more than the number, and the honest
-              position is to work it through with you — not to assert an answer
-              that isn&apos;t settled.
-            </p>
+            <Docket
+              no="§ P3"
+              tag="How districts pay"
+              title="The first question is which pot of money pays"
+              lede="Getting this right matters more than the number, and the honest position is to work it through with you — not to assert an answer that isn't settled."
+            />
             <div className={styles.callout}>
               <h3>What we will and won&apos;t claim</h3>
               <p>
@@ -233,16 +235,14 @@ export default function PricingPage() {
         </section>
 
         {/* ---------- Channels ---------- */}
-        <section id="esa" className={sales.section}>
+        <section id="esa" className={`${sales.section} ${sales.sectionRule}`}>
           <div className={sales.container}>
-            <span className={sales.kicker}>Not every district buys direct</span>
-            <h2 className={sales.sectionTitle}>Three routes, matched to who you are</h2>
-            <p className={sales.sectionLede}>
-              At 75–150 children served the floor is a large share of the grant —
-              not a price a small district should pay directly. Roughly a third of
-              districts serve under 600 students; they buy through the service
-              agencies that already administer their special-education compliance.
-            </p>
+            <Docket
+              no="§ P4"
+              tag="Purchasing routes"
+              title="Three routes, matched to who you are"
+              lede="At 75–150 children served the floor is a large share of the grant — not a price a small district should pay directly. Roughly a third of districts serve under 600 students; they buy through the service agencies that already administer their special-education compliance."
+            />
             <div className={styles.channelGrid}>
               {channels.map((c) => {
                 const Icon = c.icon;
@@ -262,10 +262,14 @@ export default function PricingPage() {
         </section>
 
         {/* ---------- Procurement facts ---------- */}
-        <section id="procurement" className={`${sales.section} ${sales.sectionAlt}`}>
+        <section id="procurement" className={`${sales.section} ${sales.sectionAlt} ${sales.sectionRule}`}>
           <div className={sales.container}>
-            <span className={sales.kicker}>Procurement</span>
-            <h2 className={sales.sectionTitle}>The facts your business office needs</h2>
+            <Docket
+              no="§ P5"
+              tag="Procurement"
+              title="The facts your business office needs"
+              lede="Everything a district finance office asks before a purchase order — stated up front."
+            />
             <div className={styles.factsGrid}>
               {facts.map((f) => (
                 <div key={f.term} className={styles.fact}>
@@ -278,15 +282,14 @@ export default function PricingPage() {
         </section>
 
         {/* ---------- Roadmap, named not priced ---------- */}
-        <section id="roadmap" className={sales.section}>
+        <section id="roadmap" className={`${sales.section} ${sales.sectionRule}`}>
           <div className={sales.container}>
-            <span className={sales.kicker}>Roadmap</span>
-            <h2 className={sales.sectionTitle}>Named, not sold</h2>
-            <p className={styles.roadmapNote}>
-              These are on the roadmap, not SKUs. We won&apos;t price a module that
-              doesn&apos;t exist or grey out a &ldquo;coming soon&rdquo; tier — the
-              price above is for the fiscal module you can use today.
-            </p>
+            <Docket
+              no="§ P6"
+              tag="Roadmap"
+              title="Named, not sold"
+              lede="These are on the roadmap, not SKUs. We won't price a module that doesn't exist or grey out a “coming soon” tier — the price above is for the fiscal module you can use today."
+            />
             <ul className={styles.roadmapList}>
               {roadmap.map((r) => (
                 <li key={r}>{r}</li>
@@ -296,29 +299,42 @@ export default function PricingPage() {
         </section>
 
         {/* ---------- CTA ---------- */}
-        <section id="contact" className={`${sales.section} ${sales.sectionAlt}`}>
+        <section id="contact" className={`${sales.section} ${sales.cta}`}>
           <div className={sales.container}>
-            <span className={sales.kicker}>Next step</span>
-            <h2 className={sales.sectionTitle}>
-              Put {formatUSD(heroExample.annualPrice)} in a budget line, or talk it through
-            </h2>
-            <p className={sales.sectionLede} style={{ marginBottom: '1.5rem' }}>
-              You have a defensible number for next year&apos;s budget request
-              already. When you&apos;re ready, we&apos;ll quote against your
-              state&apos;s actual allocation table and work through the funding source.
-            </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-              <a className={`${sales.btn} ${sales.btnPrimary} ${sales.btnLg}`} href="mailto:hello@complianceos.example?subject=ComplianceOS%20EDU%20demo">
-                Request a demo
-                <ArrowRightIcon size={18} />
-              </a>
-              <a className={`${sales.btn} ${sales.btnGhost} ${sales.btnLg}`} href="mailto:hello@complianceos.example?subject=Pricing%20for%20my%20state">
-                Talk to us about your state
-              </a>
+            <div className={sales.sectionRule} style={{ paddingTop: '1.25rem' }}>
+              <div className={sales.ctaInner}>
+                <div>
+                  <h2 className={sales.ctaTitle}>
+                    Put {formatUSD(heroExample.annualPrice)} in a budget line, or talk it through.
+                  </h2>
+                  <p className={sales.ctaSub}>
+                    You have a defensible number for next year&apos;s budget request
+                    already. When you&apos;re ready, we&apos;ll quote against your
+                    state&apos;s actual allocation table and work through the funding source.
+                  </p>
+                </div>
+                <div className={sales.ctaActions}>
+                  <a
+                    className={`${sales.btn} ${sales.btnPrimary} ${sales.btnLg}`}
+                    href="mailto:hello@complianceos.example?subject=ComplianceOS%20EDU%20demo"
+                  >
+                    Request a demo
+                    <ArrowRightIcon size={18} />
+                  </a>
+                  <a
+                    className={`${sales.btn} ${sales.btnGhost} ${sales.btnLg}`}
+                    href="mailto:hello@complianceos.example?subject=Pricing%20for%20my%20state"
+                  >
+                    Talk to us about your state
+                  </a>
+                  <p className={sales.ctaFine}>
+                    <Link href="/" style={{ color: 'inherit' }}>
+                      ← Back to overview
+                    </Link>
+                  </p>
+                </div>
+              </div>
             </div>
-            <p style={{ marginTop: '1.5rem', fontSize: '0.9rem' }}>
-              <Link href="/">← Back to overview</Link>
-            </p>
           </div>
         </section>
       </main>
