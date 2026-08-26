@@ -167,7 +167,7 @@ export const SEA_PROHIBITION_GROUNDS = [
  * The first fiscal year the text this calculator version implements governs.
  *
  * Mirrors `effective.start` on both rule files. Whether the rule's window or the pack's
- * window governs applicability is OQ-24 and is unresolved, so no golden case pins the exact
+ * window governs applicability is OQ-25 and is unresolved, so no golden case pins the exact
  * boundary date. A fiscal year before this is MANUAL_REVIEW and never NOT_APPLICABLE: the
  * requirement applied to that year under the earlier text, and NOT_APPLICABLE would report
  * an exemption that does not exist. What does not apply is this calculator version.
@@ -1006,7 +1006,7 @@ const NO_ADJUSTMENT: AdjustmentOutcome = {
  * made the result a function of how an upstream ingest happened to order a logically
  * unordered array, which defeats reproducibility of a finalized run outright (invariant 4).
  *
- * Whether the ceiling is shared across the two measures or is one per measure is OQ-10.
+ * Whether the ceiling is shared across the two measures or is one per measure is OQ-11.
  */
 function resolveAdjustment(
   reader: InputReader,
@@ -1046,7 +1046,7 @@ function resolveAdjustment(
           'ADJUSTMENT_300_205_ESEA_CONDITION_NOT_MET',
           'The LEA has not shown it used an equal amount of local funds on ESEA-supportable ' +
             'activities, so no amount is allowed under 34 CFR 300.205. Whether that condition ' +
-            'is a condition precedent or an independent obligation is OQ-13.',
+            'is a condition precedent or an independent obligation is OQ-14.',
           '34 CFR 300.205',
         ),
       ],
@@ -1065,7 +1065,7 @@ function resolveAdjustment(
     : undefined;
   if (prior === undefined) unvalidatable.push('part_b_611_allocation_prior');
   // Not defaulted to zero. A zero default enlarges the ceiling, which runs in the LEA's
-  // favour on a figure nobody supplied. OQ-9.
+  // favour on a figure nobody supplied. OQ-10.
   const ceis = probe.has('ceis_amount_300_226') ? probe.money('ceis_amount_300_226') : undefined;
   if (ceis === undefined) unvalidatable.push('ceis_amount_300_226');
 
@@ -1305,7 +1305,7 @@ function evaluateOneMethod(method: MoeMethod, facts: MethodFacts): MethodOutcome
           `${METHOD_LABEL[method]}: the comparison year was met under some measures but not ` +
             'this one. Whether the subsequent-years rule carries forward per measure or on ' +
             'the standard as a whole decides this method’s comparison level, and the two ' +
-            'readings give different answers. OQ-2.',
+            'readings give different answers. OQ-9.',
           '34 CFR 300.203(c)',
         ),
       ],
@@ -1781,7 +1781,7 @@ export function runMoe(
         `The fiscal year beginning ${currentFyStart} precedes ${MOE_RULE_EFFECTIVE_START}, the ` +
           'start of the text this calculator version implements. The requirement applied to ' +
           'that year under the earlier text, so this is a version gap and not an exemption; a ' +
-          'determination for it needs its own calculator version. OQ-24.',
+          'determination for it needs its own calculator version. OQ-25.',
         config.standardCitation,
       ),
     ]);
@@ -1796,7 +1796,7 @@ export function runMoe(
         'FEDERAL_FUNDS_NOT_EXCLUDED',
         'The amounts include expenditure from federal funds the LEA or SEA must account for ' +
           'federally, so they are not the quantities the standard speaks about. The figures ' +
-          'arrived, on the wrong basis; no arithmetic on them measures the requirement. OQ-19.',
+          'arrived, on the wrong basis; no arithmetic on them measures the requirement. OQ-20.',
         '34 CFR 300.203(a)(3)',
       ),
     ]);
@@ -1815,7 +1815,7 @@ export function runMoe(
         'The LEA received no Part B subgrant for the year. Whether such an LEA is outside the ' +
           'compliance standard is unresolved, and NOT_APPLICABLE would answer it; the year’s ' +
           'expenditure levels still set the bar for the next year in which a subgrant is ' +
-          'received. OQ-14.',
+          'received. OQ-15.',
         '34 CFR 300.203(d)',
       ),
     ]);
@@ -2208,7 +2208,7 @@ function validationScope(config: MoeVariantConfig): ValidationScope {
  *
  * The inconsistency is at least as likely to be an ingest-mapping error as a district
  * position, and either needs a person: an LEA measuring against its own reduced level after a
- * failure is exactly the ratchet-down the subsequent-years rule exists to prevent. OQ-21.
+ * failure is exactly the ratchet-down the subsequent-years rule exists to prevent. OQ-22.
  */
 function basisInconsistency(
   config: MoeVariantConfig,
@@ -2451,7 +2451,7 @@ function finalize(spec: FinalizeSpec): CalculatorResult<MoeOutput> {
             'REPAYMENT_METHOD_SELECTION_UNRESOLVED',
             'Which measure’s shortfall fixes the repayment is unresolved, and a per-capita ' +
               'dollar shortfall may not be commensurable with a total-amount one at all, so ' +
-              'the exposure is reported as a range rather than as a figure. OQ-11.',
+              'the exposure is reported as a range rather than as a figure. OQ-12.',
             '34 CFR 300.203(d)',
           ),
         );

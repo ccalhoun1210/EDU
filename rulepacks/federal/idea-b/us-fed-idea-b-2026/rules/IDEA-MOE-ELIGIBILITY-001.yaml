@@ -53,5 +53,5 @@ outputSchema:
   projectedShortfallByMethod: object
   qualifiesOnlyOnExpectedReductions: boolean
 
-severityOnFailure: CRITICAL
+severityOnFailure: HIGH
 explanationTemplate: moe_eligibility_v1

@@ -43,6 +43,20 @@ describe('the golden corpus', () => {
     }
   });
 
+  it('cites every provision its calculator implements', () => {
+    // The corpus's authority list is what a domain reviewer reads to know what the cases are
+    // derived from. When it is narrower than the calculator's, a provision is exercised by a
+    // case — 34 CFR 300.704(c) is the ground behind HIGH_COST_FUND_ASSUMPTION — while the
+    // document a reviewer checks never mentions it.
+    for (const corpus of corpora) {
+      const calculator = CALCULATORS.get(corpus.calculator as never);
+      if (calculator === undefined) continue;
+      const cited = new Set(corpus.authority);
+      const uncited = calculator.authority.filter((provision) => !cited.has(provision));
+      expect(uncited, `${corpus.file} does not cite`).toEqual([]);
+    }
+  });
+
   it('holds at most one corpus per calculator', () => {
     const names = corpora.map((corpus) => corpus.calculator);
     expect(new Set(names).size, `duplicate corpora: ${names.join(', ')}`).toBe(names.length);

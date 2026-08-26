@@ -53,7 +53,7 @@ const COMPLIANCE_INPUTS: readonly CalculatorInputSpec[] = [
     classification: 'INTERNAL',
     definition:
       'The LEA’s Part B subgrant for the year. Used only for the 34 CFR 300.203(d) cap; a ' +
-      'decimal zero routes the year to review rather than answering OQ-14.',
+      'decimal zero routes the year to review rather than answering OQ-15.',
   },
   {
     name: 'current_actual_local',
@@ -76,7 +76,7 @@ const COMPLIANCE_INPUTS: readonly CalculatorInputSpec[] = [
     classification: 'CONFIDENTIAL',
     definition:
       'Aggregate count of children with disabilities served in the year under test. Which ' +
-      'count date is the per-capita denominator is OQ-18; the calculator trusts the caller.',
+      'count date is the per-capita denominator is OQ-19; the calculator trusts the caller.',
   },
   {
     name: 'comparison_year_moe_status',
@@ -93,7 +93,7 @@ const COMPLIANCE_INPUTS: readonly CalculatorInputSpec[] = [
     definition:
       'The measures under which the LEA met the standard in the comparison year. Empty is ' +
       'legal and meaningful. Used only to detect where the two readings of the ' +
-      'subsequent-years rule can diverge for a measure — OQ-2.',
+      'subsequent-years rule can diverge for a measure — OQ-9.',
   },
 ];
 

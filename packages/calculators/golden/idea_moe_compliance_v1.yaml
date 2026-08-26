@@ -7,6 +7,8 @@ authority:
   - 34 CFR 300.204
   - 34 CFR 300.205
   - 34 CFR 300.226
+  - 34 CFR 300.704(c)
+  - 20 U.S.C. 1413(a)(2)
 notes: >-
   No regulatory text was retrieved when these cases were written. eCFR is unreachable from
   the authoring environment (ADR 0006), so every statement about what the regulation

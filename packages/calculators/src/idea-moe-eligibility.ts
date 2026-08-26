@@ -86,7 +86,7 @@ const ELIGIBILITY_INPUTS: readonly CalculatorInputSpec[] = [
     definition:
       'Aggregate count of children with disabilities projected or officially adopted for the ' +
       'budget year. Whether a projected count is admissible against an actual comparison ' +
-      'count is OQ-20.',
+      'count is OQ-21.',
   },
 ];
 
