@@ -30,9 +30,9 @@ export function SiteHeader() {
           <a className={styles.navLink} href="#trust">
             Trust &amp; security
           </a>
-          <a className={styles.navLink} href="#coverage">
-            Coverage
-          </a>
+          <Link className={styles.navLink} href="/pricing">
+            Pricing
+          </Link>
         </nav>
 
         <div className={styles.headerCta}>

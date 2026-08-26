@@ -1,0 +1,571 @@
+/* ============================================================
+   ComplianceOS EDU — pricing page
+   Reuses the institutional tokens + shared layout from
+   sales.module.css. This file holds only pricing-specific pieces:
+   the calculator, the published band table, and supporting blocks.
+   ============================================================ */
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- Hero ---------------- */
+.hero {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 3rem 0 3.5rem;
+}
+
+.heroInner {
+  display: grid;
+  gap: 2.5rem;
+  grid-template-columns: 1fr;
+}
+
+/* Grid children default to min-width:auto and can blow out the track when
+   they contain large numerals or a table — clamp them. */
+.heroInner > * {
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .heroInner {
+    grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+    gap: 3.5rem;
+    align-items: start;
+  }
+}
+
+.heroCopy {
+  max-width: 34ch;
+}
+
+.heroTitle {
+  font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+  line-height: 1.14;
+  letter-spacing: -0.025em;
+  margin: 0.9rem 0 1rem;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.heroLede {
+  font-size: 1.05rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ---------------- Calculator ---------------- */
+.calc {
+  background: var(--surface);
+  border: 1px solid var(--border-interactive);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px rgba(18, 23, 28, 0.04);
+}
+
+@media (min-width: 560px) {
+  .calc {
+    padding: 1.75rem;
+  }
+}
+
+.calcInputRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.calcLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.calcLabelHint {
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.calcField {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.calcInput {
+  flex: 1 1 9rem;
+  min-width: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--border-interactive);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.preset {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--navy);
+  background: var(--surface-muted);
+  border: 1px solid var(--border-interactive);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+}
+.preset:hover {
+  background: var(--surface-sunken);
+}
+.preset[aria-pressed='true'] {
+  background: var(--navy);
+  color: #fff;
+  border-color: var(--navy);
+}
+
+/* ---------------- Results ---------------- */
+.calcResults {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+@media (min-width: 560px) {
+  .calcResults {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.resultCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 1.25rem;
+  border-radius: 10px;
+  background: var(--surface-muted);
+  border: 1px solid var(--line);
+}
+
+.resultCardPrimary {
+  background: var(--navy);
+  border-color: var(--navy);
+}
+
+.resultLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.resultCardPrimary .resultLabel {
+  color: #cdd9ea;
+}
+
+.resultValue {
+  font-size: clamp(1.5rem, 3.2vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.resultCardPrimary .resultValue {
+  color: #fff;
+}
+
+.resultFoot {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.resultCardPrimary .resultFoot {
+  color: #cdd9ea;
+}
+
+/* ---------------- "Show the work" ---------------- */
+.work {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-muted);
+  overflow: hidden;
+}
+
+.workSummary {
+  cursor: pointer;
+  padding: 0.85rem 1.1rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--navy);
+  list-style: none;
+}
+.workSummary::-webkit-details-marker {
+  display: none;
+}
+.workSummary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 0.5rem;
+  transition: transform 0.15s ease;
+}
+.work[open] .workSummary::before {
+  transform: rotate(90deg);
+}
+
+.workBody {
+  padding: 0 1.1rem 1.1rem;
+}
+
+.workIntro {
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+.workTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.workTable th,
+.workTable td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.workTable thead th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.workTable tfoot th {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.workTotal th,
+.workTotal td {
+  font-weight: 700;
+  color: var(--ink);
+  border-bottom: none;
+  border-top: 2px solid var(--border-interactive);
+}
+
+.workEmpty {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.floorNote {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  border-left: 3px solid var(--risk);
+  background: var(--surface);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+.floorNote a {
+  color: var(--navy);
+  font-weight: 600;
+}
+
+.calcDisclaimer {
+  margin: 1.1rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* ---------------- Published band table ---------------- */
+.bandTableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.bandTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 40rem;
+}
+
+.bandTable th,
+.bandTable td {
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.bandTable thead th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  background: var(--surface-muted);
+  position: sticky;
+  top: 0;
+}
+
+.bandTable tbody tr:hover {
+  background: var(--surface-muted);
+}
+
+.channelPill {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-interactive);
+  color: var(--muted);
+}
+.channelDirect {
+  color: var(--navy);
+  border-color: var(--navy);
+  background: color-mix(in srgb, var(--navy) 8%, transparent);
+}
+
+.bandRates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+}
+.bandRates li {
+  padding: 0.35rem 0.7rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+}
+.bandRates strong {
+  color: var(--ink);
+}
+
+/* ---------------- Included / no-gating ---------------- */
+.includedGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 640px) {
+  .includedGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.includedItem {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  padding: 0.9rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.includedItem svg {
+  color: var(--pass);
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+.includedItem strong {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.includedItem span {
+  font-size: 0.87rem;
+  color: var(--muted);
+}
+
+/* ---------------- Channels ---------------- */
+.channelGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin: 1.5rem 0 0;
+}
+@media (min-width: 820px) {
+  .channelGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.channelCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.channelCardHead {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.channelCardHead svg {
+  color: var(--navy);
+}
+
+.channelWho {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--navy);
+}
+
+.channelCard p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+/* ---------------- Funding / honesty callout ---------------- */
+.callout {
+  padding: 1.5rem;
+  border: 1px solid var(--border-interactive);
+  border-left: 4px solid var(--navy);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.callout h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+.callout p {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+.callout p:last-child {
+  margin-bottom: 0;
+}
+.callout code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  background: var(--surface-sunken);
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+}
+
+/* ---------------- Procurement facts ---------------- */
+.factsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin: 1.5rem 0 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+}
+@media (min-width: 640px) {
+  .factsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.fact {
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid var(--line);
+}
+.fact:last-child {
+  border-bottom: none;
+}
+@media (min-width: 640px) {
+  .fact:nth-child(odd) {
+    border-right: 1px solid var(--line);
+  }
+  .fact:nth-last-child(2):nth-child(odd) {
+    border-bottom: none;
+  }
+}
+.factTerm {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--navy);
+  margin-bottom: 0.2rem;
+}
+.factDesc {
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+/* ---------------- Roadmap (named, NOT priced) ---------------- */
+.roadmapNote {
+  font-size: 0.95rem;
+  color: var(--muted);
+  max-width: 62ch;
+}
+.roadmapList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.roadmapList li {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px dashed var(--border-interactive);
+  border-radius: 999px;
+  color: var(--muted);
+  background: var(--surface);
+}

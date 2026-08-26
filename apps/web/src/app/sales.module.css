@@ -9,6 +9,14 @@
   color: var(--ink);
 }
 
+/* Neutralize the legacy global `main { max-width: 46rem }` rule (a /registry
+   style in globals.css) so marketing pages render full-width. */
+.page main {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
 .container {
   width: 100%;
   max-width: 68rem;
