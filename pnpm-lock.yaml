@@ -61,6 +61,24 @@ importers:
         specifier: ^19.2.1
         version: 19.2.5(@types/react@19.2.18)
 
+  packages/assurance:
+    dependencies:
+      '@complianceos/calculators':
+        specifier: workspace:*
+        version: link:../calculators
+      '@complianceos/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@complianceos/ingest':
+        specifier: workspace:*
+        version: link:../ingest
+      '@complianceos/rulepack-sdk':
+        specifier: workspace:*
+        version: link:../rulepack-sdk
+      '@complianceos/rules-engine':
+        specifier: workspace:*
+        version: link:../rules-engine
+
   packages/calculators:
     dependencies:
       '@complianceos/domain':

@@ -101,6 +101,7 @@ packages/rules-engine/       Evaluator, pack resolver, explanations, assessment 
 packages/calculators/        Calculator contract, registry, golden corpora
 packages/ingest/             Parsing, mapping, validation, provenance, snapshots
 packages/db/                 Migrations, RLS policies, tenant-scoped access
+packages/assurance/          District export to assessment, end to end
 rulepacks/                   Regulatory content as YAML, plus the source registry
 docs/architecture/           Design documents and the master technical buildout
 docs/adrs/                   Architecture decision records
