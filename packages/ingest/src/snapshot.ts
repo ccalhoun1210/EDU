@@ -15,7 +15,13 @@
  *   the run saw, not metadata attached to it.
  */
 
-import { hashCanonical, type CanonicalValue, type DataClassification } from '@complianceos/domain';
+import {
+  hashCanonical,
+  originRefusal,
+  type CanonicalValue,
+  type DataClassification,
+  type FactOrigin,
+} from '@complianceos/domain';
 import type { FactProvenance, SourceFileRef } from './provenance.js';
 
 /**
@@ -32,6 +38,15 @@ export interface CanonicalFact {
   readonly field: string;
   readonly value: CanonicalValue;
   readonly classification: DataClassification;
+  /**
+   * Whose statement this is.
+   *
+   * Classification says how sensitive the value is; origin says who was entitled to assert
+   * it. A district's expenditure total and the platform's own prior determination about that
+   * district are both CONFIDENTIAL, and only one of them may arrive in an uploaded
+   * spreadsheet. See `packages/domain/src/fact-origin.ts`.
+   */
+  readonly origin: FactOrigin;
   readonly provenance: FactProvenance;
 }
 
@@ -77,6 +92,10 @@ export function computeSnapshotHash(
       subjectId: fact.subjectId,
       field: fact.field,
       value: fact.value,
+      // Hashed for the same reason the raw source text is: if origin were outside the hash,
+      // a sealed snapshot could be edited to relabel a district's own figure as a platform
+      // determination, and `verifySnapshot` would still return true.
+      origin: fact.origin,
       // Every provenance field, not a selection of them.
       //
       // The raw source text and the physical line are what a monitor is shown on the
@@ -151,6 +170,24 @@ export class DuplicateFactError extends Error {
  * outcome available here: the finding would be internally consistent, fully provenanced, and
  * computed from an arbitrary half of the district's data.
  */
+/**
+ * A fact reached projection from a source with no standing to assert it.
+ *
+ * Thrown rather than dropped. Dropping would make the field absent, the calculator would
+ * return INDETERMINATE, and the district would be told it was missing a figure it had in fact
+ * supplied — hiding an attempt to assert a determination behind a data-quality message.
+ */
+export class FactOriginError extends Error {
+  constructor(
+    message: string,
+    readonly field: string,
+    readonly origin: FactOrigin,
+  ) {
+    super(message);
+    this.name = 'FactOriginError';
+  }
+}
+
 export function projectFactBag(
   snapshot: DataSnapshot,
   subjectType: string,
@@ -160,6 +197,13 @@ export function projectFactBag(
 
   for (const fact of snapshot.facts) {
     if (fact.subjectType !== subjectType || fact.subjectId !== subjectId) continue;
+
+    // Authority is checked here rather than at evaluation because this is the last point at
+    // which a fact still knows where it came from. Past this line the bag is flat and a
+    // district's assertion is indistinguishable from a determination.
+    const refusal = originRefusal(fact.field, fact.origin);
+    if (refusal !== undefined) throw new FactOriginError(refusal, fact.field, fact.origin);
+
     if (Object.prototype.hasOwnProperty.call(bag, fact.field)) {
       throw new DuplicateFactError(fact.field, subjectId);
     }

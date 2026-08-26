@@ -67,8 +67,11 @@ currently state what the scan concluded, which is honest but is not protection.
 
 **Status: ENFORCED**
 
-A district export is untrusted input, and the failure mode is not a crash — it is a plausible
-number computed from data that was silently mangled.
+A district export is untrusted input, and there are two distinct failure modes. Neither is a
+crash. One is a plausible number computed from data that was silently mangled; the other is a
+perfectly well-formed value in a field the district has no standing to write at all.
+
+### Mangling
 
 - No silent coercion anywhere. A currency string that does not parse is a reported issue on a
   named row and column, never a zero (`packages/ingest/src/transform.ts`).
@@ -82,6 +85,47 @@ number computed from data that was silently mangled.
   (`packages/ingest/src/pipeline.ts`), and `projectFactBag` throws rather than choosing.
 - An unmapped enumeration value is an error, not a pass-through — a category silently dropped
   from a count is a wrong denominator.
+
+### Authority
+
+This half was missing, and the entry claimed ENFORCED without it. A `MappingTemplate` may
+target any canonical field name — the schema constrained only uniqueness — and a projected
+fact bag is flat, so by the time the engine saw a value it could not tell a figure the
+district reported from a determination the platform had made.
+
+That let an uploaded spreadsheet supply `comparison_year_moe_status`,
+`comparison_year_methods_met` and `comparison_required_level_*`. A district could declare its
+own prior year compliant and set the level carried forward to whatever it liked — and
+34 CFR 300.203(c) exists precisely to stop a failing year from lowering the next year's bar.
+The resulting finding would have carried a complete, correct-looking provenance chain, pointing
+at the district's own cell. Nothing in the list above would have fired: the value parses, the
+row is well-formed, the reconciliation balances.
+
+- Every `CanonicalFact` carries a **`FactOrigin`** alongside its classification. Classification
+  says how sensitive a value is; origin says whose statement it is
+  (`packages/domain/src/fact-origin.ts`).
+- The ingest pipeline stamps `DISTRICT_EXPORT` on everything it produces, and it is not a
+  parameter. An import cannot elect to speak with the platform's authority.
+- Each canonical field states which origins may supply it, with the reasoning written next to
+  it. `projectFactBag` refuses a fact whose origin is not permitted — **throwing rather than
+  dropping**, because dropping would make the field absent, the calculator would return
+  INDETERMINATE, and the district would be told it was missing a figure it had supplied, hiding
+  an attempted assertion behind a data-quality message.
+- Authority is checked at projection because that is the last point at which a fact still knows
+  where it came from.
+- `origin` is inside the snapshot content hash. Outside it, a sealed snapshot could be edited
+  to relabel a district's figure as a platform determination with `verifySnapshot` still
+  returning true.
+- An unregistered field defaults to what a district may assert, which is right for ordinary
+  data and wrong for a determination — so `packages/calculators/src/fact-origin.test.ts`
+  requires every input any implemented calculator declares to have an explicit answer, as a
+  registry entry or as a line in its district-may-assert list. A new platform-owned input that
+  nobody classifies fails the build rather than shipping as a hole.
+
+Still open: the origins above are asserted by whichever component builds the fact, and nothing
+yet cryptographically binds a `PLATFORM_DETERMINATION` fact to the finalized run it claims to
+come from. `moe_status_source_run_id` names that run, but the link is by reference, not by
+signature. That is the next thing to close here.
 
 ## 5. Prompt injection
 

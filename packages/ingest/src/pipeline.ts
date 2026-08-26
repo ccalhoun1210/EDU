@@ -326,6 +326,10 @@ export function runImport(request: ImportRequest): ImportOutcome {
             field: value.target,
             value: conversion.value,
             classification: value.classification,
+            // Everything this pipeline produces came out of a file a district uploaded. It is
+            // not a parameter: an import cannot elect to speak with the platform's authority,
+            // which is the whole point of recording origin at all.
+            origin: 'DISTRICT_EXPORT',
             provenance: value.provenance,
           },
         });

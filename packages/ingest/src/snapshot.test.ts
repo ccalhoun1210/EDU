@@ -10,10 +10,11 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { CanonicalValue, DataClassification } from '@complianceos/domain';
+import type { CanonicalValue, DataClassification, FactOrigin } from '@complianceos/domain';
 import type { FactProvenance, SourceFileRef } from './provenance.js';
 import {
   DuplicateFactError,
+  FactOriginError,
   buildSnapshot,
   computeSnapshotHash,
   projectFactBag,
@@ -74,6 +75,7 @@ interface FactSpec {
   readonly subjectId?: string;
   readonly subjectType?: string;
   readonly classification?: DataClassification;
+  readonly origin?: FactOrigin;
   readonly provenance?: FactProvenance;
 }
 
@@ -84,6 +86,7 @@ function fact(spec: FactSpec): CanonicalFact {
     field: spec.field,
     value: spec.value,
     classification: spec.classification ?? 'INTERNAL',
+    origin: spec.origin ?? 'DISTRICT_EXPORT',
     provenance: spec.provenance ?? provenance(),
   };
 }
@@ -570,5 +573,89 @@ describe('sourceFileFor', () => {
 
   it('returns undefined for a file id the snapshot does not carry', () => {
     expect(sourceFileFor(snapshotOf(FACTS), 'file_never_uploaded')).toBeUndefined();
+  });
+});
+
+describe('projectFactBag — authority', () => {
+  // The gap: a MappingTemplate may target any canonical field name, and a projected bag is
+  // flat. Without an origin on the fact, a determination the platform made and a figure the
+  // district typed are the same thing by the time the engine sees them.
+  it('refuses a determination asserted by a district export', () => {
+    const snapshot = snapshotOf([
+      fact({ field: 'current_actual_local', value: '4800000.00' }),
+      // A district declaring its own prior year compliant. Under 34 CFR 300.203(c) that
+      // decides which level the next year is measured against, so accepting it would let an
+      // LEA measure itself against the reduced level it actually reached.
+      fact({ field: 'comparison_year_moe_status', value: 'MET' }),
+    ]);
+
+    expect(() => projectFactBag(snapshot, 'lea_fiscal_year', 'LEA-4412:2028')).toThrow(
+      FactOriginError,
+    );
+  });
+
+  it('accepts the same field from a prior finalized run', () => {
+    const snapshot = snapshotOf([
+      fact({
+        field: 'comparison_year_moe_status',
+        value: 'MET',
+        origin: 'PLATFORM_DETERMINATION',
+      }),
+    ]);
+
+    expect(projectFactBag(snapshot, 'lea_fiscal_year', 'LEA-4412:2028')).toEqual({
+      comparison_year_moe_status: 'MET',
+    });
+  });
+
+  it('throws rather than dropping the fact', () => {
+    // Dropping would make the field absent, the calculator would return INDETERMINATE, and the
+    // district would be told it was missing a figure it had supplied — an attempt to assert a
+    // determination reported as a data-quality problem.
+    const snapshot = snapshotOf([
+      fact({ field: 'comparison_required_level_local', value: '5000000.00' }),
+    ]);
+
+    try {
+      projectFactBag(snapshot, 'lea_fiscal_year', 'LEA-4412:2028');
+      expect.unreachable('projection should have refused');
+    } catch (error) {
+      expect(error).toBeInstanceOf(FactOriginError);
+      expect((error as FactOriginError).field).toBe('comparison_required_level_local');
+      expect((error as FactOriginError).origin).toBe('DISTRICT_EXPORT');
+      // The message has to say why, not just that.
+      expect((error as FactOriginError).message).toMatch(/PLATFORM_DETERMINATION/);
+    }
+  });
+
+  it('leaves ordinary district data alone', () => {
+    const snapshot = snapshotOf([
+      fact({ field: 'current_actual_local', value: '4800000.00' }),
+      fact({ field: 'current_child_count', value: 1000 }),
+    ]);
+
+    expect(projectFactBag(snapshot, 'lea_fiscal_year', 'LEA-4412:2028')).toEqual({
+      current_actual_local: '4800000.00',
+      current_child_count: 1000,
+    });
+  });
+});
+
+describe('the snapshot hash covers who asserted a fact', () => {
+  it('changes when only the origin changes', () => {
+    // If origin sat outside the hash, a sealed snapshot could be edited to relabel a
+    // district's own figure as a platform determination and verifySnapshot would still pass.
+    const asDistrict = snapshotOf([fact({ field: 'current_actual_local', value: '4800000.00' })]);
+    const asPlatform = snapshotOf([
+      fact({
+        field: 'current_actual_local',
+        value: '4800000.00',
+        origin: 'PLATFORM_DETERMINATION',
+      }),
+    ]);
+
+    expect(asPlatform.contentHash).not.toBe(asDistrict.contentHash);
+    expect(verifySnapshot(asDistrict)).toBe(true);
+    expect(verifySnapshot(asPlatform)).toBe(true);
   });
 });
