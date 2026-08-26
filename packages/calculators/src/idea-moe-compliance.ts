@@ -35,10 +35,6 @@ const CONFIG: MoeVariantConfig = {
   currentAmountLabel: 'Actual',
   currentStepPrefix: 'current',
   priorStatusInput: 'comparison_year_moe_status',
-  // Whole-year dollars. A per-capita shortfall on this side feeds the repayment exposure and
-  // has to be commensurable with the total-amount shortfalls that bound the same range; it
-  // is still derived from the exact cross-products and rounded once, at the end.
-  perCapitaMarginUnit: 'USD',
 };
 
 const COMPLIANCE_INPUTS: readonly CalculatorInputSpec[] = [

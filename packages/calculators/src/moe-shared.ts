@@ -182,7 +182,12 @@ export const MOE_RULE_EFFECTIVE_START = '2015-07-01';
  */
 const APPORTION_DP = 20;
 
-const ONE_CENT: Amount = divide(toCount(1), toCount(100), MONEY_DP) ?? ZERO;
+/** The smallest non-zero value a figure reported at `dp` places can carry. */
+function unitInLastPlace(dp: number): Amount {
+  return divide(toCount(1), toCount(10 ** dp), dp) ?? ZERO;
+}
+
+const ONE_CENT: Amount = unitInLastPlace(MONEY_DP);
 
 /* ------------------------------------------------------------------- small helpers */
 
@@ -287,6 +292,13 @@ export type MoeRepaymentBounds = {
  * The variant-specific fields are present only on the calculator they belong to, because an
  * always-present `repaymentExposureBounds: null` on the eligibility side would assert that a
  * liability was considered and came out at nothing, on a test that has no repayment attached.
+ *
+ * One key carries one unit. Every `…ByMethod` magnitude is current-year dollars at two
+ * places, on both calculators and on all four measures, so a reviewer reading the same column
+ * across the two tests is reading the same quantity. The per-child figures eligibility also
+ * reports have their own names and are null on the two total-amount measures, which have no
+ * per-child magnitude. Both forms come from the same exact cross-product, each rounded once;
+ * neither is derived from the other's rounded value.
  */
 export type MoeOutput = {
   readonly qualifyingMethods: readonly MoeMethod[];
@@ -297,7 +309,9 @@ export type MoeOutput = {
   readonly comparisonYear: MoeComparisonYear | null;
   /** Absent inputs the evaluation touched but the result did not depend on. */
   readonly dataGapsObserved: readonly string[];
+  readonly marginPerChildByMethod?: Readonly<Record<MoeMethod, string | null>>;
   readonly projectedShortfallByMethod?: Readonly<Record<MoeMethod, string | null>> | null;
+  readonly projectedShortfallPerChildByMethod?: Readonly<Record<MoeMethod, string | null>> | null;
   readonly qualifiesOnlyOnExpectedReductions?: boolean;
   readonly smallestShortfall?: string | null;
   readonly largestShortfall?: string | null;
@@ -323,16 +337,6 @@ export interface MoeVariantConfig {
   /** Step-key prefix for the current-year figures: `budget` or `current`. */
   readonly currentStepPrefix: string;
   readonly priorStatusInput: string;
-  /**
-   * The unit a per-capita margin is reported in.
-   *
-   * Eligibility reports per child; compliance reports the current-year dollars the LEA fell
-   * short by, because on that side the figure feeds a repayment range and has to be
-   * commensurable with the total-amount shortfalls. Both are derived from the same exact
-   * cross-products and rounded once. See the report accompanying this change: the divergence
-   * comes from the corpora, not from a choice made here.
-   */
-  readonly perCapitaMarginUnit: 'USD' | 'USD_PER_CHILD';
 }
 
 /* ------------------------------------------------------------------- input dictionary */
@@ -386,7 +390,7 @@ export const SHARED_MOE_INPUTS: readonly CalculatorInputSpec[] = [
   },
   {
     name: 'moe_status_source_run_id',
-    type: 'object',
+    type: 'string',
     required: false,
     classification: INTERNAL,
     definition:
@@ -497,7 +501,7 @@ export const SHARED_MOE_INPUTS: readonly CalculatorInputSpec[] = [
   },
   {
     name: 'sea_prohibition_300_205_evidence_ref',
-    type: 'object',
+    type: 'string',
     required: false,
     classification: INTERNAL,
     definition: 'Evidence for that determination. Required when the ground is not NONE.',
@@ -520,6 +524,9 @@ interface ValidationOutcome {
   readonly problems: readonly CalculatorWarning[];
   readonly exceptions: readonly ExceptionClaim[];
   readonly adjustments: readonly AdjustmentClaim[];
+  /** What the LEA submitted, whether or not it survived parsing. See `entriesSubmitted`. */
+  readonly exceptionEntriesSubmitted: number;
+  readonly adjustmentEntriesSubmitted: number;
 }
 
 interface ValidationScope {
@@ -528,6 +535,43 @@ interface ValidationScope {
   readonly dateInputs: readonly string[];
   readonly booleanInputs: readonly string[];
   readonly enumInputs: readonly { readonly name: string; readonly permitted: readonly string[] }[];
+  /** Opaque references — a run id, an evidence reference. Present-but-not-a-string is a bug. */
+  readonly referenceInputs: readonly string[];
+}
+
+/**
+ * How many entries the LEA put in a claim list.
+ *
+ * Counted from the submitted list rather than from the claims that parsed, so that a run
+ * refused *because* a claim could not be read does not also report that no claim was made.
+ * A value that is not a list at all is a malformed input and is reported as one; there are no
+ * entries in it to count.
+ */
+function entriesSubmitted(raw: CalculatorValue | undefined): number {
+  return Array.isArray(raw) ? raw.length : 0;
+}
+
+/**
+ * Money arrives at the cent, and a third fractional place is a malformed figure.
+ *
+ * Nothing rounds an operand before comparing it, so a value carrying more places than money
+ * has decides the result at a precision the district never sees: the comparison amount, the
+ * required level and the margin all render at two places, and a business officer reconciling
+ * those three figures against a ledger would be checking numbers the calculator did not use.
+ */
+function moneyScaleProblem(
+  subject: string,
+  raw: string,
+  citation?: string,
+): CalculatorWarning | undefined {
+  const fraction = raw.split('.')[1] ?? '';
+  if (fraction.length <= MONEY_DP) return undefined;
+  return blocking(
+    'MALFORMED_INPUT',
+    `${subject}: "${raw}" carries ${fraction.length} fractional digits. Money is exact at the ` +
+      'cent, and a figure below it is displayed as something other than the value compared.',
+    citation,
+  );
 }
 
 /**
@@ -551,13 +595,19 @@ function validate(
   for (const name of scope.moneyInputs) {
     if (!probe.has(name)) continue;
     const value = probe.money(name);
-    if (value !== undefined && isNegative(value)) {
+    if (value === undefined) continue;
+    if (isNegative(value)) {
       problems.push(
         blocking(
           'NEGATIVE_MONEY_VALUE',
           `${name} is negative (${usd(value)}). No quantity in this calculation can be below zero.`,
         ),
       );
+    }
+    const raw = probe.raw(name);
+    if (typeof raw === 'string') {
+      const scale = moneyScaleProblem(name, raw);
+      if (scale !== undefined) problems.push(scale);
     }
   }
   for (const name of scope.countInputs) if (probe.has(name)) probe.count(name);
@@ -566,17 +616,32 @@ function validate(
   for (const { name, permitted } of scope.enumInputs) {
     if (probe.has(name)) probe.enumValue(name, permitted);
   }
+  // A reference of the wrong shape is malformed, not absent. Reporting it as absent tells a
+  // district a field is missing that it supplied, and sends it looking for the wrong remedy.
+  for (const name of scope.referenceInputs) {
+    if (!probe.has(name) || typeof inputs[name] === 'string') continue;
+    problems.push(
+      blocking('MALFORMED_INPUT', `${name}: a value was supplied, but not as a reference string.`),
+    );
+  }
 
   const exceptions = readExceptionClaims(inputs, config, problems);
   const adjustments = readAdjustmentClaims(inputs, problems);
+  const adjustmentEntriesSubmitted = entriesSubmitted(inputs['claimed_adjustments_300_205']);
 
   const prohibition = probe.has('sea_prohibition_300_205_ground')
     ? probe.enumValue('sea_prohibition_300_205_ground', SEA_PROHIBITION_GROUNDS)
     : undefined;
+  // Only where the LEA claimed something under the section. A prohibition does one thing —
+  // hold an allowed 34 CFR 300.205 adjustment at zero — so with no claim to hold down it
+  // cannot move any figure in the run, and refusing over its evidence refuses a question
+  // nobody asked. Counted from the entries submitted rather than the ones that parsed: a
+  // claim the platform could not read is still a claim the LEA made.
   if (
     prohibition !== undefined &&
     prohibition !== 'NONE' &&
-    typeof inputs['sea_prohibition_300_205_evidence_ref'] !== 'string'
+    adjustmentEntriesSubmitted > 0 &&
+    !probe.has('sea_prohibition_300_205_evidence_ref')
   ) {
     problems.push(
       blocking(
@@ -588,13 +653,19 @@ function validate(
     );
   }
 
+  problems.push(...validateCombinedContainsLocal(probe, config));
   if (config.variant === 'COMPLIANCE') {
-    problems.push(...validateCombinedContainsLocal(probe, config));
     problems.push(...validateComparisonMethodsMet(inputs));
   }
 
   problems.push(...probe.malformedWarnings());
-  return { problems, exceptions, adjustments };
+  return {
+    problems,
+    exceptions,
+    adjustments,
+    exceptionEntriesSubmitted: entriesSubmitted(inputs['claimed_exceptions']),
+    adjustmentEntriesSubmitted,
+  };
 }
 
 /**
@@ -603,7 +674,9 @@ function validate(
  * An inversion is a fund-category mapping error, not a district that spent negative State
  * money, and every figure downstream of it is wrong. Checked on both comparison pairs
  * independently of which one the declared basis makes operative, because a mapping error in
- * the pair that is not used this year is still a mapping error.
+ * the pair that is not used this year is still a mapping error — and on both calculators,
+ * because the containment is a property of the fund categories and not of which test is
+ * running. The two read the same comparison pairs.
  */
 function validateCombinedContainsLocal(
   probe: InputReader,
@@ -719,6 +792,11 @@ function readExceptionClaims(
       problems.push(
         blocking('MALFORMED_INPUT', `${where}: "${rawAmount}" is not a plain decimal numeral.`),
       );
+      return;
+    }
+    const scale = moneyScaleProblem(`${where} amount`, rawAmount, citation);
+    if (scale !== undefined) {
+      problems.push(scale);
       return;
     }
     if (isNegative(claimAmount)) {
@@ -871,6 +949,11 @@ function readAdjustmentClaims(
       problems.push(
         blocking('MALFORMED_INPUT', `${where}: "${rawAmount}" is not a plain decimal numeral.`),
       );
+      return;
+    }
+    const scale = moneyScaleProblem(`${where} amount`, rawAmount, '34 CFR 300.205');
+    if (scale !== undefined) {
+      problems.push(scale);
       return;
     }
     if (isNegative(claimAmount)) {
@@ -1145,8 +1228,12 @@ function allowedSteps(allowed: Record<MoeSource, Amount>): readonly CalculationS
 
 interface MethodOutcome {
   readonly status: EvaluationStatus;
+  /** Current-year dollars, on all four measures. */
   readonly margin: Amount | null;
   readonly shortfall: Amount | null;
+  /** The same quantity per child. Null on a total-amount measure, which has no per-child form. */
+  readonly marginPerChild: Amount | null;
+  readonly shortfallPerChild: Amount | null;
   readonly missing: readonly string[];
   readonly warnings: readonly CalculatorWarning[];
   readonly steps: readonly CalculationStep[];
@@ -1167,7 +1254,6 @@ interface MethodFacts {
   readonly comparisonCountInput: string;
   /** Methods refused before any arithmetic, by the 34 CFR 300.203(c) reading dispute. */
   readonly refusedMethods: ReadonlySet<MoeMethod>;
-  readonly perCapitaMarginUnit: 'USD' | 'USD_PER_CHILD';
   readonly currentAmountLabel: string;
 }
 
@@ -1179,6 +1265,23 @@ interface CrossReading {
   readonly numerator: Amount;
   readonly detail: string;
   readonly admitsEnrollmentClaim: boolean;
+}
+
+/**
+ * A per-capita magnitude, rounded once from the exact cross-product it came from.
+ *
+ * Never to nothing. A quotient can be smaller than the last place the figure is reported in,
+ * and a measure the calculator has just reported as failing must not put the amount at zero:
+ * on the compliance side that figure bounds a repayment, and a zero there understates a
+ * district's exposure to nothing at all. A difference that is genuinely zero still reports as
+ * zero — the floor moves only a magnitude that exists and would otherwise disappear.
+ */
+function magnitude(numerator: Amount, denominator: Amount, dp: number): Amount | null {
+  const quotient = divide(numerator, denominator, dp);
+  if (quotient === undefined) return null;
+  if (!isZero(quotient) || isZero(numerator)) return quotient;
+  const smallest = unitInLastPlace(dp);
+  return isNegative(numerator) ? smallest.negated() : smallest;
 }
 
 function evaluateMethods(facts: MethodFacts): Record<MoeMethod, MethodOutcome> {
@@ -1193,6 +1296,8 @@ function evaluateOneMethod(method: MoeMethod, facts: MethodFacts): MethodOutcome
       status: 'MANUAL_REVIEW',
       margin: null,
       shortfall: null,
+      marginPerChild: null,
+      shortfallPerChild: null,
       missing: [],
       warnings: [
         blocking(
@@ -1234,6 +1339,8 @@ function evaluateOneMethod(method: MoeMethod, facts: MethodFacts): MethodOutcome
       status: passes ? 'PASS' : 'FAIL',
       margin,
       shortfall: passes ? ZERO : margin.negated(),
+      marginPerChild: null,
+      shortfallPerChild: null,
       missing: [],
       warnings: [],
       steps: [
@@ -1291,6 +1398,8 @@ function evaluateOneMethod(method: MoeMethod, facts: MethodFacts): MethodOutcome
       status: 'NOT_APPLICABLE',
       margin: null,
       shortfall: null,
+      marginPerChild: null,
+      shortfallPerChild: null,
       missing: [],
       warnings: zeroWarnings,
       steps: [
@@ -1363,43 +1472,62 @@ function evaluateOneMethod(method: MoeMethod, facts: MethodFacts): MethodOutcome
         ),
       );
     }
-    return { status: 'MANUAL_REVIEW', margin: null, shortfall: null, missing: [], warnings, steps };
-  }
-
-  const passes = readings.every((reading) => reading.passes);
-  const denominator =
-    facts.perCapitaMarginUnit === 'USD' ? toCount(nc) : multiply(toCount(n), toCount(nc));
-  const dp = facts.perCapitaMarginUnit === 'USD' ? MONEY_DP : PER_CHILD_DP;
-  const margins = readings.map((reading) => divide(reading.numerator, denominator, dp));
-  const distinct = new Set(
-    margins.map((value) => (value === undefined ? '' : formatAmount(value, dp))),
-  );
-
-  if (distinct.size > 1) {
-    // Every live reading agreed on the status, so the status stands; they disagreed only on
-    // how far short the LEA fell, and the platform does not pick one magnitude over another.
     return {
-      status: passes ? 'PASS' : 'FAIL',
+      status: 'MANUAL_REVIEW',
       margin: null,
       shortfall: null,
+      marginPerChild: null,
+      shortfallPerChild: null,
       missing: [],
-      warnings: [
-        advisory(
-          'SHORTFALL_AMOUNT_DISPUTED',
-          `${METHOD_LABEL[method]}: the live readings agree on the outcome but not on the ` +
-            'amount, so no single figure is reported. OQ-5.',
-          '34 CFR 300.204',
-        ),
-      ],
+      warnings,
       steps,
     };
   }
 
-  const margin = margins[0] ?? ZERO;
+  const passes = readings.every((reading) => reading.passes);
+  const numerator = readings[0]?.numerator ?? ZERO;
+  // Compared unrounded. Two readings can differ by less than the last place the magnitude is
+  // reported in, and comparing the rounded figures would collapse a real disagreement and
+  // report reading A — which under falling enrollment is the reading that favours the LEA.
+  const disputedAmount = readings.some((reading) => compare(reading.numerator, numerator) !== 0);
+
+  if (disputedAmount) {
+    // Every live reading agreed on the status, so the status stands; they disagreed only on
+    // how far short the LEA fell, and the platform does not pick one magnitude over another.
+    return applySetAside(
+      {
+        status: passes ? 'PASS' : 'FAIL',
+        margin: null,
+        shortfall: null,
+        marginPerChild: null,
+        shortfallPerChild: null,
+        missing: [],
+        warnings: [
+          advisory(
+            'SHORTFALL_AMOUNT_DISPUTED',
+            `${METHOD_LABEL[method]}: the live readings agree on the outcome but not on the ` +
+              'amount, so no single figure is reported. OQ-5.',
+            '34 CFR 300.204',
+          ),
+        ],
+        steps,
+      },
+      setAside,
+    );
+  }
+
+  // Both forms come off the one cross-product, each rounded once: the per-child figure is not
+  // the dollar figure divided again, and neither is derived from the other's rounded value.
+  const dollarDenominator = toCount(nc);
+  const perChildDenominator = multiply(toCount(n), dollarDenominator);
   const outcome: MethodOutcome = {
     status: passes ? 'PASS' : 'FAIL',
-    margin,
-    shortfall: passes ? ZERO : margin.negated(),
+    margin: magnitude(numerator, dollarDenominator, MONEY_DP),
+    shortfall: passes ? ZERO : magnitude(numerator.negated(), dollarDenominator, MONEY_DP),
+    marginPerChild: magnitude(numerator, perChildDenominator, PER_CHILD_DP),
+    shortfallPerChild: passes
+      ? ZERO
+      : magnitude(numerator.negated(), perChildDenominator, PER_CHILD_DP),
     missing: [],
     warnings: [],
     steps,
@@ -1419,6 +1547,8 @@ function unanswerableMethod(missing: readonly string[]): MethodOutcome {
     status: 'INDETERMINATE',
     margin: null,
     shortfall: null,
+    marginPerChild: null,
+    shortfallPerChild: null,
     missing: sorted(missing),
     warnings: [],
     steps: [],
@@ -1433,6 +1563,10 @@ function unanswerableMethod(missing: readonly string[]): MethodOutcome {
  * decided by the absent figures. A method that fails might have passed had the ceiling
  * admitted part of the claim, so the honest answer is that the question could not be
  * reached — not that the LEA fell short.
+ *
+ * Every exit from a per-capita method routes through here, the shortfall dispute included:
+ * the claim is set aside whether or not the readings agreed on how far short the LEA fell,
+ * and a measure the calculator could not decide is what a finding would publish.
  */
 function applySetAside(outcome: MethodOutcome, setAside: readonly string[]): MethodOutcome {
   if (setAside.length === 0 || outcome.status !== 'FAIL') return outcome;
@@ -1440,6 +1574,8 @@ function applySetAside(outcome: MethodOutcome, setAside: readonly string[]): Met
     status: 'INDETERMINATE',
     margin: outcome.margin,
     shortfall: null,
+    marginPerChild: outcome.marginPerChild,
+    shortfallPerChild: null,
     missing: setAside,
     warnings: outcome.warnings,
     steps: outcome.steps,
@@ -1551,7 +1687,13 @@ export function runMoe(
   const warnings: CalculatorWarning[] = [];
 
   const scope = validationScope(config);
-  const { problems, exceptions, adjustments } = validate(inputs, config, scope);
+  const {
+    problems,
+    exceptions,
+    adjustments,
+    exceptionEntriesSubmitted,
+    adjustmentEntriesSubmitted,
+  } = validate(inputs, config, scope);
 
   const fiscalYear = probe.has('current_fiscal_year_start')
     ? probe.date('current_fiscal_year_start')
@@ -1564,18 +1706,35 @@ export function runMoe(
       }),
     );
   }
+  // Two different facts: what the LEA submitted, and what the platform could read. The run
+  // that most needs both is the one refused because a claim could not be read — a lone count
+  // of the entries that parsed says the district claimed nothing on the run its claim stopped.
   steps.push(
     step(
       'claimed_exception_entries',
       'Reductions claimed under 34 CFR 300.204',
-      String(exceptions.length),
+      String(exceptionEntriesSubmitted),
+      'COUNT',
+      { citation: '34 CFR 300.204', inputsUsed: ['claimed_exceptions'] },
+    ),
+    step(
+      'claimed_exception_entries_rejected',
+      'Claimed 34 CFR 300.204 reductions the platform could not read',
+      String(exceptionEntriesSubmitted - exceptions.length),
       'COUNT',
       { citation: '34 CFR 300.204', inputsUsed: ['claimed_exceptions'] },
     ),
     step(
       'claimed_adjustment_entries',
       'Reductions claimed under 34 CFR 300.205',
-      String(adjustments.length),
+      String(adjustmentEntriesSubmitted),
+      'COUNT',
+      { citation: '34 CFR 300.205', inputsUsed: ['claimed_adjustments_300_205'] },
+    ),
+    step(
+      'claimed_adjustment_entries_rejected',
+      'Claimed 34 CFR 300.205 reductions the platform could not read',
+      String(adjustmentEntriesSubmitted - adjustments.length),
       'COUNT',
       { citation: '34 CFR 300.205', inputsUsed: ['claimed_adjustments_300_205'] },
     ),
@@ -1683,7 +1842,9 @@ export function runMoe(
     ]);
   }
 
-  if (typeof inputs['moe_status_source_run_id'] !== 'string') {
+  // Absence only. A value of another shape was refused as malformed in validation, because a
+  // district that supplied the field must not be told the field is missing.
+  if (!probe.has('moe_status_source_run_id')) {
     return unanswerable(['moe_status_source_run_id']);
   }
 
@@ -1852,6 +2013,7 @@ export function runMoe(
      per-source: a claim that consumes an entire measure puts the whole submission in
      question, and a BLOCKING warning may not accompany a PASS, so a per-source refusal that
      still let another method carry one would have to hide itself. */
+  const zeroRequiredLevel: CalculatorWarning[] = [];
   for (const source of MOE_SOURCES) {
     const comparison = comparisonBySource[source];
     if (comparison === undefined) continue;
@@ -1860,7 +2022,7 @@ export function runMoe(
     // reviewer. Naming a claimed reduction where the LEA claimed none sends that reviewer
     // looking through an empty list for a claim that does not exist.
     const claimed = !isZero(reductions.total[source]);
-    return refuse([
+    zeroRequiredLevel.push(
       claimed
         ? blocking(
             'REDUCTION_NOT_LESS_THAN_COMPARISON_AMOUNT',
@@ -1881,8 +2043,12 @@ export function runMoe(
               'figure did not survive the mapping. Both need a person.',
             '34 CFR 300.203',
           ),
-    ]);
+    );
   }
+  // Collected rather than returned inside the loop: a submission that puts both measures at a
+  // required level of zero has two problems, and step 1's collect-don't-stop principle is what
+  // keeps the district from being told about them one run at a time.
+  if (zeroRequiredLevel.length > 0) return refuse(zeroRequiredLevel);
 
   /* 9. Required levels and the four methods. */
   for (const source of MOE_SOURCES) {
@@ -1956,7 +2122,6 @@ export function runMoe(
     comparisonCount,
     comparisonCountInput,
     refusedMethods,
-    perCapitaMarginUnit: config.perCapitaMarginUnit,
     currentAmountLabel: config.currentAmountLabel,
   };
 
@@ -1974,18 +2139,10 @@ export function runMoe(
   if (statuses.includes('PASS')) status = 'PASS';
   else if (statuses.includes('MANUAL_REVIEW')) status = 'MANUAL_REVIEW';
   else if (statuses.includes('INDETERMINATE')) status = 'INDETERMINATE';
-  else if (statuses.includes('FAIL')) status = 'FAIL';
-  else {
-    status = 'INDETERMINATE';
-    warnings.push(
-      advisory(
-        'NO_METHOD_COMPUTABLE',
-        'None of the four measures could be evaluated, so the standard was neither satisfied ' +
-          'nor failed on these facts.',
-        config.standardCitation,
-      ),
-    );
-  }
+  // Not a defensive fallback. NOT_APPLICABLE is produced only inside the per-capita branch, so
+  // the two total-amount measures always carry one of the four statuses above, and with three
+  // of them excluded what is left on those two is FAIL.
+  else status = 'FAIL';
 
   const shadow = shadowOutcomes(config, facts, exceptions, adjustment.allowedBySource);
 
@@ -2042,6 +2199,7 @@ function validationScope(config: MoeVariantConfig): ValidationScope {
       { name: config.priorStatusInput, permitted: MOE_YEAR_STATUSES },
       { name: 'sea_prohibition_300_205_ground', permitted: SEA_PROHIBITION_GROUNDS },
     ],
+    referenceInputs: ['moe_status_source_run_id', 'sea_prohibition_300_205_evidence_ref'],
   };
 }
 
@@ -2237,11 +2395,9 @@ function finalize(spec: FinalizeSpec): CalculatorResult<MoeOutput> {
   const warnings = [...spec.warnings];
   let status = spec.status;
 
-  const perCapitaDp = config.perCapitaMarginUnit === 'USD' ? MONEY_DP : PER_CHILD_DP;
-  const dpFor = (method: MoeMethod): number =>
-    METHOD_IS_PER_CAPITA[method] ? perCapitaDp : MONEY_DP;
-  const render = (method: MoeMethod, value: Amount | null): string | null =>
-    value === null ? null : formatAmount(value, dpFor(method));
+  const render = (value: Amount | null): string | null => (value === null ? null : usd(value));
+  const renderPerChild = (value: Amount | null): string | null =>
+    value === null ? null : perChild(value);
 
   const observedGaps = new Set<string>(spec.setAsideInputs);
   for (const method of MOE_METHODS)
@@ -2255,9 +2411,7 @@ function finalize(spec: FinalizeSpec): CalculatorResult<MoeOutput> {
     }
   }
 
-  const shortfallByMethod = byMethod<string | null>((method) =>
-    render(method, outcomes[method].shortfall),
-  );
+  const shortfallByMethod = byMethod<string | null>((method) => render(outcomes[method].shortfall));
 
   /* 11. Consequence — compliance only. */
   let smallestShortfall: string | null = null;
@@ -2312,19 +2466,32 @@ function finalize(spec: FinalizeSpec): CalculatorResult<MoeOutput> {
   const shadowQualifies = MOE_METHODS.some((method) => shadow[method].status === 'PASS');
   const dependsOnCounterfactual = qualifyingMethods.length > 0 && !shadowQualifies;
   const counterfactualShortfall = byMethod<string | null>((method) =>
-    render(method, shadow[method].shortfall),
+    render(shadow[method].shortfall),
   );
 
-  if (config.variant === 'COMPLIANCE' && dependsOnCounterfactual) {
+  // The two tests lean on different counterfactuals — claims with no evidence on one side,
+  // reductions not yet taken on the other — but a qualification that rests entirely on one is
+  // the same thing to a reviewer, and a clean `warnings` list is what the finding-detail
+  // screen and every triage query read.
+  if (dependsOnCounterfactual) {
     warnings.push(
-      advisory(
-        'QUALIFICATION_DEPENDS_ON_UNVERIFIED_CLAIMS',
-        'Every qualifying measure depends on reductions claimed without an evidence ' +
-          'reference. Removing them as a set, which is the honest test, leaves no measure ' +
-          'qualifying. This is reported as a figure, not as a status: the statute states the ' +
-          'test as a single line and sets no band between compliance and failure.',
-        '34 CFR 300.204',
-      ),
+      config.variant === 'COMPLIANCE'
+        ? advisory(
+            'QUALIFICATION_DEPENDS_ON_UNVERIFIED_CLAIMS',
+            'Every qualifying measure depends on reductions claimed without an evidence ' +
+              'reference. Removing them as a set, which is the honest test, leaves no measure ' +
+              'qualifying. This is reported as a figure, not as a status: the statute states ' +
+              'the test as a single line and sets no band between compliance and failure.',
+            '34 CFR 300.204',
+          )
+        : advisory(
+            'QUALIFICATION_DEPENDS_ON_EXPECTED_REDUCTIONS',
+            'Every qualifying measure depends on a reduction the LEA expects to take rather ' +
+              'than one it has taken. Anticipating one is permitted, so this is not a ' +
+              'failure — but the budget qualifies on an event that has not happened, and the ' +
+              'projected shortfall is what the year looks like if it does not.',
+            '34 CFR 300.203(a)(2)',
+          ),
     );
   }
 
@@ -2333,7 +2500,7 @@ function finalize(spec: FinalizeSpec): CalculatorResult<MoeOutput> {
   const base = {
     qualifyingMethods,
     methodStatus: byMethod<EvaluationStatus>((method) => outcomes[method].status),
-    marginByMethod: byMethod<string | null>((method) => render(method, outcomes[method].margin)),
+    marginByMethod: byMethod<string | null>((method) => render(outcomes[method].margin)),
     shortfallByMethod,
     reductionBySource: bySource<string | null>((source) => usd(spec.reductions[source])),
     comparisonYear: spec.comparisonYear,
@@ -2344,7 +2511,13 @@ function finalize(spec: FinalizeSpec): CalculatorResult<MoeOutput> {
     config.variant === 'ELIGIBILITY'
       ? {
           ...base,
+          marginPerChildByMethod: byMethod<string | null>((method) =>
+            renderPerChild(outcomes[method].marginPerChild),
+          ),
           projectedShortfallByMethod: counterfactualShortfall,
+          projectedShortfallPerChildByMethod: byMethod<string | null>((method) =>
+            renderPerChild(shadow[method].shortfallPerChild),
+          ),
           qualifiesOnlyOnExpectedReductions: dependsOnCounterfactual,
         }
       : {
@@ -2394,7 +2567,13 @@ function conclude(
   };
   const output: MoeOutput =
     config.variant === 'ELIGIBILITY'
-      ? { ...base, projectedShortfallByMethod: null, qualifiesOnlyOnExpectedReductions: false }
+      ? {
+          ...base,
+          marginPerChildByMethod: byMethod<string | null>(() => null),
+          projectedShortfallByMethod: null,
+          projectedShortfallPerChildByMethod: null,
+          qualifiesOnlyOnExpectedReductions: false,
+        }
       : {
           ...base,
           smallestShortfall: null,
