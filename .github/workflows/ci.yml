@@ -89,13 +89,17 @@ jobs:
       - name: Build workspace packages
         run: pnpm exec tsc --build
 
-      - name: Tenant isolation and migration tests
+      - name: Tenant isolation, migration and authorization tests
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/complianceos_test
-          # Turns a skipped isolation suite into a failure. Only this job sets it: the
-          # `verify` job runs the same project and legitimately has no database.
+          # Turns a skipped isolation or authorization suite into a failure. Only this job
+          # sets it: the `verify` job runs the same projects and legitimately has no
+          # database.
           REQUIRE_DATABASE_TESTS: '1'
-        run: pnpm exec vitest run --project db
+        # `identity` as well as `db`: principal resolution is where a revoked membership
+        # stops conferring authority and where one tenant fails to reach another's user,
+        # and both of those are claims only a real Postgres can settle.
+        run: pnpm exec vitest run --project db --project identity
 
   data-hygiene:
     runs-on: ubuntu-latest
