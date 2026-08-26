@@ -69,12 +69,20 @@ swapped and what that costs.
 ## Layout
 
 ```
-apps/web/              Next.js application (web + API routes)
-packages/domain/       Core vocabulary — evaluation statuses, org model, access rules
+apps/web/              Next.js application — the assessment, the finding "Why", the rule library
+packages/domain/       Core vocabulary — evaluation statuses, money, dates, org model, fact origin
 packages/rulepack-sdk/ Rule schema, restricted DSL, pack loader, calculator allow-list
+packages/rules-engine/ Evaluator, pack layering, explanations, evaluation hash, assessment runs
+packages/calculators/  Calculator contract, registry, golden corpora, the statutory arithmetic
+packages/ingest/       Parsing, mapping templates, validation, provenance, immutable snapshots
+packages/assurance/    District export to assessment, and the carry-forward of determinations
+packages/db/           Migrations, RLS policies, tenant-scoped access
 rulepacks/             Regulatory content as YAML — federal baseline, then state overlays
+scripts/               Checks that need a running server rather than a test runner
 docs/architecture/     Design documents, including the master buildout
 docs/adrs/             Architecture decision records
+docs/regulatory-methodology/  How each regulatory conclusion is derived
+docs/threat-model/     Section 37 threats and what mitigates each today
 ```
 
 Target layout for packages not yet created is in
@@ -89,7 +97,8 @@ pnpm dev          # Next dev server
 pnpm test         # Vitest across all packages
 pnpm typecheck    # tsc project references + Next type check
 pnpm lint
-pnpm verify       # format + lint + typecheck + test — run before every PR
+pnpm smoke:web    # start the built server and check every route actually renders
+pnpm verify       # format + lint + typecheck + test + build + smoke — run before every PR
 ```
 
 ## Working agreements

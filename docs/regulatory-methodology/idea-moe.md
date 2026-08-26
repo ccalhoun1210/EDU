@@ -24,7 +24,7 @@ Consequences a reader must carry through the whole document:
   State prohibition — is recalled, not checked.
 - The **effective date** used by both calculators is the rule's declared
   `effective.start`. Whether the rule's window or the pack's window governs is open
-  question **OQ-24**, and no case in either corpus pins the exact boundary date for that
+  question **OQ-25**, and no case in either corpus pins the exact boundary date for that
   reason.
 
 The design principle for both calculators follows from that: **be right where the
@@ -68,7 +68,7 @@ failure, not the reduced level it actually reached. A failure does not ratchet t
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | 34 CFR 300.203(a)    | The eligibility (budget) standard and its four methods                                                                                                                      | High on substance, medium on subparagraph lettering                                |
 | 34 CFR 300.203(a)(2) | Permits anticipating 300.204 and 300.205 amounts when setting the budget                                                                                                    | High on substance                                                                  |
-| 34 CFR 300.203(a)(3) | Excludes federally accountable expenditures from the determination                                                                                                          | High that the exclusion exists; medium that it reaches the compliance test — OQ-19 |
+| 34 CFR 300.203(a)(3) | Excludes federally accountable expenditures from the determination                                                                                                          | High that the exclusion exists; medium that it reaches the compliance test — OQ-20 |
 | 34 CFR 300.203(b)    | The compliance (actual expenditure) standard and its four methods                                                                                                           | High on substance and on the four methods                                          |
 | 34 CFR 300.203(c)    | Subsequent years — no ratchet-down after a failure; a transition clause for the years beginning July 1 2013 and July 1 2014                                                 | High on the no-ratchet substance, medium on the paragraph split and the dates      |
 | 34 CFR 300.203(d)    | Repayment of non-Federal funds on a compliance failure, capped at the LEA's subgrant                                                                                        | Medium-high; the cap's location in the section is uncertain                        |
@@ -139,7 +139,7 @@ calculator is wired in. An input the rule does not declare has no provenance cha
 | `current_actual_state_local`  | money | Same, State and local combined.                                                                                                                                                          |
 | `current_child_count`         | count | Children with disabilities served in the year under test.                                                                                                                                |
 | `comparison_year_moe_status`  | enum  | `MET`, `NOT_MET` or `UNKNOWN` for the comparison year.                                                                                                                                   |
-| `comparison_year_methods_met` | list  | The methods under which the LEA met the standard in the comparison year. Empty is legal and meaningful. Used only to detect where the two readings of 300.203(c) can diverge — see OQ-2. |
+| `comparison_year_methods_met` | list  | The methods under which the LEA met the standard in the comparison year. Empty is legal and meaningful. Used only to detect where the two readings of 300.203(c) can diverge — see OQ-9. |
 
 ### `claimed_exceptions[]` element
 
@@ -149,7 +149,7 @@ calculator is wired in. An input the rule does not declare has no provenance cha
 | `source`                   | enum                   | `LOCAL` or `STATE_AND_LOCAL`. One entry per measure the LEA claims against; the calculator never infers one from the other, because the two measures have different denominators of eligible expenditure. |
 | `amount`                   | money                  | Non-negative.                                                                                                                                                                                             |
 | `basis_description`        | string                 | Narrative for the explanation panel. Never used in arithmetic.                                                                                                                                            |
-| `event_fiscal_year_start`  | date                   | The fiscal year the underlying event occurred in, so a downstream rule can detect the same event claimed against successive years — OQ-15.                                                                |
+| `event_fiscal_year_start`  | date                   | The fiscal year the underlying event occurred in, so a downstream rule can detect the same event claimed against successive years — OQ-16.                                                                |
 | `evidence_ref`             | string, optional       | Absence does not reject the claim; it marks it unverified.                                                                                                                                                |
 | `timing`                   | enum, eligibility only | `TAKEN_INTERVENING` or `EXPECTED_BUDGET_YEAR`. 300.203(a)(2) permits anticipating a reduction; the compliance test does not, so the field does not exist there.                                           |
 | `personnel_departure_type` | enum                   | Required if and only if the ground is `VOLUNTARY_DEPARTURE_OF_PERSONNEL`: `VOLUNTARY`, `RETIREMENT` or `JUST_CAUSE`.                                                                                      |
@@ -200,7 +200,7 @@ strings; no timezone conversion and no timestamp round-trip (invariant 6).
 Not `NOT_APPLICABLE`. `NOT_APPLICABLE` is conclusive in `packages/domain/src/evaluation.ts`
 and reads to a district and an SEA as _the requirement did not apply to you_. That is false:
 the requirement applied under the earlier text. What does not apply is this calculator
-version. See OQ-24 on which effective window governs.
+version. See OQ-25 on which effective window governs.
 
 ### 3. Federal-funds gate
 
@@ -213,7 +213,7 @@ and no arithmetic on them measures the thing the regulation names.
 `lea_part_b_subgrant_amount` equal to zero **as a decimal** returns `MANUAL_REVIEW` with
 `NO_PART_B_SUBGRANT_FOR_THE_YEAR`. The comparison is a decimal comparison, never a string
 comparison: `"0"`, `"0.00"` and `"0.000"` are one fact and must not produce three statuses.
-Whether such an LEA is outside the compliance standard is OQ-14; `NOT_APPLICABLE` would
+Whether such an LEA is outside the compliance standard is OQ-15; `NOT_APPLICABLE` would
 answer it.
 
 Absent is different from zero and is handled at step 10.
@@ -407,6 +407,27 @@ allocation names in `missingInputs`. The same logic governs an absent
 `INDETERMINATE` with `REPAYMENT_CANNOT_BE_BOUNDED`, because the finding is the failure and
 its consequence together and the platform does not publish half of it.
 
+**The determination the next year reads.** On the compliance side the roll-up is also an
+answer to the question the _following_ year asks: did this LEA maintain effort? The next
+year's run consumes that as `comparison_year_moe_status`, whose vocabulary is
+`MET | NOT_MET | UNKNOWN` and not `PASS | FAIL | …`. So the calculator states it in that
+vocabulary itself, as `output.moeStatus`: `PASS` → `MET`, `FAIL` → `NOT_MET`, everything else
+→ `UNKNOWN`.
+
+`UNKNOWN` is deliberate and is a value rather than a gap — the eligibility calculator handles
+it explicitly and routes the run to review with a named remedy. Mapping an unanswered question
+to `NOT_MET` would invent a failure and, through 300.203(c), a bar the LEA never earned;
+mapping it to `MET` would invent compliance. The eligibility calculator emits no `moeStatus` at
+all: it tests a _budget_ for the year ahead, which is a projection, and 300.203(c) carries
+forward a determination about a year that has closed.
+
+Stating it here is what makes the carry-forward mechanical rather than editorial. The value a
+later year reads is taken from the finalized result by
+`carryForward` (`packages/assurance/src/carry-forward.ts`), which stamps that result's own
+evaluation hash onto the fact, so a prior-year status can be checked against the run that
+produced it instead of trusted. Before this, translating `PASS` into `MET` happened wherever
+somebody carried a value across — by hand, and unverifiably.
+
 ### 11. Consequence — compliance only
 
 On `FAIL`, the calculator reports `shortfallByMethod` for all four methods,
@@ -418,7 +439,7 @@ repaymentExposureBounds = { low:  min(smallestShortfall, lea_part_b_subgrant_amo
 ```
 
 with `REPAYMENT_METHOD_SELECTION_UNRESOLVED` at `WARNING` severity. It does **not** report a
-single repayment figure. Which method's shortfall fixes the amount is OQ-11, the amount is
+single repayment figure. Which method's shortfall fixes the amount is OQ-12, the amount is
 what a district actually pays, and the draft's minimum-across-methods rule is both unverified
 and not commensurable — a per-capita dollar shortfall is a synthetic quantity, not an amount
 by which the LEA reduced expenditure, and under falling enrollment it is systematically the
@@ -464,21 +485,22 @@ per-capita amounts, no direction, no tolerance. Everything below other than the 
 ceiling is a platform presentation decision, and full precision is carried into every
 decision so that the choice cannot affect an outcome.
 
-| Quantity                                                                                 | Rule                                                                                                                                                                                                                                                                                                      |
-| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Every money value crossing a boundary                                                    | Plain decimal string, exactly two places. Never a float; `parseFloat` is banned by ESLint (invariant 5).                                                                                                                                                                                                  |
-| Allocation increase, reduction totals, required levels, margins, total-method shortfalls | Exact. Sums and differences of two-place values are two-place. No rounding at all.                                                                                                                                                                                                                        |
-| Half the section 611 allocation increase                                                 | Rounded **toward zero** at the cent. This is the only directional rounding in either calculator and it is deliberate: the ceiling is a statutory maximum, and rounding a maximum up would authorise a reduction the regulation does not.                                                                  |
-| Pro-rata apportionment of the ceiling                                                    | Each share floored at the cent, then the residual — at most one cent, since at most two claims exist — assigned to the `LOCAL` claim. The total allowed never exceeds the ceiling.                                                                                                                        |
-| Per-capita quotients                                                                     | Computed at full working precision, reported at **six decimal places, half away from zero**, unit `USD_PER_CHILD`. Display only.                                                                                                                                                                          |
-| Per-capita comparisons                                                                   | **Exact.** Cross-multiplied integers and two-place decimals. No quotient is ever an operand of a comparison.                                                                                                                                                                                              |
-| Per-capita margins and shortfalls                                                        | Computed from the exact cross-products and rounded once, at the end, to six places. Never by subtracting two already-rounded per-child values.                                                                                                                                                            |
-| A rounded zero                                                                           | Emitted unsigned. A true margin of `-0.0000097` rounds to `0.000000`, not `-0.000000`: a signed zero does not survive a round trip through `NUMERIC` or through two decimal serialisers, and a finalized run must reproduce byte for byte. The sign lives in the method's status, which is authoritative. |
+| Quantity                                                                                 | Rule                                                                                                                                                                                                                                                                                                                                                   |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Every money value crossing a boundary                                                    | Plain decimal string, exactly two places. Never a float; `parseFloat` is banned by ESLint (invariant 5).                                                                                                                                                                                                                                               |
+| Allocation increase, reduction totals, required levels, margins, total-method shortfalls | Exact. Sums and differences of two-place values are two-place. No rounding at all.                                                                                                                                                                                                                                                                     |
+| Half the section 611 allocation increase                                                 | Rounded **toward zero** at the cent. This is the only directional rounding in either calculator and it is deliberate: the ceiling is a statutory maximum, and rounding a maximum up would authorise a reduction the regulation does not.                                                                                                               |
+| Pro-rata apportionment of the ceiling                                                    | Each share floored at the cent, then the residual — at most one cent, since at most two claims exist — assigned to the `LOCAL` claim. The total allowed never exceeds the ceiling.                                                                                                                                                                     |
+| Per-capita quotients                                                                     | Computed at full working precision, reported at **six decimal places, half away from zero**, unit `USD_PER_CHILD`. Display only.                                                                                                                                                                                                                       |
+| Per-capita comparisons                                                                   | **Exact.** Cross-multiplied integers and two-place decimals. No quotient is ever an operand of a comparison.                                                                                                                                                                                                                                           |
+| Per-capita margins and shortfalls, in dollars                                            | Computed from the exact cross-products and rounded once, at the end, to two places. Never by subtracting two already-rounded values. A magnitude that is genuinely non-zero but rounds to nothing is floored at one cent: a measure that failed must not report a shortfall of `0.00`, least of all on the calculator whose output bounds a repayment. |
+| Per-capita margins and shortfalls, per child                                             | The same cross-products, rounded once to six places. Eligibility only, under `marginPerChildByMethod` and `projectedShortfallPerChildByMethod`.                                                                                                                                                                                                        |
+| A rounded zero                                                                           | Emitted unsigned. A true margin of `-0.0000097` rounds to `0.000000`, not `-0.000000`: a signed zero does not survive a round trip through `NUMERIC` or through two decimal serialisers, and a finalized run must reproduce byte for byte. The sign lives in the method's status, which is authoritative.                                              |
 
-`USD_PER_CHILD` at six places must be added to the canonical-form rule in
-`packages/calculators/src/types.ts` in the same change that extends the two rules'
-`outputSchema`; the step contract currently names two places for money and ten for ratios and
-covers neither case.
+`PER_CHILD_DP` in `packages/calculators/src/types.ts` fixes `USD_PER_CHILD` at six places, and
+`formatAmount` emits a rounded-away zero unsigned so `-0.000000` cannot reach a hash or a
+screen. `moe-findings.test.ts` asserts every step value matches the precision its declared unit
+prescribes.
 
 **Displayed values must not be re-derived from.** Two per-child levels that differ in the
 seventh decimal place round to the same string. The UI must present each method's status
@@ -489,23 +511,23 @@ beside its margin and must never invite a reader to infer the status from the di
 Missing means absent, empty or null. Present-but-invalid is a validation failure and a
 `MANUAL_REVIEW`, which is a different thing and must not be collapsed into `INDETERMINATE`.
 
-| Absent input                                                                             | Effect                                                                                                                                                          |
-| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `current_fiscal_year_start`                                                              | Whole run `INDETERMINATE`; applicability cannot be established.                                                                                                 |
-| `federal_funds_excluded`                                                                 | Whole run `INDETERMINATE`.                                                                                                                                      |
-| `comparison_fiscal_year_start`, `comparison_basis`, or the prior-year status enum        | Whole run `INDETERMINATE`; the comparison basis is undeclared.                                                                                                  |
-| The operative comparison local amount                                                    | `LOCAL_ONLY` and `LOCAL_PER_CAPITA` `INDETERMINATE`.                                                                                                            |
-| The operative comparison State-and-local amount                                          | `STATE_AND_LOCAL` and `STATE_AND_LOCAL_PER_CAPITA` `INDETERMINATE`.                                                                                             |
-| The current local or State-and-local amount                                              | The two methods on that source `INDETERMINATE`.                                                                                                                 |
-| The operative comparison child count                                                     | Both per-capita methods `INDETERMINATE`. The total methods are unaffected.                                                                                      |
-| `current_child_count`                                                                    | Both per-capita methods `INDETERMINATE`.                                                                                                                        |
-| `claimed_exceptions` or `claimed_adjustments_300_205`                                    | Treated as empty. An LEA claiming nothing has given a complete answer, and the unreduced level is the conservative direction.                                   |
-| A section 611 allocation, or `esea_use_condition_attested`, with a 300.205 claim present | The claim is set aside; step 10's resolution decides between `PASS` and `INDETERMINATE`.                                                                        |
-| A section 611 allocation with no 300.205 claim                                           | No effect. Not required.                                                                                                                                        |
-| `ceis_amount_300_226` with a 300.205 claim present                                       | The claim is set aside. It is **not** defaulted to zero: a zero default enlarges the ceiling, which runs in the LEA's favour on a figure nobody supplied. OQ-9. |
-| An exception's `evidence_ref`                                                            | Not missing data. Marks the claim unverified.                                                                                                                   |
-| `lea_part_b_subgrant_amount` (compliance)                                                | A `PASS` stands. A `FAIL` becomes `INDETERMINATE` with `REPAYMENT_CANNOT_BE_BOUNDED`.                                                                           |
-| `moe_status_source_run_id` while the status is `MET` or `NOT_MET`                        | Whole run `INDETERMINATE`; the subsequent-years premise has no provenance.                                                                                      |
+| Absent input                                                                             | Effect                                                                                                                                                           |
+| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `current_fiscal_year_start`                                                              | Whole run `INDETERMINATE`; applicability cannot be established.                                                                                                  |
+| `federal_funds_excluded`                                                                 | Whole run `INDETERMINATE`.                                                                                                                                       |
+| `comparison_fiscal_year_start`, `comparison_basis`, or the prior-year status enum        | Whole run `INDETERMINATE`; the comparison basis is undeclared.                                                                                                   |
+| The operative comparison local amount                                                    | `LOCAL_ONLY` and `LOCAL_PER_CAPITA` `INDETERMINATE`.                                                                                                             |
+| The operative comparison State-and-local amount                                          | `STATE_AND_LOCAL` and `STATE_AND_LOCAL_PER_CAPITA` `INDETERMINATE`.                                                                                              |
+| The current local or State-and-local amount                                              | The two methods on that source `INDETERMINATE`.                                                                                                                  |
+| The operative comparison child count                                                     | Both per-capita methods `INDETERMINATE`. The total methods are unaffected.                                                                                       |
+| `current_child_count`                                                                    | Both per-capita methods `INDETERMINATE`.                                                                                                                         |
+| `claimed_exceptions` or `claimed_adjustments_300_205`                                    | Treated as empty. An LEA claiming nothing has given a complete answer, and the unreduced level is the conservative direction.                                    |
+| A section 611 allocation, or `esea_use_condition_attested`, with a 300.205 claim present | The claim is set aside; step 10's resolution decides between `PASS` and `INDETERMINATE`.                                                                         |
+| A section 611 allocation with no 300.205 claim                                           | No effect. Not required.                                                                                                                                         |
+| `ceis_amount_300_226` with a 300.205 claim present                                       | The claim is set aside. It is **not** defaulted to zero: a zero default enlarges the ceiling, which runs in the LEA's favour on a figure nobody supplied. OQ-10. |
+| An exception's `evidence_ref`                                                            | Not missing data. Marks the claim unverified.                                                                                                                    |
+| `lea_part_b_subgrant_amount` (compliance)                                                | A `PASS` stands. A `FAIL` becomes `INDETERMINATE` with `REPAYMENT_CANNOT_BE_BOUNDED`.                                                                            |
+| `moe_status_source_run_id` while the status is `MET` or `NOT_MET`                        | Whole run `INDETERMINATE`; the subsequent-years premise has no provenance.                                                                                       |
 
 A status enum whose value is `UNKNOWN` is **not** a missing input — the field was supplied.
 It is a `MANUAL_REVIEW` whose warning names the remedy: a finalized `idea_moe_compliance_v1`
@@ -523,11 +545,11 @@ run for that fiscal year, or an SEA determination of record.
 | `COMPARISON_YEAR_MOE_STATUS_UNKNOWN`        | Prior-year status supplied as `UNKNOWN`                                                                                                                             | Without knowing whether the prior year failed, the comparison basis is undetermined and no comparison is meaningful.                                                                                                      |
 | `COMPARISON_YEAR_NOT_PRIOR`                 | Comparison year not earlier than the year under test                                                                                                                | A year cannot be its own comparison year.                                                                                                                                                                                 |
 | `COMPARISON_BASIS_INCONSISTENT`             | The declared basis contradicts the declared prior-year status                                                                                                       | The most likely cause is an ingest-mapping error; the next most likely is an LEA measuring against its own reduced level. Both need a person.                                                                             |
-| `COMPARISON_BASIS_READING_DISPUTED`         | Compliance: the comparison year was met under some but not all methods, and the two readings of the subsequent-years rule give a method different comparison levels | OQ-2. The difference decides whether a repayment is owed.                                                                                                                                                                 |
+| `COMPARISON_BASIS_READING_DISPUTED`         | Compliance: the comparison year was met under some but not all methods, and the two readings of the subsequent-years rule give a method different comparison levels | OQ-9. The difference decides whether a repayment is owed.                                                                                                                                                                 |
 | `PER_CAPITA_REDUCTION_BASIS_DISPUTED`       | The two readings of how a reduction enters a per-capita method disagree on that method's status                                                                     | OQ-5.                                                                                                                                                                                                                     |
 | `ENROLLMENT_EXCEPTION_PER_CAPITA_DISPUTED`  | Admitting and excluding a 300.204(b) claim from a per-capita method disagree on that method's status                                                                | OQ-6. The exclusion is a platform invention that runs against the LEA; admitting it may double-count.                                                                                                                     |
-| `ZERO_COMPARISON_AMOUNT`                    | The comparison-year amount for a measure is zero and no reduction is claimed against it                                                                             | The required level is zero, so any figure clears it. Either that measure genuinely had no expenditure — in which case maintenance of effort is not the question to ask of it — or the figure did not survive the mapping. |
-| `NO_PART_B_SUBGRANT_FOR_THE_YEAR`           | Compliance: the subgrant is decimal-zero                                                                                                                            | OQ-14. `NOT_APPLICABLE` would answer it, and the year's levels still set the next year's bar.                                                                                                                             |
+| `ZERO_COMPARISON_AMOUNT`                    | The same branch as the row above, reached with no reduction claimed: the comparison-year amount for a measure is itself zero                                        | The required level is zero, so any figure clears it. Either that measure genuinely had no expenditure — in which case maintenance of effort is not the question to ask of it — or the figure did not survive the mapping. |
+| `NO_PART_B_SUBGRANT_FOR_THE_YEAR`           | Compliance: the subgrant is decimal-zero                                                                                                                            | OQ-15. `NOT_APPLICABLE` would answer it, and the year's levels still set the next year's bar.                                                                                                                             |
 
 Non-refusing warnings, all at `WARNING` or `INFO` severity and all compatible with a
 conclusive status: `ADJUSTMENT_300_205_CAPPED`, `ADJUSTMENT_300_205_PROHIBITED_BY_SEA`,
@@ -540,6 +562,23 @@ A `BLOCKING` warning accompanies `MANUAL_REVIEW` and never a `PASS`, per the cal
 contract. That constraint is why every refusal above is whole-run or produces a method status
 that cannot be counted as qualifying.
 
+## Severity, and why the two rules differ
+
+`IDEA-MOE-COMPLIANCE-001` fails at `CRITICAL`. `IDEA-MOE-ELIGIBILITY-001` fails at `HIGH`.
+
+Both carried `CRITICAL` until the adversarial review pointed out that the whole design rests on
+the two consequences being different, and that this was the one place the distinction was not
+reflected. A compliance failure means non-Federal funds go back to the Department: the money
+has already been spent, or not spent, and the year is closed. An eligibility failure means the
+LEA is not eligible for its subgrant until it fixes the budget — serious, but prospective and
+recoverable by an act the LEA can still take.
+
+Grading them identically would tell a district facing a fixable budget problem that it is in
+the same position as one facing a repayment demand, and would make a severity-sorted worklist
+useless for triage. The severity is a platform judgement about consequence, not a reading of
+the regulation, and OQ-26 asks a reviewer to confirm what an eligibility failure actually
+obliges before either rule leaves DRAFT.
+
 ## What these calculators do NOT conclude
 
 - Whether a claimed 34 CFR 300.204 exception is **factually supported**. The calculator
@@ -549,23 +588,23 @@ that cannot be counted as qualifying.
 - Whether the same underlying event has been **claimed against successive years**. The
   calculator is pure and holds no cross-year state. `event_fiscal_year_start` and
   `evidence_ref` exist so a downstream rule or the pipeline can detect recycling; that
-  assurance lives elsewhere and is not delivered here. OQ-15.
+  assurance lives elsewhere and is not delivered here. OQ-16.
 - Whether the **ESEA-use condition** at 300.205 was actually satisfied. The calculator
   consumes an attestation.
 - Whether the **fund category definitions** are right — what counts as local funds, whether
   an intermediate-unit levy or a Medicaid reimbursement belongs inside them, whether capital
   is in or out. Period-alignment and category-definition errors dominate real
   maintenance-of-effort findings far more than arithmetic errors do, and none of them is
-  visible here. OQ-17, OQ-19.
+  visible here. OQ-18, OQ-20.
 - Whether the **child count basis** is consistent between years. The calculator trusts the
-  caller. OQ-18.
-- The **repayment amount** on a compliance failure. It reports a bounded range. OQ-11.
+  caller. OQ-19.
+- The **repayment amount** on a compliance failure. It reports a bounded range. OQ-12.
 - Anything about a **State overlay**. This is the federal floor. Several States impose a
   stricter standard or prescribe the count date and the fund definitions, and a district in
-  such a State must not be shown this result as the complete answer. OQ-23.
+  such a State must not be shown this result as the complete answer. OQ-24.
 - Anything about **LEA reorganisations** — mergers, splits, transfers of schools. The
   comparison figures for a reorganised LEA are not reconstructible here and must route to a
-  manual path rather than to an inferred allocation. OQ-22.
+  manual path rather than to an inferred allocation. OQ-23.
 
 ## Worked examples
 
@@ -712,40 +751,51 @@ marked **outcome-determinative** change a district's result in at least one gold
    SEA has accepted? The platform accepts the LEA's assertion with no test. Should a
    comparison year more than two years before the budget year be flagged?
 
+9. **Does the subsequent-years rule carry forward per measure, or on the standard as a
+   whole?** An LEA that met the standard in the comparison year under the State-and-local
+   measures only has, on one reading, simply met it — there was no failure, so nothing is
+   carried forward and every measure is tested against that year's actuals. On the other
+   reading the rule attaches to each measure, so the two local measures were not met and
+   their bar is the level that would have been required then, which nobody supplies. The
+   calculator refuses the affected measures rather than choosing, with
+   `COMPARISON_BASIS_READING_DISPUTED`, and `comparison_year_methods_met` exists solely to
+   detect the divergence. On the compliance side the difference decides whether a district
+   owes a repayment. **Outcome-determinative.**
+
 ### On the exceptions and the adjustment
 
-9. **Should an absent coordinated-early-intervening-services amount, alongside a 300.205
-   claim, set the claim aside rather than default to zero?** This document sets it aside,
-   because a zero default enlarges the ceiling in the LEA's favour on a figure nobody
-   supplied. Confirm. Also confirm whether comprehensive services required on a significant
-   disproportionality identification offset the ceiling the same way voluntary ones do, and
-   which year's reservation offsets which year's ceiling.
-10. **Is the 300.205 ceiling shared across the local and the State-and-local measures, or is
+10. **Should an absent coordinated-early-intervening-services amount, alongside a 300.205
+    claim, set the claim aside rather than default to zero?** This document sets it aside,
+    because a zero default enlarges the ceiling in the LEA's favour on a figure nobody
+    supplied. Confirm. Also confirm whether comprehensive services required on a significant
+    disproportionality identification offset the ceiling the same way voluntary ones do, and
+    which year's reservation offsets which year's ceiling.
+11. **Is the 300.205 ceiling shared across the local and the State-and-local measures, or is
     there one per measure?** This document applies one shared ceiling apportioned pro rata.
     If the ceiling is per-source, the apportionment is wrong in the LEA's disfavour. Confirm
     also whether the adjustment reaches the State-and-local measures at all, or only local.
-11. **Which method's shortfall fixes the repayment on a compliance failure?** The calculator
+12. **Which method's shortfall fixes the repayment on a compliance failure?** The calculator
     reports a range rather than a figure. The candidates are the smallest shortfall across the
     methods, the shortfall under the method the LEA relied on, the shortfall under the method
     used in the comparison year, and the largest. **This is the dollar amount a district
     pays.** Note that a per-capita dollar shortfall is a synthetic quantity and may not be
     commensurable with a total-amount shortfall at all. **Outcome-determinative.**
-12. **Is the 50 percent base the section 611 allocation only, or 611 plus 619?** The input
+13. **Is the 50 percent base the section 611 allocation only, or 611 plus 619?** The input
     names say 611. If preschool funds belong in the base, every adjustment case changes.
-13. **Is the ESEA-use condition a condition precedent** whose failure invalidates the
+14. **Is the ESEA-use condition a condition precedent** whose failure invalidates the
     reduction, or an independent obligation with its own remedy? This document disallows the
     claim when the attestation is false and sets it aside when the attestation is absent. If
     it is an independent obligation, both treatments are too strict.
-14. **Is an LEA that received no Part B subgrant outside the compliance standard?** The
+15. **Is an LEA that received no Part B subgrant outside the compliance standard?** The
     calculator refuses rather than answering. Confirm, and confirm the treatment of an LEA
     that received a subgrant but drew none of it, and one whose subgrant was withheld
     mid-year. **Outcome-determinative.**
-15. **Is a 300.204 reduction consumed once, or does it persist against successive years?** The
+16. **Is a 300.204 reduction consumed once, or does it persist against successive years?** The
     same personnel departure claimed in three successive years compounds against a baseline
     that may itself trace to one comparison year. The calculator cannot detect it. Confirm
     what the pipeline must enforce, and whether `event_fiscal_year_start` plus an evidence
     reference is enough to detect a repeat.
-16. **What is the claimable amount under each ground?** For a personnel departure, the full
+17. **What is the claimable amount under each ground?** For a personnel departure, the full
     salary and benefits or the net differential after the replacement's cost? For the high
     cost fund, the amount assumed or the LEA's net decrease? Considered and rejected here: a
     rule that a claim may not exceed the observed year-over-year decrease. It is
@@ -756,43 +806,43 @@ marked **outcome-determinative** change a district's result in at least one gold
 
 ### On the inputs
 
-17. **Define local funds and State and local funds.** Intermediate-unit and county funds,
+18. **Define local funds and State and local funds.** Intermediate-unit and county funds,
     dedicated special education levies, tuition and Medicaid reimbursement, in-kind and
     central-office allocations, capital against operating. Both calculators take the boundary
     as given.
-18. **Which child count is the per-capita denominator** — a December 1 count, an October
+19. **Which child count is the per-capita denominator** — a December 1 count, an October
     count, a State-prescribed date, or an LEA projection for a budget year? The regulation
     does not say and this document does not say. Should a `child_count_basis` enum be required,
     with a mismatch between the two years refused?
-19. **Does the federal-funds exclusion govern the compliance test?** It is written into the
+20. **Does the federal-funds exclusion govern the compliance test?** It is written into the
     eligibility paragraph. Both calculators apply it to both, on the view that it follows from
     what the fund categories mean. Confirm, and confirm the treatment of Medicaid
     reimbursement and other quasi-federal revenue.
-20. **Is a projected budget-year child count admissible at all**, given the comparison side is
+21. **Is a projected budget-year child count admissible at all**, given the comparison side is
     an actual count, and what must the LEA document to support it?
 
 ### On status and process
 
-21. **Is an inconsistent comparison-basis declaration a refusal or a failure?** An LEA
+22. **Is an inconsistent comparison-basis declaration a refusal or a failure?** An LEA
     measuring against its own reduced level has arguably not met the standard. This document
     treats it as a data-integrity problem, because the inconsistency is at least as likely to
     be an ingest-mapping error as a district position.
-22. **LEA reorganisations.** Out of scope for both `_v1` calculators. Confirm that a merged,
+23. **LEA reorganisations.** Out of scope for both `_v1` calculators. Confirm that a merged,
     split or dissolved LEA routes to an explicit manual path and never to an inferred
     allocation of comparison-year figures.
-23. **State overlays.** Confirm the overlay mechanism, and confirm what the interface tells a
+24. **State overlays.** Confirm the overlay mechanism, and confirm what the interface tells a
     district in a State whose standard is stricter than this federal floor.
-24. **Rule effective window against pack effective window.** `IDEA-MOE-ELIGIBILITY-001`
+25. **Rule effective window against pack effective window.** `IDEA-MOE-ELIGIBILITY-001`
     declares `2015-07-01`; pack `US-FED-IDEA-B-2026` declares `2026-07-01`. Which governs
     applicability? No golden case pins the boundary date until this is answered — both
     effective-date cases use a year well before either.
-25. **What does an eligibility failure oblige?** Withholding of the subgrant, a budget
+26. **What does an eligibility failure oblige?** Withholding of the subgrant, a budget
     amendment window, a conditional award? The remediation workflow attached to the finding
     depends on the answer.
-26. **Is an attached evidence document enough** for the platform to treat a claim as verified,
+27. **Is an attached evidence document enough** for the platform to treat a claim as verified,
     or must a human attest? The dependence flag currently keys off the reference alone. If
     attestation is required, an `attested_by_ref` field is needed.
-27. **Does the platform report PASS with a non-empty `dataGapsObserved`?** Both calculators
+28. **Does the platform report PASS with a non-empty `dataGapsObserved`?** Both calculators
     do, on the ground that an input that could not have changed the answer did not decide
     anything. Confirm that a finding may issue on facts the LEA did not itself assert — the
     set-aside resolution reports PASS where a method clears the _higher_ bar, which is
@@ -822,11 +872,18 @@ by this list — a checklist nobody re-reads is not a control.
 
 One further item is now an open question rather than a task, because it is a presentation
 decision with no obviously right answer: **the two calculators report per-capita magnitudes in
-different units.** `idea_moe_eligibility_v1` reports dollars per child at six places, matching
-the corpus derivations; `idea_moe_compliance_v1` reports the current-year dollars the LEA fell
-short by, at two places, because those figures feed the repayment range and have to be
-commensurable with the total-amount shortfalls. Both are computed from the same exact
-cross-products, so no status turns on the choice — but a reviewer reading the two side by side
-will see the same column heading over two different quantities. Each result carries a
-`perCapitaMagnitudeUnit` field naming which, and the UI must render it. Reconcile before either
-calculator leaves DRAFT.
+different units — **resolved, and worth recording because the first fix was wrong.**
+
+`marginByMethod`, `shortfallByMethod` and the counterfactual maps now carry current-year
+dollars at two places for all four measures on **both** calculators. Eligibility additionally
+emits `marginPerChildByMethod` and `projectedShortfallPerChildByMethod`, per child at six
+places, with `null` against the two total-amount measures because a total-amount measure has no
+per-child magnitude and dividing one out would invent a quantity the regulation does not
+describe. Both come from the same exact cross-products.
+
+The first attempt was a `perCapitaMagnitudeUnit` field naming which unit a result used. It was
+rejected on review for two reasons. It never existed — the field was documented here and
+implemented nowhere, so the only stated safeguard against the collision was fictitious, which
+is a worse failure than the collision. And even built, a label is the wrong shape of fix: a
+reader scanning a column of figures does not consult a sibling field first. One key must mean
+one unit.

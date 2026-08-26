@@ -17,6 +17,9 @@ importers:
       eslint:
         specifier: ^9.39.1
         version: 9.39.5
+      next:
+        specifier: ^15.5.6
+        version: 15.5.24(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       prettier:
         specifier: ^3.6.2
         version: 3.9.6
@@ -32,15 +35,24 @@ importers:
 
   apps/web:
     dependencies:
+      '@complianceos/assurance':
+        specifier: workspace:*
+        version: link:../../packages/assurance
       '@complianceos/calculators':
         specifier: workspace:*
         version: link:../../packages/calculators
       '@complianceos/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@complianceos/ingest':
+        specifier: workspace:*
+        version: link:../../packages/ingest
       '@complianceos/rulepack-sdk':
         specifier: workspace:*
         version: link:../../packages/rulepack-sdk
+      '@complianceos/rules-engine':
+        specifier: workspace:*
+        version: link:../../packages/rules-engine
       next:
         specifier: ^15.5.6
         version: 15.5.24(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -57,6 +69,24 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.1
         version: 19.2.5(@types/react@19.2.18)
+
+  packages/assurance:
+    dependencies:
+      '@complianceos/calculators':
+        specifier: workspace:*
+        version: link:../calculators
+      '@complianceos/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@complianceos/ingest':
+        specifier: workspace:*
+        version: link:../ingest
+      '@complianceos/rulepack-sdk':
+        specifier: workspace:*
+        version: link:../rulepack-sdk
+      '@complianceos/rules-engine':
+        specifier: workspace:*
+        version: link:../rules-engine
 
   packages/calculators:
     dependencies:

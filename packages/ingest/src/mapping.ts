@@ -18,7 +18,7 @@ import { z } from 'zod';
 import { DATA_CLASSIFICATIONS, type DataClassification } from '@complianceos/domain';
 import { lookupCell, type ParsedRow } from './csv.js';
 import { applyTransforms, describeTransforms, type TransformStep } from './transform.js';
-import type { FactProvenance } from './provenance.js';
+import type { FileRowProvenance } from './provenance.js';
 import type { ValidationIssue } from './validate.js';
 
 /** How several source columns combine into one canonical field (§10.4 "split/merge fields"). */
@@ -95,7 +95,7 @@ export interface MappedValue {
   readonly valueType: ValueType;
   readonly value: string | null;
   readonly classification: DataClassification;
-  readonly provenance: FactProvenance;
+  readonly provenance: FileRowProvenance;
 }
 
 export interface MappedRow {
@@ -221,7 +221,10 @@ export function applyFieldMapping(
     });
   }
 
-  const provenance: FactProvenance = {
+  const provenance: FileRowProvenance = {
+    // The mapping engine reads rows out of files, and that is the only thing it can produce.
+    // A determination has no row to point at and never comes through here.
+    kind: 'FILE_ROW',
     importJobId: context.importJobId,
     sourceFileId: context.sourceFileId,
     sourceHash: context.sourceHash,

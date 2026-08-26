@@ -7,6 +7,8 @@ authority:
   - 34 CFR 300.204
   - 34 CFR 300.205
   - 34 CFR 300.226
+  - 34 CFR 300.704(c)
+  - 20 U.S.C. 1413(a)(2)
 notes: >-
   No regulatory text was retrieved when these cases were written. eCFR is unreachable from
   the authoring environment (ADR 0006), so every statement about what the regulation
@@ -466,11 +468,14 @@ cases:
           evidence_ref: EV-MISC-0009
     expect:
       status: MANUAL_REVIEW
+      missingInputs: []
       output:
         qualifyingMethods: []
         repaymentExposureBounds: null
       warnings:
         - UNRECOGNISED_EXCEPTION_GROUND
+      steps:
+        fiscal_year_under_test: '2025-07-01'
     derivation: |
       The State-and-local measures would qualify without the claim
       (8,100,000.00 >= 8,000,000.00, child counts equal), so the run would otherwise report
@@ -517,10 +522,13 @@ cases:
           evidence_ref: EV-204C-0010
     expect:
       status: MANUAL_REVIEW
+      missingInputs: []
       output:
         qualifyingMethods: []
       warnings:
         - EXCEPTION_GROUND_CONDITION_NOT_SUPPLIED
+      steps:
+        fiscal_year_under_test: '2025-07-01'
     derivation: |
       Admitting the claim would give a required local level of
       5,000,000.00 - 260,000.00 = 4,740,000.00 against actual local expenditure of
@@ -627,6 +635,7 @@ cases:
           evidence_ref: EV-204D-0012
     expect:
       status: MANUAL_REVIEW
+      missingInputs: []
       output:
         qualifyingMethods: []
         methodStatus:
@@ -637,6 +646,8 @@ cases:
         repaymentExposureBounds: null
       warnings:
         - PER_CAPITA_REDUCTION_BASIS_DISPUTED
+      steps:
+        fiscal_year_under_test: '2025-07-01'
     derivation: |
       LOCAL_ONLY        required 10,000,000.00 - 400,000.00 = 9,600,000.00
                         7,600,000.00 - 9,600,000.00 = -2,000,000.00     -> FAIL
@@ -695,6 +706,7 @@ cases:
           evidence_ref: EV-204B-0013
     expect:
       status: MANUAL_REVIEW
+      missingInputs: []
       output:
         qualifyingMethods: []
         methodStatus:
@@ -705,6 +717,8 @@ cases:
         repaymentExposureBounds: null
       warnings:
         - ENROLLMENT_EXCEPTION_PER_CAPITA_DISPUTED
+      steps:
+        fiscal_year_under_test: '2025-07-01'
     derivation: |
       LOCAL_ONLY        required 10,000,000.00 - 450,000.00 = 9,550,000.00
                         8,640,000.00 - 9,550,000.00 = -910,000.00       -> FAIL
@@ -831,6 +845,7 @@ cases:
       comparison_child_count: 1000
     expect:
       status: MANUAL_REVIEW
+      missingInputs: []
       output:
         qualifyingMethods: []
         methodStatus:
@@ -841,6 +856,8 @@ cases:
         repaymentExposureBounds: null
       warnings:
         - COMPARISON_BASIS_READING_DISPUTED
+      steps:
+        fiscal_year_under_test: '2025-07-01'
     derivation: |
       The LEA met the standard in the comparison year, under the State-and-local measures
       only. Two readings of the subsequent-years rule follow.
@@ -996,11 +1013,14 @@ cases:
       comparison_child_count: 1000
     expect:
       status: MANUAL_REVIEW
+      missingInputs: []
       output:
         qualifyingMethods: []
         repaymentExposureBounds: null
       warnings:
         - NO_PART_B_SUBGRANT_FOR_THE_YEAR
+      steps:
+        fiscal_year_under_test: '2025-07-01'
     derivation: |
       The amount arrives as the string "0.00". It is compared as a decimal, not as text, so
       "0", "0.00" and "0.000" are one fact and cannot produce three different compliance
@@ -1041,11 +1061,14 @@ cases:
       comparison_child_count: 1000
     expect:
       status: MANUAL_REVIEW
+      missingInputs: []
       output:
         qualifyingMethods: []
         repaymentExposureBounds: null
       warnings:
         - OUTSIDE_RULE_EFFECTIVE_WINDOW
+      steps:
+        fiscal_year_under_test: '2013-07-01'
     derivation: |
       The figures would produce a failure with shortfalls of 200,000.00 and 300,000.00.
       None of that arithmetic runs.
@@ -1130,3 +1153,112 @@ cases:
       disallowed. It is not a status: the statute sets no band between compliance and
       failure, and inventing one would let the platform tell a district it half-failed a
       test the regulation states as a single line.
+
+  - case: fail-a-zero-comparison-child-count-is-not-an-unanswerable-one
+    intent: not-applicable
+    asserts: >-
+      A comparison-year child count of zero makes the per-capita measures not applicable, and
+      the year fails on the two total measures alone. Absent is a different fact and produces
+      INDETERMINATE - the difference between this case and its neighbour is a repayment.
+    inputs:
+      current_fiscal_year_start: '2025-07-01'
+      current_fiscal_year_end: '2026-06-30'
+      federal_funds_excluded: true
+      lea_part_b_subgrant_amount: '1450000.00'
+      current_actual_local: '4800000.00'
+      current_actual_state_local: '7700000.00'
+      current_child_count: 1000
+      comparison_fiscal_year_start: '2024-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      comparison_year_moe_status: MET
+      comparison_year_methods_met:
+        - LOCAL_ONLY
+        - STATE_AND_LOCAL
+        - LOCAL_PER_CAPITA
+        - STATE_AND_LOCAL_PER_CAPITA
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2024-0021
+      comparison_actual_local: '5000000.00'
+      comparison_actual_state_local: '8000000.00'
+      comparison_child_count: 0
+    expect:
+      status: FAIL
+      missingInputs: []
+      output:
+        qualifyingMethods: []
+        methodStatus:
+          LOCAL_ONLY: FAIL
+          STATE_AND_LOCAL: FAIL
+          LOCAL_PER_CAPITA: NOT_APPLICABLE
+          STATE_AND_LOCAL_PER_CAPITA: NOT_APPLICABLE
+        smallestShortfall: '200000.00'
+        largestShortfall: '300000.00'
+        repaymentExposureBounds:
+          low: '200000.00'
+          high: '300000.00'
+      warnings:
+        - ZERO_COMPARISON_CHILD_COUNT
+    derivation: |
+      LOCAL_ONLY        5,000,000.00 - 4,800,000.00 = 200,000.00 short  -> FAIL
+      STATE_AND_LOCAL   8,000,000.00 - 7,700,000.00 = 300,000.00 short  -> FAIL
+
+      The comparison year served no children with disabilities, so no comparison per-child
+      level exists and neither per-capita measure is applicable. That is not the same as
+      being unable to evaluate them: nothing is missing, and no figure the district could
+      supply would make them computable.
+
+      Compare with missing-comparison-child-count-two-failures-and-two-unanswerable-is-not-a-
+      failure, whose inputs are identical except that the count is absent rather than zero.
+      There the two per-capita measures are INDETERMINATE, the roll-up refuses to conclude
+      from an incomplete calculation, and no repayment is asserted. Here they are
+      NOT_APPLICABLE, which roll-up rule 4 counts alongside FAIL, so the standard is not met
+      and the exposure is bounded at 200,000.00 to 300,000.00 against a 1,450,000.00 subgrant.
+
+      Absent versus zero is therefore the difference between no finding and money owed. It is
+      pinned on this side because this is the side where that difference costs a district.
+
+  - case: manual-review-state-and-local-below-local-in-the-comparison-year
+    intent: manual-review
+    asserts: >-
+      The State-and-local measure contains the local one, so a comparison year reporting less
+      combined than local is a mapping error rather than a fiscal fact, and no arithmetic on
+      the pair is meaningful.
+    inputs:
+      current_fiscal_year_start: '2025-07-01'
+      current_fiscal_year_end: '2026-06-30'
+      federal_funds_excluded: true
+      lea_part_b_subgrant_amount: '1450000.00'
+      current_actual_local: '5100000.00'
+      current_actual_state_local: '8200000.00'
+      current_child_count: 1000
+      comparison_fiscal_year_start: '2024-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      comparison_year_moe_status: MET
+      comparison_year_methods_met:
+        - LOCAL_ONLY
+        - STATE_AND_LOCAL
+        - LOCAL_PER_CAPITA
+        - STATE_AND_LOCAL_PER_CAPITA
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2024-0022
+      comparison_actual_local: '5000000.00'
+      comparison_actual_state_local: '4000000.00'
+      comparison_child_count: 1000
+    expect:
+      status: MANUAL_REVIEW
+      missingInputs: []
+      output:
+        qualifyingMethods: []
+        repaymentExposureBounds: null
+      warnings:
+        - COMBINED_MEASURE_BELOW_LOCAL_MEASURE
+      steps:
+        fiscal_year_under_test: '2025-07-01'
+    derivation: |
+      Every figure would qualify: 5,100,000.00 against 5,000,000.00 on the local measure and
+      8,200,000.00 against 4,000,000.00 on the combined one. The second comparison is
+      meaningless, and the run would report a comfortable PASS built on it.
+
+      State and local funds combined cannot be less than local funds alone; the combined
+      measure contains the other. A comparison year reporting 4,000,000.00 combined against
+      5,000,000.00 local describes no possible set of books. The likeliest cause is a mapping
+      that points the combined column at a State-only total, which would understate the bar
+      on the measure most districts qualify under.

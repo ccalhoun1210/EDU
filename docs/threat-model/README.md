@@ -7,6 +7,9 @@ with file references — and what does not exist yet.
 A mitigation nobody can point at is a plan. And a threat model listing only what has been done
 is marketing, so the gaps are stated in the same voice as the controls.
 
+Entries 1–13 are §37's, in its order. Entry 14 is not in §37: it arrived with the product
+surfaces, because a browser-rendered page is a threat surface the buildout's list predates.
+
 **Status vocabulary**
 
 | Status        | Meaning                                                                  |
@@ -67,8 +70,11 @@ currently state what the scan concluded, which is honest but is not protection.
 
 **Status: ENFORCED**
 
-A district export is untrusted input, and the failure mode is not a crash — it is a plausible
-number computed from data that was silently mangled.
+A district export is untrusted input, and there are two distinct failure modes. Neither is a
+crash. One is a plausible number computed from data that was silently mangled; the other is a
+perfectly well-formed value in a field the district has no standing to write at all.
+
+### Mangling
 
 - No silent coercion anywhere. A currency string that does not parse is a reported issue on a
   named row and column, never a zero (`packages/ingest/src/transform.ts`).
@@ -82,6 +88,87 @@ number computed from data that was silently mangled.
   (`packages/ingest/src/pipeline.ts`), and `projectFactBag` throws rather than choosing.
 - An unmapped enumeration value is an error, not a pass-through — a category silently dropped
   from a count is a wrong denominator.
+
+### Authority
+
+This half was missing, and the entry claimed ENFORCED without it. A `MappingTemplate` may
+target any canonical field name — the schema constrained only uniqueness — and a projected
+fact bag is flat, so by the time the engine saw a value it could not tell a figure the
+district reported from a determination the platform had made.
+
+That let an uploaded spreadsheet supply `comparison_year_moe_status`,
+`comparison_year_methods_met` and `comparison_required_level_*`. A district could declare its
+own prior year compliant and set the level carried forward to whatever it liked — and
+34 CFR 300.203(c) exists precisely to stop a failing year from lowering the next year's bar.
+The resulting finding would have carried a complete, correct-looking provenance chain, pointing
+at the district's own cell. Nothing in the list above would have fired: the value parses, the
+row is well-formed, the reconciliation balances.
+
+- Every `CanonicalFact` carries a **`FactOrigin`** alongside its classification. Classification
+  says how sensitive a value is; origin says whose statement it is
+  (`packages/domain/src/fact-origin.ts`).
+- The ingest pipeline stamps `DISTRICT_EXPORT` on everything it produces, and it is not a
+  parameter. An import cannot elect to speak with the platform's authority.
+- Each canonical field states which origins may supply it, with the reasoning written next to
+  it. `projectFactBag` refuses a fact whose origin is not permitted — **throwing rather than
+  dropping**, because dropping would make the field absent, the calculator would return
+  INDETERMINATE, and the district would be told it was missing a figure it had supplied, hiding
+  an attempted assertion behind a data-quality message.
+- Authority is checked at projection because that is the last point at which a fact still knows
+  where it came from.
+- `origin` is inside the snapshot content hash. Outside it, a sealed snapshot could be edited
+  to relabel a district's figure as a platform determination with `verifySnapshot` still
+  returning true.
+- An unregistered field defaults to what a district may assert, which is right for ordinary
+  data and wrong for a determination — so `packages/calculators/src/fact-origin.test.ts`
+  requires every input any implemented calculator declares to have an explicit answer, as a
+  registry entry or as a line in its district-may-assert list. A new platform-owned input that
+  nobody classifies fails the build rather than shipping as a hole.
+
+### Shape
+
+Origin says who asserted a fact; it does not say what kind of source is behind it, and until
+those came apart the record could describe the wrong one. `FactProvenance` had exactly one
+shape — a row in an uploaded file — so a prior-year determination carried forward from a
+finalized run was recorded with `sourceRow: 1` and a `sourceHash` naming an unrelated upload.
+Not merely unhelpful: a finding-detail screen citing row 1, column
+`comparison_year_moe_status` sends a business officer looking for a cell that does not exist,
+and a monitor who goes looking finds a citation that is false.
+
+Worse, nothing bound the fact to the run it named. `moe_status_source_run_id` was a string
+beside another string; any value could sit next to any run id and the chain would look
+complete all the way back to a finalized run that concluded the opposite.
+
+- `FactProvenance` is a discriminated union. `FILE_ROW` describes a cell in an export;
+  `DETERMINATION` describes a computation, naming the run, the rule, the pack version, the
+  engine, the snapshot it read and the **evaluation hash** of the result carried forward
+  (`packages/ingest/src/provenance.ts`).
+- `buildSnapshot` refuses a fact whose provenance shape does not match what its origin claims
+  — checked at sealing, because once an incoherent chain is inside the content hash the hash
+  certifies the incoherence.
+- Three origins — `DISTRICT_ATTESTATION`, `SEA_DETERMINATION`, `PLATFORM_REFERENCE` — have no
+  shape designed yet and are **refused** rather than squeezed into one of the two that exist.
+  Nothing produces them today, so nothing is blocked; the first producer gets an error naming
+  what has to be built. Reusing a shape for something it does not describe is what produced
+  this entry.
+- `carryForward` is the only sanctioned way to build a determination fact. It reads the value
+  out of the finalized `EvaluationResult` — there is no parameter for it — and stamps that
+  result's own identifiers on. A carried-forward fact cannot state a status the run it cites
+  did not reach (`packages/assurance/src/carry-forward.ts`).
+- `verifyCarriedForward` closes the loop from the other side: the named run and rule must be
+  among the finalized results, the evaluation hash must match, and the value must still read
+  out of the recorded path. The hash covers the rule, pack version, engine, snapshot, inputs
+  and result, and excludes the timestamp and run id — so it survives re-running a prior year
+  unchanged and breaks the moment that conclusion is different.
+- The whole determination record is inside the snapshot content hash, evaluation hash
+  included. Outside it, the binding could be repointed at a run that concluded the opposite
+  and `verifySnapshot` would certify the result.
+
+Still open: the binding is a hash comparison against results the caller supplies, not a
+signature. A caller that supplies a fabricated `EvaluationResult` alongside a fabricated fact
+gets a consistent pair. Closing that means finalized results being read from storage that the
+application cannot rewrite — an append-only table with its own integrity chain (§21) — rather
+than passed in.
 
 ## 5. Prompt injection
 
@@ -198,6 +285,44 @@ Retention anchors to a named event rather than to record creation, because 2 CFR
 period runs from submission of the final expenditure report, not from when the row was written.
 
 ---
+
+## 14. Injected script in a product surface
+
+**Status: PARTIAL**
+
+The surfaces render values a district supplied — a filename, a raw cell as it appeared, an LEA
+name. React escapes them, and nothing here builds HTML by hand or uses `dangerouslySetInnerHTML`,
+so the ordinary reflected path is closed by construction. What that does not cover is a bug
+that reopens it later, which is what a Content-Security-Policy is for.
+
+The policy was declared and, for a while, wrong in a way that read as strict. It said
+`script-src 'self'` on the premise that the application uses no inline script; the App Router
+streams its server-rendered payload through inline `<script>` tags, so the policy blocked the
+framework's own scripts and React never hydrated. Nothing on these pages needs hydration yet,
+which is precisely why it went unnoticed — the symptom was console errors, not a broken
+screen, and the first interactive control would have found it the hard way. Before that it
+lived in a `vercel.json` the deployment did not read, and was absent entirely.
+
+- The policy is issued per request by `apps/web/src/middleware.ts` with a fresh nonce, set on
+  the request headers so the renderer stamps it onto the scripts it emits and on the response
+  so the browser enforces it. `strict-dynamic` then covers the chunks those scripts load
+  without the policy enumerating them.
+- It is declared in exactly one place. A second `Content-Security-Policy` from
+  `next.config.ts` would be enforced as the intersection of the two, silently reinstating the
+  bug.
+- `scripts/smoke-web.mjs` fails the build if the header is missing, if it carries no nonce, or
+  if any inline script in the served HTML lacks that nonce. Two of the three failures above
+  were "declared and never checked"; this is the check.
+- `frame-ancestors 'none'`, `object-src 'none'`, and the static headers — HSTS, `nosniff`,
+  `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` — are asserted by the same test.
+
+**Gap.** `style-src` still allows `'unsafe-inline'`, because Next inlines critical CSS and a
+style nonce would have to be threaded through every stylesheet link the framework emits.
+Inline style is a much weaker vector than inline script, but it is not nothing: it permits
+appearance-based deception of a reader on a compliance screen. Narrowing it is separate work.
+
+There is also no authenticated surface yet, so CSRF, session fixation and clickjacking beyond
+`frame-ancestors` are untested rather than mitigated — they arrive with authentication.
 
 ## Threats this table does not cover
 

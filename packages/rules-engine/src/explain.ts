@@ -45,7 +45,8 @@ export interface ExplanationContext {
 }
 
 /** Rendered when a placeholder resolves to nothing. Never an empty string, which reads as a typo. */
-const ABSENT = '—';
+/** What a value that is not there renders as, in prose and in a table alike. */
+export const ABSENT = '—';
 
 /**
  * Any `{{...}}` span, not only well-formed ones.
@@ -57,7 +58,15 @@ const ABSENT = '—';
  */
 const PLACEHOLDER = /\{\{([^{}]*)\}\}/g;
 
-function formatStepValue(step: CalculationStep): string {
+/**
+ * A step's value, as a reader should see it.
+ *
+ * Exported because the finding-detail screen renders the same steps in a table directly
+ * beneath the prose explanation. Two formatters would eventually disagree, and a district
+ * officer reading `$4,900,000.00` in the sentence and `4900000.00` in the table below it has
+ * been given two numbers to reconcile where the platform has only one.
+ */
+export function formatStepValue(step: CalculationStep): string {
   switch (step.unit) {
     case 'USD':
     case 'USD_PER_CHILD':
@@ -88,7 +97,14 @@ function readPath(source: unknown, path: readonly string[]): unknown {
   return current;
 }
 
-function renderValue(value: unknown): string {
+/**
+ * A fact or output value, as a reader should see it.
+ *
+ * Exported for the same reason as `formatStepValue`: the finding-detail screen tabulates the
+ * very inputs the explanation names, and a table that renders `4830000.00` under a sentence
+ * that says `$4,830,000.00` invites a district to wonder which one the platform decided on.
+ */
+export function renderValue(value: unknown): string {
   if (value === undefined || value === null) return ABSENT;
   if (Array.isArray(value)) return value.length === 0 ? ABSENT : value.map(renderValue).join(', ');
   if (typeof value === 'object') return JSON.stringify(value);

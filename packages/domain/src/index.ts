@@ -6,6 +6,7 @@ export * from './classification.js';
 export * from './corrective-action.js';
 export * from './evaluation.js';
 export * from './evidence.js';
+export * from './fact-origin.js';
 export * from './finding.js';
 export * from './money.js';
 export * from './organization.js';

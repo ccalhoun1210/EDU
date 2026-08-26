@@ -415,6 +415,7 @@ describe('provenance on every mapped value', () => {
     const { value } = applyFieldMapping(mapping, row, header, tpl, CONTEXT);
 
     expect(value.provenance).toEqual({
+      kind: 'FILE_ROW',
       importJobId: CONTEXT.importJobId,
       sourceFileId: CONTEXT.sourceFileId,
       sourceHash: CONTEXT.sourceHash,

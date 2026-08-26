@@ -95,7 +95,7 @@ with a citation, a provenance chain and a reproducible hash, and the wrong answe
 
 The two maintenance-of-effort calculators have since been respecified against those findings
 and implemented: [`idea-moe.md`](idea-moe.md) is the revised methodology, and the corpora at
-`packages/calculators/golden/` carry 42 cases between them. The ceiling is now apportioned
+`packages/calculators/golden/` carry 47 cases between them. The ceiling is now apportioned
 pro rata rather than consumed in list order; the enrollment carve-out is not decided but
 evaluated under every live reading and refused where they disagree. Revision is not clearance:
 both remain at `DRAFT` behind the source gate, and the open questions in that document still

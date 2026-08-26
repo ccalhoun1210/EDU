@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { SiteNav } from '../components/site-nav.js';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div className="masthead-inner">
             <span className="wordmark">ComplianceOS EDU</span>
             <span className="masthead-note">IDEA Part B fiscal assurance</span>
+            <SiteNav />
           </div>
         </header>
 

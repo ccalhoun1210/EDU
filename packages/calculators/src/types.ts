@@ -128,7 +128,8 @@ export interface CalculatorResult<TOutput extends CalculatorOutput = CalculatorO
 
 export interface CalculatorInputSpec {
   readonly name: string;
-  readonly type: 'money' | 'count' | 'date' | 'enum' | 'boolean' | 'list' | 'object';
+  /** `string` is an opaque reference — a run id, an evidence reference — never free text. */
+  readonly type: 'money' | 'count' | 'date' | 'enum' | 'boolean' | 'string' | 'list' | 'object';
   readonly required: boolean;
   readonly classification: DataClassification;
   readonly definition: string;

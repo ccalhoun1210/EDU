@@ -13,6 +13,12 @@
  * to anticipate a reduction, and the projection that shows what the year looks like if an
  * anticipated reduction never materialises.
  *
+ * This is also the calculator that reports per-child magnitudes, under
+ * `marginPerChildByMethod` and `projectedShortfallPerChildByMethod`. They are additional to
+ * the dollar figures both calculators report, never a different quantity under a shared name:
+ * a budget officer comparing this year's eligibility result against last year's compliance
+ * result reads one column and gets one unit.
+ *
  * Spec: `docs/regulatory-methodology/idea-moe.md`. Golden corpus:
  * `golden/idea_moe_eligibility_v1.yaml`. Rule: `IDEA-MOE-ELIGIBILITY-001`, held at DRAFT
  * because no regulatory text was retrievable when this was written (ADR 0006).
@@ -35,10 +41,6 @@ const CONFIG: MoeVariantConfig = {
   currentAmountLabel: 'Budgeted',
   currentStepPrefix: 'budget',
   priorStatusInput: 'most_recent_available_year_moe_status',
-  // Per child. The eligibility projection is a per-child figure in the corpus derivations,
-  // and nothing on this side is fed into a dollar recovery, so the per-capita measures are
-  // reported in their own unit rather than converted to whole-year dollars.
-  perCapitaMarginUnit: 'USD_PER_CHILD',
 };
 
 const ELIGIBILITY_INPUTS: readonly CalculatorInputSpec[] = [
@@ -84,7 +86,7 @@ const ELIGIBILITY_INPUTS: readonly CalculatorInputSpec[] = [
     definition:
       'Aggregate count of children with disabilities projected or officially adopted for the ' +
       'budget year. Whether a projected count is admissible against an actual comparison ' +
-      'count is OQ-20.',
+      'count is OQ-21.',
   },
 ];
 

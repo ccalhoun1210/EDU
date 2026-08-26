@@ -14,7 +14,12 @@
 
 import { describe, expect, it } from 'vitest';
 import type { CanonicalValue } from '@complianceos/domain';
-import type { SourceFileRef } from './provenance.js';
+import {
+  isFileRowProvenance,
+  type FactProvenance,
+  type FileRowProvenance,
+  type SourceFileRef,
+} from './provenance.js';
 import type { MappingTemplate } from './mapping.js';
 import {
   runImport,
@@ -24,6 +29,19 @@ import {
   type SubjectBinding,
 } from './pipeline.js';
 import type { CanonicalFact, DataSnapshot } from './snapshot.js';
+
+/**
+ * Narrow to the file-row form.
+ *
+ * Everything the import pipeline produces is one. A determination reaching here would be a
+ * bug worth failing loudly on rather than an optional chain that quietly asserts undefined.
+ */
+function fileRow(provenance: FactProvenance | undefined): FileRowProvenance {
+  if (provenance === undefined || !isFileRowProvenance(provenance)) {
+    throw new Error(`expected file-row provenance, got ${provenance?.kind ?? 'nothing'}`);
+  }
+  return provenance;
+}
 
 const FILE: SourceFileRef = {
   sourceFileId: 'file_fy2028_expenditures',
@@ -235,6 +253,7 @@ describe('a clean import', () => {
     );
 
     expect(fact?.provenance).toEqual({
+      kind: 'FILE_ROW',
       importJobId: 'job_fy2028_expenditures',
       sourceFileId: FILE.sourceFileId,
       sourceHash: FILE.sourceHash,
@@ -435,7 +454,7 @@ LEA-4412,FY2028,3310,"1,400,000.00",412,B. Okonkwo
 
     expect(valueOf(snapshot, 'LEA-4412:2028', 'local_actual_expenditure')).toBeUndefined();
     // And the quarantined row contributes nothing else either.
-    expect(snapshot.facts.filter((entry) => entry.provenance.sourceRow === 2)).toEqual([]);
+    expect(snapshot.facts.filter((entry) => fileRow(entry.provenance).sourceRow === 2)).toEqual([]);
   });
 });
 
@@ -563,14 +582,18 @@ LEA-4412,FY2028,3310,"1,250,000.00",412,B. Okonkwo
     expect(triples(shuffled.facts)).toEqual(triples(original.facts));
     expect(shuffled.contentHash).not.toBe(original.contentHash);
     expect(
-      shuffled.facts.find(
-        (entry) => entry.subjectId === 'LEA-7781:2028' && entry.field === 'child_count',
-      )?.provenance.sourceRow,
+      fileRow(
+        shuffled.facts.find(
+          (entry) => entry.subjectId === 'LEA-7781:2028' && entry.field === 'child_count',
+        )?.provenance,
+      ).sourceRow,
     ).toBe(1);
     expect(
-      original.facts.find(
-        (entry) => entry.subjectId === 'LEA-7781:2028' && entry.field === 'child_count',
-      )?.provenance.sourceRow,
+      fileRow(
+        original.facts.find(
+          (entry) => entry.subjectId === 'LEA-7781:2028' && entry.field === 'child_count',
+        )?.provenance,
+      ).sourceRow,
     ).toBe(2);
   });
 
