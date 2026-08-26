@@ -1,7 +1,10 @@
 <title>Section 18 Binder</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+/>
 
 <style>
   /*
@@ -39,7 +42,9 @@
     --rule: 1px solid var(--border-decorative);
   }
 
-  * { box-sizing: border-box; }
+  * {
+    box-sizing: border-box;
+  }
 
   body {
     margin: 0;
@@ -77,7 +82,9 @@
     text-transform: uppercase;
     font-size: 0.6875rem;
   }
-  .demo-banner span { color: #cdd8e8; }
+  .demo-banner span {
+    color: #cdd8e8;
+  }
 
   /* ---------- masthead ---------- */
   .masthead {
@@ -149,7 +156,9 @@
     align-items: flex-start;
     justify-content: space-between;
   }
-  .verdict-copy { max-width: 44ch; }
+  .verdict-copy {
+    max-width: 44ch;
+  }
   .verdict h2 {
     margin: 0 0 0.4rem;
     font-size: 1.0625rem;
@@ -159,7 +168,11 @@
     align-items: center;
     gap: 0.5rem;
   }
-  .verdict p { margin: 0; color: var(--muted); font-size: 0.9375rem; }
+  .verdict p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9375rem;
+  }
 
   .tally {
     display: flex;
@@ -173,7 +186,9 @@
     border-right: 1px solid var(--border-decorative);
     min-width: 5.25rem;
   }
-  .tally div:last-child { border-right: 0; }
+  .tally div:last-child {
+    border-right: 0;
+  }
   .tally b {
     display: block;
     font-size: 1.5rem;
@@ -190,7 +205,9 @@
   }
 
   /* ---------- indicators ---------- */
-  .indicators { padding: 0 2.5rem 3rem; }
+  .indicators {
+    padding: 0 2.5rem 3rem;
+  }
 
   .indicator {
     border-bottom: var(--rule);
@@ -200,7 +217,9 @@
     gap: 0 1.75rem;
     align-items: start;
   }
-  .indicator:last-of-type { border-bottom: 0; }
+  .indicator:last-of-type {
+    border-bottom: 0;
+  }
 
   .number {
     font-family: var(--mono);
@@ -235,7 +254,12 @@
   }
 
   /* status chip — icon + text, never colour alone (WCAG 1.4.1) */
-  .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.1rem; }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.1rem;
+  }
   .chip {
     display: inline-flex;
     align-items: center;
@@ -248,12 +272,26 @@
     text-transform: uppercase;
     background: var(--surface);
   }
-  .chip svg { width: 0.85rem; height: 0.85rem; flex: none; }
-  .chip.pass { color: var(--pass); }
-  .chip.fail { color: var(--fail); }
-  .chip.indeterminate { color: var(--indeterminate); }
-  .chip.na { color: var(--na); }
-  .chip.manual { color: var(--manual); }
+  .chip svg {
+    width: 0.85rem;
+    height: 0.85rem;
+    flex: none;
+  }
+  .chip.pass {
+    color: var(--pass);
+  }
+  .chip.fail {
+    color: var(--fail);
+  }
+  .chip.indeterminate {
+    color: var(--indeterminate);
+  }
+  .chip.na {
+    color: var(--na);
+  }
+  .chip.manual {
+    color: var(--manual);
+  }
   .chip.neutral {
     color: var(--muted);
     border-color: var(--border-interactive);
@@ -280,13 +318,17 @@
     align-items: center;
     gap: 0.5rem;
   }
-  details.workpaper > summary::-webkit-details-marker { display: none; }
+  details.workpaper > summary::-webkit-details-marker {
+    display: none;
+  }
   details.workpaper > summary::before {
     content: '▸';
     font-size: 0.7rem;
     transition: transform 0.15s ease;
   }
-  details.workpaper[open] > summary::before { transform: rotate(90deg); }
+  details.workpaper[open] > summary::before {
+    transform: rotate(90deg);
+  }
   details.workpaper > summary:focus-visible {
     outline: 2px solid var(--navy);
     outline-offset: -2px;
@@ -317,9 +359,14 @@
     font-size: 0.8125rem;
     word-break: break-word;
   }
-  .meta dd a { color: var(--navy); }
+  .meta dd a {
+    color: var(--navy);
+  }
 
-  .table-wrap { overflow-x: auto; margin-bottom: 1.1rem; }
+  .table-wrap {
+    overflow-x: auto;
+    margin-bottom: 1.1rem;
+  }
   table {
     width: 100%;
     border-collapse: collapse;
@@ -335,7 +382,8 @@
     color: var(--muted);
     padding-bottom: 0.5rem;
   }
-  th, td {
+  th,
+  td {
     text-align: left;
     padding: 0.5rem 0.75rem 0.5rem 0;
     border-bottom: 1px solid var(--border-decorative);
@@ -349,10 +397,26 @@
     font-weight: 600;
     border-bottom: 1px solid var(--border-interactive);
   }
-  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); padding-right: 0; }
-  td .source { display: block; color: var(--muted); font-size: 0.75rem; margin-top: 0.15rem; }
-  tr.total td { font-weight: 700; border-bottom: 0; }
-  tr.missing td { color: var(--indeterminate); }
+  td.num,
+  th.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-family: var(--mono);
+    padding-right: 0;
+  }
+  td .source {
+    display: block;
+    color: var(--muted);
+    font-size: 0.75rem;
+    margin-top: 0.15rem;
+  }
+  tr.total td {
+    font-weight: 700;
+    border-bottom: 0;
+  }
+  tr.missing td {
+    color: var(--indeterminate);
+  }
 
   .conclusion {
     border-left: 3px solid var(--navy);
@@ -361,7 +425,9 @@
     font-size: 0.9375rem;
     max-width: var(--measure);
   }
-  .conclusion b { font-weight: 700; }
+  .conclusion b {
+    font-weight: 700;
+  }
 
   .attestation {
     margin-top: 1.1rem;
@@ -373,7 +439,10 @@
     flex-wrap: wrap;
     gap: 0.25rem 1.25rem;
   }
-  .attestation b { color: var(--ink); font-weight: 600; }
+  .attestation b {
+    color: var(--ink);
+    font-weight: 600;
+  }
 
   .blocked {
     margin-top: 1.1rem;
@@ -382,7 +451,9 @@
     border: 1px solid var(--fail);
     font-size: 0.875rem;
   }
-  .blocked b { color: var(--fail); }
+  .blocked b {
+    color: var(--fail);
+  }
 
   /* ---------- colophon ---------- */
   .colophon {
@@ -400,56 +471,106 @@
     color: var(--ink);
     margin: 0 0 0.75rem;
   }
-  .colophon p { margin: 0 0 0.7rem; max-width: var(--measure); }
-  .colophon a { color: var(--navy); }
-  .colophon code { font-family: var(--mono); font-size: 0.75rem; }
+  .colophon p {
+    margin: 0 0 0.7rem;
+    max-width: var(--measure);
+  }
+  .colophon a {
+    color: var(--navy);
+  }
+  .colophon code {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+  }
 
   @media (max-width: 40rem) {
-    .masthead, .verdict, .indicators, .colophon, .demo-banner { padding-left: 1.25rem; padding-right: 1.25rem; }
-    .indicator { grid-template-columns: 1fr; gap: 0.75rem; }
-    .number { font-size: 1.25rem; }
-    .number small { display: inline; margin-left: 0.5rem; }
+    .masthead,
+    .verdict,
+    .indicators,
+    .colophon,
+    .demo-banner {
+      padding-left: 1.25rem;
+      padding-right: 1.25rem;
+    }
+    .indicator {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+    .number {
+      font-size: 1.25rem;
+    }
+    .number small {
+      display: inline;
+      margin-left: 0.5rem;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; animation: none !important; }
+    * {
+      transition: none !important;
+      animation: none !important;
+    }
   }
 </style>
 
 <div class="sheet">
-
   <div class="demo-banner">
     <strong>Demonstration</strong>
-    <span>Sample County Schools is a fictional district. Every figure, name and signature below is illustrative. This is not a monitoring record of any real school system.</span>
+    <span
+      >Sample County Schools is a fictional district. Every figure, name and signature below is
+      illustrative. This is not a monitoring record of any real school system.</span
+    >
   </div>
 
   <header class="masthead">
     <p class="eyebrow">ComplianceOS EDU · Monitoring binder</p>
     <h1>Section 18 — IDEA Fiscal Indicators</h1>
     <p class="lede">
-      Assembled against the Georgia Department of Education Cross-Functional Monitoring
-      instrument, in the state's own indicator order and numbering. Every conclusion below
-      carries the regulation it was decided under, the inputs it was computed from, and where
-      each of those numbers came from.
+      Assembled against the Georgia Department of Education Cross-Functional Monitoring instrument,
+      in the state's own indicator order and numbering. Every conclusion below carries the
+      regulation it was decided under, the inputs it was computed from, and where each of those
+      numbers came from.
     </p>
     <dl class="facts">
-      <div class="fact"><dt>District</dt><dd>Sample County Schools<span class="sub">LEA 000 · 8,412 students</span></dd></div>
-      <div class="fact"><dt>Fiscal year</dt><dd>FY2026<span class="sub">1 Jul 2025 – 30 Jun 2026</span></dd></div>
-      <div class="fact"><dt>Instrument</dt><dd>GA-GADOE-CFM<span class="sub">FY2025 edition · 4-year cycle</span></dd></div>
-      <div class="fact"><dt>Prepared</dt><dd>26 Aug 2026<span class="sub">Draft — not yet submitted</span></dd></div>
+      <div class="fact">
+        <dt>District</dt>
+        <dd>Sample County Schools<span class="sub">LEA 000 · 8,412 students</span></dd>
+      </div>
+      <div class="fact">
+        <dt>Fiscal year</dt>
+        <dd>FY2026<span class="sub">1 Jul 2025 – 30 Jun 2026</span></dd>
+      </div>
+      <div class="fact">
+        <dt>Instrument</dt>
+        <dd>GA-GADOE-CFM<span class="sub">FY2025 edition · 4-year cycle</span></dd>
+      </div>
+      <div class="fact">
+        <dt>Prepared</dt>
+        <dd>26 Aug 2026<span class="sub">Draft — not yet submitted</span></dd>
+      </div>
     </dl>
   </header>
 
   <section class="verdict" aria-label="Binder status">
     <div class="verdict-copy">
       <h2>
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" style="width:1rem;height:1rem"><path d="M8 1.5 15 14H1L8 1.5Z" stroke-linejoin="round"/><path d="M8 6v3.5M8 11.6v.5" stroke-linecap="round"/></svg>
+        <svg
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          aria-hidden="true"
+          style="width: 1rem; height: 1rem"
+        >
+          <path d="M8 1.5 15 14H1L8 1.5Z" stroke-linejoin="round" />
+          <path d="M8 6v3.5M8 11.6v.5" stroke-linecap="round" />
+        </svg>
         This binder cannot be submitted yet
       </h2>
       <p>
         Two indicators are outstanding. 18.2 is waiting on one figure, and 18.5 is a genuine
-        shortfall against a Georgia minimum. There is no partial binder — resolve both, or
-        submit nothing.
+        shortfall against a Georgia minimum. There is no partial binder — resolve both, or submit
+        nothing.
       </p>
     </div>
     <div class="tally" role="group" aria-label="Indicator tally">
@@ -461,19 +582,28 @@
   </section>
 
   <main class="indicators">
-
     <!-- 18.1 -->
     <article class="indicator">
       <div class="number">18.1<small>Attested</small></div>
       <div class="body">
         <h3>Maintenance of effort</h3>
         <p class="requirement">
-          The LEA complies with maintenance of effort procedures, budgeting and expending at
-          least the same amount for the education of children with disabilities as in the
-          preceding fiscal year, under one of the four permitted methods of comparison.
+          The LEA complies with maintenance of effort procedures, budgeting and expending at least
+          the same amount for the education of children with disabilities as in the preceding fiscal
+          year, under one of the four permitted methods of comparison.
         </p>
         <div class="chips">
-          <span class="chip pass"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Pass</span>
+          <span class="chip pass"
+            ><svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M3 8.5 6.5 12 13 4.5" stroke-linecap="round" stroke-linejoin="round" /></svg
+            >Pass</span
+          >
           <span class="chip neutral">34 CFR 300.203(b)</span>
           <span class="chip neutral">US-FED-IDEA-B-2026 · 0.1.0</span>
         </div>
@@ -482,27 +612,55 @@
           <summary>Workpaper — IDEA-MOE-COMPLIANCE-001</summary>
           <div class="workpaper-body">
             <dl class="meta-grid">
-              <div class="meta"><dt>Method applied</dt><dd>LOCAL_FUNDS_ONLY</dd></div>
-              <div class="meta"><dt>Comparison year</dt><dd>FY2025</dd></div>
-              <div class="meta"><dt>Calculator</dt><dd>idea_moe_compliance_v1</dd></div>
-              <div class="meta"><dt>Computed</dt><dd>26 Aug 2026 09:14 EDT</dd></div>
+              <div class="meta">
+                <dt>Method applied</dt>
+                <dd>LOCAL_FUNDS_ONLY</dd>
+              </div>
+              <div class="meta">
+                <dt>Comparison year</dt>
+                <dd>FY2025</dd>
+              </div>
+              <div class="meta">
+                <dt>Calculator</dt>
+                <dd>idea_moe_compliance_v1</dd>
+              </div>
+              <div class="meta">
+                <dt>Computed</dt>
+                <dd>26 Aug 2026 09:14 EDT</dd>
+              </div>
             </dl>
 
             <div class="table-wrap">
               <table>
-                <caption>Inputs and their sources</caption>
+                <caption>
+                  Inputs and their sources
+                </caption>
                 <thead>
-                  <tr><th scope="col">Input</th><th scope="col">Source</th><th scope="col" class="num">Value</th></tr>
+                  <tr>
+                    <th scope="col">Input</th>
+                    <th scope="col">Source</th>
+                    <th scope="col" class="num">Value</th>
+                  </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <td>Prior year local expenditure<span class="source">FY2025 actuals</span></td>
-                    <td>FY2025 Annual Financial Report, fund 100, function 2300<span class="source">Uploaded by J. Reyes, Business Manager · 12 Aug 2026</span></td>
+                    <td>
+                      FY2025 Annual Financial Report, fund 100, function 2300<span class="source"
+                        >Uploaded by J. Reyes, Business Manager · 12 Aug 2026</span
+                      >
+                    </td>
                     <td class="num">4,218,773.42</td>
                   </tr>
                   <tr>
-                    <td>Current year local expenditure<span class="source">FY2026 actuals</span></td>
-                    <td>General ledger export, period 12<span class="source">Uploaded by J. Reyes, Business Manager · 20 Aug 2026</span></td>
+                    <td>
+                      Current year local expenditure<span class="source">FY2026 actuals</span>
+                    </td>
+                    <td>
+                      General ledger export, period 12<span class="source"
+                        >Uploaded by J. Reyes, Business Manager · 20 Aug 2026</span
+                      >
+                    </td>
                     <td class="num">4,391,006.18</td>
                   </tr>
                   <tr class="total">
@@ -516,8 +674,8 @@
             <p class="conclusion">
               Local funds met the prior-year level under the local-funds-only method, with
               <b>$172,232.76</b> of headroom. Three further methods were available and were not
-              needed; each is recorded in the run so a reviewer can see the district did not
-              simply pick the one that passed.
+              needed; each is recorded in the run so a reviewer can see the district did not simply
+              pick the one that passed.
             </p>
 
             <p class="attestation">
@@ -536,11 +694,26 @@
       <div class="body">
         <h3>Annual excess cost calculation</h3>
         <p class="requirement">
-          The LEA conducts an annual excess cost calculation, computed separately for
-          elementary and secondary levels.
+          The LEA conducts an annual excess cost calculation, computed separately for elementary and
+          secondary levels.
         </p>
         <div class="chips">
-          <span class="chip indeterminate"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M6.2 6.1a1.85 1.85 0 1 1 2.3 1.9c-.4.15-.5.4-.5.8v.4" stroke-linecap="round"/><path d="M8 11.9v.4" stroke-linecap="round"/></svg>Indeterminate</span>
+          <span class="chip indeterminate"
+            ><svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              aria-hidden="true"
+            >
+              <circle cx="8" cy="8" r="6.2" />
+              <path
+                d="M6.2 6.1a1.85 1.85 0 1 1 2.3 1.9c-.4.15-.5.4-.5.8v.4"
+                stroke-linecap="round"
+              />
+              <path d="M8 11.9v.4" stroke-linecap="round" /></svg
+            >Indeterminate</span
+          >
           <span class="chip neutral">34 CFR 300.202(b)</span>
           <span class="chip neutral">1 input missing</span>
         </div>
@@ -549,37 +722,73 @@
           <summary>Workpaper — IDEA-EXCESS-COST-001</summary>
           <div class="workpaper-body">
             <dl class="meta-grid">
-              <div class="meta"><dt>Method applied</dt><dd>SEPARATE_BY_LEVEL</dd></div>
-              <div class="meta"><dt>Levels</dt><dd>K–8, 9–12</dd></div>
-              <div class="meta"><dt>Calculator</dt><dd>idea_excess_cost_v1</dd></div>
-              <div class="meta"><dt>Computed</dt><dd>26 Aug 2026 09:14 EDT</dd></div>
+              <div class="meta">
+                <dt>Method applied</dt>
+                <dd>SEPARATE_BY_LEVEL</dd>
+              </div>
+              <div class="meta">
+                <dt>Levels</dt>
+                <dd>K–8, 9–12</dd>
+              </div>
+              <div class="meta">
+                <dt>Calculator</dt>
+                <dd>idea_excess_cost_v1</dd>
+              </div>
+              <div class="meta">
+                <dt>Computed</dt>
+                <dd>26 Aug 2026 09:14 EDT</dd>
+              </div>
             </dl>
 
             <div class="table-wrap">
               <table>
-                <caption>Inputs and their sources</caption>
+                <caption>
+                  Inputs and their sources
+                </caption>
                 <thead>
-                  <tr><th scope="col">Input</th><th scope="col">Source</th><th scope="col" class="num">Value</th></tr>
+                  <tr>
+                    <th scope="col">Input</th>
+                    <th scope="col">Source</th>
+                    <th scope="col" class="num">Value</th>
+                  </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <td>Elementary total expenditures</td>
-                    <td>FY2026 general ledger, K–8 cost centres<span class="source">Uploaded by J. Reyes · 20 Aug 2026</span></td>
+                    <td>
+                      FY2026 general ledger, K–8 cost centres<span class="source"
+                        >Uploaded by J. Reyes · 20 Aug 2026</span
+                      >
+                    </td>
                     <td class="num">38,904,551.00</td>
                   </tr>
                   <tr>
                     <td>Elementary enrolment</td>
-                    <td>FTE Count 2, Sample County SIS<span class="source">Entered by M. Okafor · 21 Aug 2026</span></td>
+                    <td>
+                      FTE Count 2, Sample County SIS<span class="source"
+                        >Entered by M. Okafor · 21 Aug 2026</span
+                      >
+                    </td>
                     <td class="num">5,106</td>
                   </tr>
                   <tr>
                     <td>Secondary total expenditures</td>
-                    <td>FY2026 general ledger, 9–12 cost centres<span class="source">Uploaded by J. Reyes · 20 Aug 2026</span></td>
+                    <td>
+                      FY2026 general ledger, 9–12 cost centres<span class="source"
+                        >Uploaded by J. Reyes · 20 Aug 2026</span
+                      >
+                    </td>
                     <td class="num">27,441,880.00</td>
                   </tr>
                   <tr class="missing">
-                    <td>Federal funds excluded<span class="source">Required by 300.202(b)</span></td>
-                    <td>Not supplied — no source on file<span class="source">Requested from the business office 21 Aug 2026</span></td>
+                    <td>
+                      Federal funds excluded<span class="source">Required by 300.202(b)</span>
+                    </td>
+                    <td>
+                      Not supplied — no source on file<span class="source"
+                        >Requested from the business office 21 Aug 2026</span
+                      >
+                    </td>
                     <td class="num">—</td>
                   </tr>
                 </tbody>
@@ -587,16 +796,16 @@
             </div>
 
             <p class="conclusion">
-              <b>No result was produced.</b> One required input has not arrived, so the run
-              returned Indeterminate rather than computing around the gap. A district is never
-              told it is compliant on the strength of data that never came.
+              <b>No result was produced.</b> One required input has not arrived, so the run returned
+              Indeterminate rather than computing around the gap. A district is never told it is
+              compliant on the strength of data that never came.
             </p>
 
             <div class="blocked">
-              <b>To resolve:</b> supply the FY2026 federal funds excluded from the excess cost
-              base — Title I, Part A and Title II, Part A amounts charged to the levels above —
-              with the report they were read from. The calculation will re-run and this
-              indicator becomes attestable.
+              <b>To resolve:</b> supply the FY2026 federal funds excluded from the excess cost base
+              — Title I, Part A and Title II, Part A amounts charged to the levels above — with the
+              report they were read from. The calculation will re-run and this indicator becomes
+              attestable.
             </div>
           </div>
         </details>
@@ -614,7 +823,18 @@
           coordinated early intervening services.
         </p>
         <div class="chips">
-          <span class="chip na"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M4 12 12 4" stroke-linecap="round"/></svg>Not applicable</span>
+          <span class="chip na"
+            ><svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              aria-hidden="true"
+            >
+              <circle cx="8" cy="8" r="6.2" />
+              <path d="M4 12 12 4" stroke-linecap="round" /></svg
+            >Not applicable</span
+          >
           <span class="chip neutral">34 CFR 300.646(d)</span>
           <span class="chip neutral">Conditional</span>
         </div>
@@ -623,16 +843,31 @@
           <summary>Basis for recording this indicator as not applicable</summary>
           <div class="workpaper-body">
             <p class="conclusion">
-              Sample County Schools was not identified with significant disproportionality in any
-              of the analysis categories for FY2026, so no CCEIS reservation is required and the
-              tab does not apply.
+              Sample County Schools was not identified with significant disproportionality in any of
+              the analysis categories for FY2026, so no CCEIS reservation is required and the tab
+              does not apply.
             </p>
             <div class="table-wrap">
               <table>
-                <caption>Evidence on file</caption>
-                <thead><tr><th scope="col">Document</th><th scope="col">Captured</th></tr></thead>
+                <caption>
+                  Evidence on file
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Document</th>
+                    <th scope="col">Captured</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  <tr><td>GaDOE significant disproportionality determination letter, FY2026<span class="source">PDF · 214 KB</span></td><td>14 Aug 2026</td></tr>
+                  <tr>
+                    <td>
+                      GaDOE significant disproportionality determination letter, FY2026<span
+                        class="source"
+                        >PDF · 214 KB</span
+                      >
+                    </td>
+                    <td>14 Aug 2026</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -652,12 +887,32 @@
       <div class="body">
         <h3>High-cost grant</h3>
         <p class="requirement">
-          The LEA uses funds received under the state high-cost grant for their intended purpose
-          and can evidence the costs claimed.
+          The LEA uses funds received under the state high-cost grant for their intended purpose and
+          can evidence the costs claimed.
         </p>
         <div class="chips">
-          <span class="chip pass"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Pass</span>
-          <span class="chip manual"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2.5 13.5h11M4 11V6.5M8 11V4M12 11V8" stroke-linecap="round"/></svg>Narrative required</span>
+          <span class="chip pass"
+            ><svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M3 8.5 6.5 12 13 4.5" stroke-linecap="round" stroke-linejoin="round" /></svg
+            >Pass</span
+          >
+          <span class="chip manual"
+            ><svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              aria-hidden="true"
+            >
+              <path d="M2.5 13.5h11M4 11V6.5M8 11V4M12 11V8" stroke-linecap="round" /></svg
+            >Narrative required</span
+          >
         </div>
 
         <details class="workpaper">
@@ -665,18 +920,42 @@
           <div class="workpaper-body">
             <p class="conclusion">
               High-cost grant funds of <b>$96,400.00</b> were applied to one-to-one nursing and
-              specialised transportation for two students whose approved costs exceeded the
-              district threshold. Costs are coded to the students' approved service lines and
-              reconcile to the FY2026 claim.
+              specialised transportation for two students whose approved costs exceeded the district
+              threshold. Costs are coded to the students' approved service lines and reconcile to
+              the FY2026 claim.
             </p>
             <div class="table-wrap">
               <table>
-                <caption>Evidence on file</caption>
-                <thead><tr><th scope="col">Document</th><th scope="col">Captured</th></tr></thead>
+                <caption>
+                  Evidence on file
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Document</th>
+                    <th scope="col">Captured</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  <tr><td>FY2026 high-cost grant award notice<span class="source">PDF · 88 KB</span></td><td>3 Oct 2025</td></tr>
-                  <tr><td>Cost reconciliation, service lines 2140 and 2700<span class="source">XLSX · 41 KB</span></td><td>18 Aug 2026</td></tr>
-                  <tr><td>Board approval minutes, 9 Sep 2025<span class="source">PDF · 156 KB</span></td><td>18 Aug 2026</td></tr>
+                  <tr>
+                    <td>
+                      FY2026 high-cost grant award notice<span class="source">PDF · 88 KB</span>
+                    </td>
+                    <td>3 Oct 2025</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      Cost reconciliation, service lines 2140 and 2700<span class="source"
+                        >XLSX · 41 KB</span
+                      >
+                    </td>
+                    <td>18 Aug 2026</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      Board approval minutes, 9 Sep 2025<span class="source">PDF · 156 KB</span>
+                    </td>
+                    <td>18 Aug 2026</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -696,11 +975,21 @@
       <div class="body">
         <h3>Parent mentor minimum</h3>
         <p class="requirement">
-          The LEA budgets at least $14,400 for a parent mentor. This is a Georgia requirement
-          with no federal analogue.
+          The LEA budgets at least $14,400 for a parent mentor. This is a Georgia requirement with
+          no federal analogue.
         </p>
         <div class="chips">
-          <span class="chip fail"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/></svg>Fail</span>
+          <span class="chip fail"
+            ><svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round" /></svg
+            >Fail</span
+          >
           <span class="chip neutral">GaDOE CFM FY2025 · 18.5</span>
           <span class="chip neutral">US-GA-IDEA-B-2026 · 0.1.0</span>
         </div>
@@ -709,22 +998,44 @@
           <summary>Workpaper — GA-IDEA-PARENT-MENTOR-001</summary>
           <div class="workpaper-body">
             <dl class="meta-grid">
-              <div class="meta"><dt>Rule layer</dt><dd>STATE · overlays US-FED-IDEA-B-2026</dd></div>
-              <div class="meta"><dt>Condition</dt><dd>budgeted ≥ 14400</dd></div>
-              <div class="meta"><dt>Severity</dt><dd>MEDIUM</dd></div>
-              <div class="meta"><dt>Computed</dt><dd>26 Aug 2026 09:14 EDT</dd></div>
+              <div class="meta">
+                <dt>Rule layer</dt>
+                <dd>STATE · overlays US-FED-IDEA-B-2026</dd>
+              </div>
+              <div class="meta">
+                <dt>Condition</dt>
+                <dd>budgeted ≥ 14400</dd>
+              </div>
+              <div class="meta">
+                <dt>Severity</dt>
+                <dd>MEDIUM</dd>
+              </div>
+              <div class="meta">
+                <dt>Computed</dt>
+                <dd>26 Aug 2026 09:14 EDT</dd>
+              </div>
             </dl>
 
             <div class="table-wrap">
               <table>
-                <caption>Inputs and their sources</caption>
+                <caption>
+                  Inputs and their sources
+                </caption>
                 <thead>
-                  <tr><th scope="col">Input</th><th scope="col">Source</th><th scope="col" class="num">Value</th></tr>
+                  <tr>
+                    <th scope="col">Input</th>
+                    <th scope="col">Source</th>
+                    <th scope="col" class="num">Value</th>
+                  </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <td>Parent mentor budgeted amount</td>
-                    <td>FY2026 IDEA Part B budget, line 2210-190<span class="source">Consolidated Application export · 6 Aug 2026</span></td>
+                    <td>
+                      FY2026 IDEA Part B budget, line 2210-190<span class="source"
+                        >Consolidated Application export · 6 Aug 2026</span
+                      >
+                    </td>
                     <td class="num">12,000.00</td>
                   </tr>
                   <tr>
@@ -756,31 +1067,29 @@
         </details>
       </div>
     </article>
-
   </main>
 
   <footer class="colophon">
     <h2>About this document</h2>
     <p>
-      This is a demonstration of the ComplianceOS EDU binder, built to show what the product
-      hands a monitor. <b>Sample County Schools does not exist.</b> Every figure, name,
-      signature and hash is illustrative.
+      This is a demonstration of the ComplianceOS EDU binder, built to show what the product hands a
+      monitor. <b>Sample County Schools does not exist.</b> Every figure, name, signature and hash
+      is illustrative.
     </p>
     <p>
-      The indicator structure is real. Section 18 and its five indicators were transcribed from
-      a published Georgia monitoring result — the Cross Functional Monitoring Indicator Report,
+      The indicator structure is real. Section 18 and its five indicators were transcribed from a
+      published Georgia monitoring result — the Cross Functional Monitoring Indicator Report,
       FY2025, for a real district — because GaDOE's own instrument PDFs are not currently
       retrievable from gadoe.org. The requirement wording here is paraphrased from that report
-      rather than quoted from GaDOE's issued document, and must be reconciled against the
-      FY2027 CFM Document before it is relied on. The $14,400 parent mentor minimum comes from
-      the same source and carries the same caveat.
+      rather than quoted from GaDOE's issued document, and must be reconciled against the FY2027 CFM
+      Document before it is relied on. The $14,400 parent mentor minimum comes from the same source
+      and carries the same caveat.
     </p>
     <p>
-      Palette, typography and the rule that status is never encoded by colour alone are taken
-      from <code>docs/design/landing-page-direction.md</code>. Indicator numbering is Georgia's
-      and is never renumbered. The model behind it is
-      <code>packages/evidence</code>; the decision behind it is ADR 0006.
+      Palette, typography and the rule that status is never encoded by colour alone are taken from
+      <code>docs/design/landing-page-direction.md</code>. Indicator numbering is Georgia's and is
+      never renumbered. The model behind it is <code>packages/evidence</code>; the decision behind
+      it is ADR 0006.
     </p>
   </footer>
-
 </div>

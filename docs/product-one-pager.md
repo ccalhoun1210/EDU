@@ -41,14 +41,14 @@ Special-education fiscal rules do not behave the way general accounting intuitio
 Three examples the product has to get right, and a spreadsheet almost never does:
 
 - **Maintenance of effort has two separate standards, not one.** The eligibility standard
-  tests next year's *budget*; the compliance standard tests last year's *actual
-  expenditures*. A district can pass one and fail the other in the same year.
+  tests next year's _budget_; the compliance standard tests last year's _actual
+  expenditures_. A district can pass one and fail the other in the same year.
 - **A district can qualify four different ways** — local funds only, state and local
   combined, and each of those on a per-child basis — and needs only one to pass. Most
   districts do not know they can test all four, and a tool that checks only one method
   reports a failure that is not a failure.
 - **Failing MOE does not reset the baseline.** Under the subsequent-years rule, the level
-  required the following year is the level that *would* have been required absent the
+  required the following year is the level that _would_ have been required absent the
   failure — not the reduced amount actually spent. A district that models next year from
   what it really spent digs the hole deeper.
 
@@ -85,13 +85,13 @@ those trades a narrow, defensible product for a large support burden.
 
 The same engine extends without re-architecture:
 
-| | |
-|---|---|
-| **Now** | IDEA fiscal — MOE, excess cost, proportionate share, CEIS/CCEIS |
-| **Next** | Evidence vault, corrective actions, monitoring readiness |
-| **Then** | Programmatic SPED monitoring — Child Find and evaluation timelines; significant disproportionality |
-| **Later** | Title I and federal programs, Part C, Head Start, subrecipient monitoring, Section 504 |
-| **Buyer shift** | District-side assurance tool → multi-state platform → state-agency monitoring |
+|                 |                                                                                                    |
+| --------------- | -------------------------------------------------------------------------------------------------- |
+| **Now**         | IDEA fiscal — MOE, excess cost, proportionate share, CEIS/CCEIS                                    |
+| **Next**        | Evidence vault, corrective actions, monitoring readiness                                           |
+| **Then**        | Programmatic SPED monitoring — Child Find and evaluation timelines; significant disproportionality |
+| **Later**       | Title I and federal programs, Part C, Head Start, subrecipient monitoring, Section 504             |
+| **Buyer shift** | District-side assurance tool → multi-state platform → state-agency monitoring                      |
 
 ## The defensible asset
 

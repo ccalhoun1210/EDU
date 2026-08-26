@@ -35,6 +35,9 @@ importers:
       '@complianceos/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@complianceos/evidence':
+        specifier: workspace:*
+        version: link:../../packages/evidence
       '@complianceos/rulepack-sdk':
         specifier: workspace:*
         version: link:../../packages/rulepack-sdk
@@ -56,6 +59,18 @@ importers:
         version: 19.2.5(@types/react@19.2.18)
 
   packages/domain: {}
+
+  packages/evidence:
+    dependencies:
+      '@complianceos/domain':
+        specifier: workspace:*
+        version: link:../domain
+      yaml:
+        specifier: ^2.8.1
+        version: 2.9.0
+      zod:
+        specifier: ^4.1.12
+        version: 4.4.3
 
   packages/rulepack-sdk:
     dependencies:

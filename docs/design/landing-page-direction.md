@@ -15,7 +15,7 @@ This rules out an entire visual genre. The GRC-SaaS look — dark hero, purple-t
 gradient, floating glass cards, "Get compliant in days" — is calibrated for a startup CTO
 buying SOC 2 on a credit card. Put it in front of a district business manager and it reads
 as a vendor who has never sat through a monitoring visit. Vanta, Drata and Secureframe are
-the closest analogues by *product category* and the wrong reference by *audience*. Worth
+the closest analogues by _product category_ and the wrong reference by _audience_. Worth
 looking at once to know what not to do.
 
 The incumbent in this space is Frontline Education. Their special-programs page is
@@ -31,15 +31,15 @@ district looks for before it looks at anything else.
 
 Under the **ADA Title II web rule**, public entities must conform to **WCAG 2.1 Level AA**:
 
-| Entity | Deadline |
-|---|---|
+| Entity                                  | Deadline           |
+| --------------------------------------- | ------------------ |
 | Jurisdictions serving 50,000+ residents | **April 26, 2027** |
-| Jurisdictions under 50,000 | April 26, 2028 |
-| Special district governments | April 26, 2028 |
+| Jurisdictions under 50,000              | April 26, 2028     |
+| Special district governments            | April 26, 2028     |
 
 School districts are covered by the population of the jurisdiction they serve — city
 district by city population, county district by county population, independent district by
-census estimate. *(Read from ada.gov directly — see §7.)*
+census estimate. _(Read from ada.gov directly — see §7.)_
 
 Two consequences:
 
@@ -48,12 +48,12 @@ Two consequences:
    compliance product, that is disqualifying in a way it would not be for a lesson-planning
    tool.
 2. **The near deadline is eight months out.** Districts serving 50,000+ are procuring
-   against it *now*. Accessibility is not a Phase 4 polish item; it is a Phase 1 gate.
+   against it _now_. Accessibility is not a Phase 4 polish item; it is a Phase 1 gate.
 
 **The lever most people miss:** a component library gives you accessible components. It
 does not give you the artifact procurement actually asks for. That artifact is an
 **Accessibility Conformance Report** — an ACR, authored against the VPAT template — and it
-must describe *our product*, not Radix's or USWDS's. No library produces one. Budget a real
+must describe _our product_, not Radix's or USWDS's. No library produces one. Budget a real
 audit against WCAG 2.1 AA before the first district contract and treat the ACR as a
 deliverable with an owner, like the security package in §30 of the buildout.
 
@@ -66,16 +66,16 @@ not the skin.**
 
 ### The three candidates
 
-| | What it is | Verdict |
-|---|---|---|
-| **USWDS** `@uswds/uswds` 3.14.0 | The federal government's design system. Sass + CSS + JS (now built on `lit`). No official React library; `@trussworks/react-uswds` 12.0.0 is the community React wrapper — actively maintained, published two weeks ago, peer-supports React 19. | Reference, not skin |
-| **Radix + Tailwind (shadcn/ui)** | Unstyled accessible primitives you copy into your repo and own. | **Recommended base** |
-| **React Aria Components** 1.20.0 | Adobe's primitives. Strongest assistive-technology behavior of the three. | Use for the hard components |
+|                                  | What it is                                                                                                                                                                                                                                       | Verdict                     |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------- |
+| **USWDS** `@uswds/uswds` 3.14.0  | The federal government's design system. Sass + CSS + JS (now built on `lit`). No official React library; `@trussworks/react-uswds` 12.0.0 is the community React wrapper — actively maintained, published two weeks ago, peer-supports React 19. | Reference, not skin         |
+| **Radix + Tailwind (shadcn/ui)** | Unstyled accessible primitives you copy into your repo and own.                                                                                                                                                                                  | **Recommended base**        |
+| **React Aria Components** 1.20.0 | Adobe's primitives. Strongest assistive-technology behavior of the three.                                                                                                                                                                        | Use for the hard components |
 
 ### Why not USWDS as the skin
 
 It is genuinely excellent and battle-tested for accessibility, and a state-agency buyer will
-recognize it instantly. But its visual identity is unmistakably *federal government*. A
+recognize it instantly. But its visual identity is unmistakably _federal government_. A
 private vendor wearing it looks like it is presenting itself as a government entity, which
 is a bad thing to imply to the people who administer federal grants. It also gives you no
 differentiation — every page looks like every other .gov — and it drags a Sass build into a
@@ -129,15 +129,15 @@ a district network may block it.
 
 ### Core tokens
 
-| Token | Hex | Contrast on white | On `#F5F7FA` |
-|---|---|---|---|
-| `ink` — body text | `#14171C` | 17.96 AAA | 16.74 AAA |
-| `navy` — primary | `#123A6B` | 11.39 AAA | 10.62 AAA |
-| `muted` — secondary text | `#5B6472` | 5.98 AA | 5.57 AA |
-| surface | `#FFFFFF` | — | — |
-| surface-muted | `#F5F7FA` | — | — |
-| border-decorative | `#D8DDE5` | 1.36 — dividers only | — |
-| **border-interactive** | `#8A93A3` | **3.10 — meets 1.4.11** | — |
+| Token                    | Hex       | Contrast on white       | On `#F5F7FA` |
+| ------------------------ | --------- | ----------------------- | ------------ |
+| `ink` — body text        | `#14171C` | 17.96 AAA               | 16.74 AAA    |
+| `navy` — primary         | `#123A6B` | 11.39 AAA               | 10.62 AAA    |
+| `muted` — secondary text | `#5B6472` | 5.98 AA                 | 5.57 AA      |
+| surface                  | `#FFFFFF` | —                       | —            |
+| surface-muted            | `#F5F7FA` | —                       | —            |
+| border-decorative        | `#D8DDE5` | 1.36 — dividers only    | —            |
+| **border-interactive**   | `#8A93A3` | **3.10 — meets 1.4.11** | —            |
 
 White on `navy` is 11.39:1.
 
@@ -147,14 +147,14 @@ Interactive boundaries use `#8A93A3` or darker.
 
 ### Status tokens
 
-| Status | Hex | On white | On `#F5F7FA` |
-|---|---|---|---|
-| `PASS` | `#1D6B45` | 6.48 AA | 6.04 AA |
-| `FAIL` | `#A8231C` | 7.19 AAA | 6.70 AA |
-| `RISK` | `#8A5A12` | 5.91 AA | 5.51 AA |
-| `INDETERMINATE` | `#4A5568` | 7.53 AAA | 7.01 AAA |
-| `MANUAL_REVIEW` | `#5B3E90` | 8.28 AAA | 7.71 AAA |
-| `NOT_APPLICABLE` | `#6B7280` | 4.83 AA | 4.50 AA |
+| Status           | Hex       | On white | On `#F5F7FA` |
+| ---------------- | --------- | -------- | ------------ |
+| `PASS`           | `#1D6B45` | 6.48 AA  | 6.04 AA      |
+| `FAIL`           | `#A8231C` | 7.19 AAA | 6.70 AA      |
+| `RISK`           | `#8A5A12` | 5.91 AA  | 5.51 AA      |
+| `INDETERMINATE`  | `#4A5568` | 7.53 AAA | 7.01 AAA     |
+| `MANUAL_REVIEW`  | `#5B3E90` | 8.28 AAA | 7.71 AAA     |
+| `NOT_APPLICABLE` | `#6B7280` | 4.83 AA  | 4.50 AA      |
 
 Every ratio above was computed, not estimated — see §7. All pass AA for normal text on both
 surfaces. `NOT_APPLICABLE` at 4.50 on the muted surface is at the line; do not lighten it.
@@ -211,7 +211,7 @@ disqualify.
   — surfaced in search, not read.
 - Whether Public Sans is served by Google Fonts. Egress from this environment blocked the
   check. The `@fontsource` package was confirmed and is the better route regardless.
-- Frontline's page was read through a text extraction, so the *description* of their palette
+- Frontline's page was read through a text extraction, so the _description_ of their palette
   and typography is second-hand. The structural facts — testimonial, case study, privacy
   pledge badge, security and accessibility statements — are reliable; "modern, clean
   typography" is not something I saw.

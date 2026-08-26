@@ -12,7 +12,7 @@ software pricing.** Frontline, PowerSchool, Infinite Campus and every serious in
 privately. What surfaces in search is SEO filler with invented ranges. Any pricing document
 that cites "the market rate is $X per student" is citing content marketing.
 
-So this model is not built from comparables. It is built from three things that *can* be
+So this model is not built from comparables. It is built from three things that _can_ be
 verified:
 
 1. **The size of the grant being protected**, from federal appropriation and child-count data.
@@ -33,7 +33,7 @@ Every K-12 vendor prices per student, because every K-12 vendor sells something 
 Nobody uses this product but a handful of administrators, so per-seat pricing would put the
 price at roughly zero for a large district and make it impossible to capture value. Per-total-
 enrollment is closer, but it prices the wrong denominator — two districts of equal size can
-differ two-fold in children with disabilities served, and it is *that* number that drives both
+differ two-fold in children with disabilities served, and it is _that_ number that drives both
 the grant and the exposure.
 
 The allocation is the right basis for three reasons:
@@ -48,12 +48,12 @@ $1,600 per child (derivation below).
 
 ### Derivation
 
-| | |
-|---|---|
+|                                                                          |                 |
+| ------------------------------------------------------------------------ | --------------- |
 | IDEA Part B §611 appropriation (FY2023, most recent published on ed.gov) | $14,193,704,000 |
-| Children ages 3–21 served under IDEA (2022–23, NCES) | 7,500,000 |
-| Gross federal dollars per child served | **$1,892** |
-| Net after an illustrative 15% SEA set-aside | **≈ $1,600** |
+| Children ages 3–21 served under IDEA (2022–23, NCES)                     | 7,500,000       |
+| Gross federal dollars per child served                                   | **$1,892**      |
+| Net after an illustrative 15% SEA set-aside                              | **≈ $1,600**    |
 
 The set-aside is not fixed nationally — states reserve varying amounts for state-level
 activities — so $1,600 is a modeling assumption, not a fact. Use the actual state allocation
@@ -71,11 +71,11 @@ That gives a clean, statutory ceiling on exposure: **the district cannot lose mo
 annual subgrant, and it loses it in local dollars.**
 
 | Children served | IDEA Part B grant ≈ | Maximum MOE exposure |
-|---|---|---|
-| 150 | $240,000 | $240,000 |
-| 400 | $640,000 | $640,000 |
-| 1,000 | $1,600,000 | $1,600,000 |
-| 3,000 | $4,800,000 | $4,800,000 |
+| --------------- | ------------------- | -------------------- |
+| 150             | $240,000            | $240,000             |
+| 400             | $640,000            | $640,000             |
+| 1,000           | $1,600,000          | $1,600,000           |
+| 3,000           | $4,800,000          | $4,800,000           |
 
 This is the number the pricing conversation should anchor on, and it is why a percentage-of-
 grant model is defensible rather than arbitrary. We are not pricing a dashboard. We are pricing
@@ -85,7 +85,7 @@ against a bounded, statutory, local-dollar liability.
 
 ## 4. The structure — marginal bands, not tiers
 
-Flat-rate tiers break. Modeling them produced a price that *fell* from $48,000 to $38,500 as a
+Flat-rate tiers break. Modeling them produced a price that _fell_ from $48,000 to $38,500 as a
 district grew from 2,000 to 3,000 children — the classic tier-boundary inversion, where the
 buyer is rewarded for being bigger. Any tiered table needs checking for this before it is
 published; ours did not survive it.
@@ -94,31 +94,31 @@ Use **marginal bands on the allocation**, the way tax brackets work. Each band o
 charged at a declining rate, which guarantees the price always rises with size while the
 effective rate always falls.
 
-| Band of IDEA Part B allocation | Rate |
-|---|---|
-| First $500,000 | 2.5% |
-| $500,000 – $2,000,000 | 1.5% |
-| $2,000,000 – $5,000,000 | 0.9% |
-| Above $5,000,000 | 0.5% |
-| **Annual floor** | **$9,000** |
+| Band of IDEA Part B allocation | Rate       |
+| ------------------------------ | ---------- |
+| First $500,000                 | 2.5%       |
+| $500,000 – $2,000,000          | 1.5%       |
+| $2,000,000 – $5,000,000        | 0.9%       |
+| Above $5,000,000               | 0.5%       |
+| **Annual floor**               | **$9,000** |
 
 ### Resulting prices
 
-| Children served | IDEA grant ≈ | Annual price | % of grant | Per child | Channel |
-|---|---|---|---|---|---|
-| 75 | $120,000 | $9,000 | 7.50% | $120 | ESA / co-op |
-| 150 | $240,000 | $9,000 | 3.75% | $60 | ESA / co-op |
-| 250 | $400,000 | $10,000 | 2.50% | $40 | Direct |
-| 400 | $640,000 | $14,500 | 2.27% | $36 | Direct |
-| 500 | $800,000 | $17,000 | 2.12% | $34 | Direct |
-| 750 | $1,200,000 | $23,000 | 1.92% | $31 | Direct |
-| 1,000 | $1,600,000 | $29,000 | 1.81% | $29 | Direct |
-| 1,500 | $2,400,000 | $38,500 | 1.60% | $26 | Direct |
-| 2,000 | $3,200,000 | $46,000 | 1.44% | $23 | Direct |
-| 3,000 | $4,800,000 | $60,000 | 1.25% | $20 | Direct, custom |
-| 5,000 | $8,000,000 | $77,000 | 0.96% | $15 | Direct, custom |
-| 8,000 | $12,800,000 | $101,000 | 0.79% | $13 | Direct, custom |
-| 15,000 | $24,000,000 | $157,000 | 0.65% | $10 | Direct, custom |
+| Children served | IDEA grant ≈ | Annual price | % of grant | Per child | Channel        |
+| --------------- | ------------ | ------------ | ---------- | --------- | -------------- |
+| 75              | $120,000     | $9,000       | 7.50%      | $120      | ESA / co-op    |
+| 150             | $240,000     | $9,000       | 3.75%      | $60       | ESA / co-op    |
+| 250             | $400,000     | $10,000      | 2.50%      | $40       | Direct         |
+| 400             | $640,000     | $14,500      | 2.27%      | $36       | Direct         |
+| 500             | $800,000     | $17,000      | 2.12%      | $34       | Direct         |
+| 750             | $1,200,000   | $23,000      | 1.92%      | $31       | Direct         |
+| 1,000           | $1,600,000   | $29,000      | 1.81%      | $29       | Direct         |
+| 1,500           | $2,400,000   | $38,500      | 1.60%      | $26       | Direct         |
+| 2,000           | $3,200,000   | $46,000      | 1.44%      | $23       | Direct         |
+| 3,000           | $4,800,000   | $60,000      | 1.25%      | $20       | Direct, custom |
+| 5,000           | $8,000,000   | $77,000      | 0.96%      | $15       | Direct, custom |
+| 8,000           | $12,800,000  | $101,000     | 0.79%      | $13       | Direct, custom |
+| 15,000          | $24,000,000  | $157,000     | 0.65%      | $10       | Direct, custom |
 
 Verified computationally: price rises monotonically with size, and the effective rate declines
 monotonically. Prices rounded to the nearest $500.
@@ -144,11 +144,11 @@ relationship and the trust.
 
 Three channels, three products:
 
-| Channel | Who signs | Shape |
-|---|---|---|
-| **Direct** | District, 250+ children served | The band table above |
-| **ESA / co-op** | The service agency, covering N member districts | One contract, per-member rate at a discount to the floor; the ESA is the administrator |
-| **State agency** | SEA | Different product — monitoring across every LEA in the state. Price against state-level activity funds, not a district budget |
+| Channel          | Who signs                                       | Shape                                                                                                                         |
+| ---------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Direct**       | District, 250+ children served                  | The band table above                                                                                                          |
+| **ESA / co-op**  | The service agency, covering N member districts | One contract, per-member rate at a discount to the floor; the ESA is the administrator                                        |
+| **State agency** | SEA                                             | Different product — monitoring across every LEA in the state. Price against state-level activity funds, not a district budget |
 
 The SEA channel has a specific funding advantage worth noting: state-level IDEA funds may be
 reserved for activities that **explicitly include monitoring, enforcement, and complaint
@@ -163,17 +163,17 @@ getting it right matters more than the number.
 
 What the regulations actually say:
 
-- **34 CFR 300.202** — Part B funds must be used only for the *excess costs* of providing
+- **34 CFR 300.202** — Part B funds must be used only for the _excess costs_ of providing
   special education, and must supplement rather than supplant. It does not speak to
   administrative or program-support costs either way.
 - **34 CFR 300.208(c)** — permissive use includes purchasing technology for "recordkeeping,
   data collection, and related case management activities" for personnel implementing **IEP
-  case management** duties. That is a plausible fit for the *programmatic* module later. It is
+  case management** duties. That is a plausible fit for the _programmatic_ module later. It is
   a stretch for the fiscal module, which is not IEP case management.
 
 So the likely path for the fiscal module is as an **administrative cost allocable to the Part B
-grant under 2 CFR Part 200**, not under 300.208(c). *That has not been confirmed and should
-not be asserted to a buyer.* It is a question for the district's federal-programs director and
+grant under 2 CFR Part 200**, not under 300.208(c). _That has not been confirmed and should
+not be asserted to a buyer._ It is a question for the district's federal-programs director and
 their SEA, and the honest sales position is to ask it rather than answer it.
 
 ### The MOE ratchet — a hypothesis, not a claim
@@ -219,7 +219,7 @@ budget cycle and costs a year.
 
 ### Build the calculator, not a tier grid
 
-The page's centerpiece should be an input — *children with disabilities served* — that returns
+The page's centerpiece should be an input — _children with disabilities served_ — that returns
 two numbers side by side:
 
 > **Your IDEA Part B grant at risk:** $640,000
@@ -286,7 +286,7 @@ implies. Price the fiscal module. Name the rest as roadmap in prose, with no pri
 monotonicity and degression checks.
 
 **Known-stale:** the district-size distribution is 2014–15, the newest year in that NCES table.
-The *shape* — a long tail of very small districts, a handful of very large ones — is stable and
+The _shape_ — a long tail of very small districts, a handful of very large ones — is stable and
 is all the tier design depends on, but do not quote the counts as current. The appropriation
 figure is FY2023 and is the most recent published on that ed.gov page; a current-year number
 should be pulled from the FY2026 congressional justification before it goes in any material.

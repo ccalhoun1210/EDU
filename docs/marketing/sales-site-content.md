@@ -18,7 +18,7 @@ Three findings reshaped this content. They are what make it specific rather than
 calculator — Texas ships separate Excel workbooks for districts and charters plus an exceptions
 workbook; New York publishes year-specific eligibility and compliance calculators; Washington
 has a guidance handbook; Wisconsin now drives monitoring off WISEdata Finance submissions. The
-district's current process is *filling in the state's spreadsheet once a year*. That is what we
+district's current process is _filling in the state's spreadsheet once a year_. That is what we
 are replacing, and the copy should name it, because every reader recognizes it instantly.
 
 **2. Districts learn they failed roughly eight months after they could still have fixed it.**
@@ -49,11 +49,11 @@ One paragraph everything else derives from:
 
 Three claims, in priority order:
 
-| | Claim | Proof |
-|---|---|---|
-| 1 | **You find out in time** | Continuous evaluation against an open year vs. Feb–March determinations |
-| 2 | **You can defend every number** | Citation, rule version, snapshot, inputs, source rows |
-| 3 | **You test all four methods, not one** | Most districts and most tools check one and report false failures |
+|     | Claim                                  | Proof                                                                   |
+| --- | -------------------------------------- | ----------------------------------------------------------------------- |
+| 1   | **You find out in time**               | Continuous evaluation against an open year vs. Feb–March determinations |
+| 2   | **You can defend every number**        | Citation, rule version, snapshot, inputs, source rows                   |
+| 3   | **You test all four methods, not one** | Most districts and most tools check one and report false failures       |
 
 ---
 
@@ -194,14 +194,14 @@ Caption it:
 >
 > ComplianceOS EDU evaluates all four, every time, and shows the margin on each.
 
-*(Worked illustration for the page — synthetic figures, verified arithmetic:)*
+_(Worked illustration for the page — synthetic figures, verified arithmetic:)_
 
-| Method | Comparison year | Current year | Result |
-|---|---|---|---|
-| Local funds, total | $4,200,000 | $4,150,000 | **Short $50,000** |
-| Local funds, per child | $10,194.17 | $10,375.00 | Passes by $180.83 |
-| State + local, total | $6,800,000 | $6,900,000 | Passes by $100,000 |
-| State + local, per child | $16,504.85 | $17,250.00 | Passes by $745.15 |
+| Method                   | Comparison year | Current year | Result             |
+| ------------------------ | --------------- | ------------ | ------------------ |
+| Local funds, total       | $4,200,000      | $4,150,000   | **Short $50,000**  |
+| Local funds, per child   | $10,194.17      | $10,375.00   | Passes by $180.83  |
+| State + local, total     | $6,800,000      | $6,900,000   | Passes by $100,000 |
+| State + local, per child | $16,504.85      | $17,250.00   | Passes by $745.15  |
 
 > Three of four methods qualify. This district is compliant. A single-method check would have
 > reported a $50,000 failure and started a repayment conversation.
@@ -210,7 +210,7 @@ Caption it:
 
 > **A year you failed does not lower next year's bar.**
 >
-> If your district missed MOE, the level required the following year is the level that *would*
+> If your district missed MOE, the level required the following year is the level that _would_
 > have been required had you not missed it — not the reduced amount you actually spent. As OSEP
 > puts it, the required level is the one from the last year the LEA met MOE.
 >
@@ -218,8 +218,8 @@ Caption it:
 > without knowing it. ComplianceOS EDU carries the required level forward as a tracked fact, so
 > your baseline is right even after a bad year.
 
-*Verified across three sources: the 2015 final rule, Wisconsin DPI quoting OSEP, and Texas
-Education Agency. Safe to publish.*
+_Verified across three sources: the 2015 final rule, Wisconsin DPI quoting OSEP, and Texas
+Education Agency. Safe to publish._
 
 ---
 
@@ -255,10 +255,10 @@ Four distinct value arguments. Lead with the first — it is the one that lands.
 > dollars, from a budget already written, in a year when nothing was set aside for it.
 
 | Children served | Your IDEA Part B grant ≈ | Maximum exposure |
-|---|---|---|
-| 400 | $640,000 | $640,000 |
-| 1,000 | $1,600,000 | $1,600,000 |
-| 3,000 | $4,800,000 | $4,800,000 |
+| --------------- | ------------------------ | ---------------- |
+| 400             | $640,000                 | $640,000         |
+| 1,000           | $1,600,000               | $1,600,000       |
+| 3,000           | $4,800,000               | $4,800,000       |
 
 > At a district of 400 children served, ComplianceOS EDU costs about **2.3% of the grant it
 > protects**.
@@ -304,16 +304,16 @@ statistic is the single easiest way to lose a business manager who does this wor
 
 ## 5. Page inventory and what each page must do
 
-| Page | Job | Must contain |
-|---|---|---|
-| **Home** | Qualify the visitor in 10 seconds | The question headline, the named requirements, the Why panel, read-only reassurance, trust row |
-| **How it works** | Convert the skeptic | The six steps, the Why panel expanded, the four-methods worked example, the subsequent-years section |
-| **IDEA fiscal** | Depth per requirement | MOE, excess cost, proportionate share, CEIS/CCEIS — one section each, with the citation |
-| **Pricing** | Enable a budget line item | Calculator, band table, funding-source honesty, ESA route (see the pricing doc) |
-| **Trust** | Survive procurement | Accessibility conformance report, FERPA terms, data-privacy agreement, security posture, data residency, subprocessors |
-| **For state agencies** | A different buyer | Monitoring across LEAs; state-level IDEA funds may be reserved for monitoring and enforcement |
-| **Resources** | Earn the search traffic | See §7 |
-| **About** | Answer "who are you" | The honest version — see §6 |
+| Page                   | Job                               | Must contain                                                                                                           |
+| ---------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Home**               | Qualify the visitor in 10 seconds | The question headline, the named requirements, the Why panel, read-only reassurance, trust row                         |
+| **How it works**       | Convert the skeptic               | The six steps, the Why panel expanded, the four-methods worked example, the subsequent-years section                   |
+| **IDEA fiscal**        | Depth per requirement             | MOE, excess cost, proportionate share, CEIS/CCEIS — one section each, with the citation                                |
+| **Pricing**            | Enable a budget line item         | Calculator, band table, funding-source honesty, ESA route (see the pricing doc)                                        |
+| **Trust**              | Survive procurement               | Accessibility conformance report, FERPA terms, data-privacy agreement, security posture, data residency, subprocessors |
+| **For state agencies** | A different buyer                 | Monitoring across LEAs; state-level IDEA funds may be reserved for monitoring and enforcement                          |
+| **Resources**          | Earn the search traffic           | See §7                                                                                                                 |
+| **About**              | Answer "who are you"              | The honest version — see §6                                                                                            |
 
 ---
 
@@ -321,15 +321,15 @@ statistic is the single easiest way to lose a business manager who does this wor
 
 Write these into the pages rather than saving them for calls.
 
-| Objection | Response |
-|---|---|
-| *"We already have a spreadsheet from the state."* | So does every district — and it answers the question once, after the year has closed. We run the same tests continuously against the open year, and we keep the evidence for the exceptions window. |
-| *"We can't take on another system."* | You are not replacing anything. Read-only, no migration, no change to how staff work. Most districts start by sending the exports they already produce. |
-| *"How do I know your numbers are right?"* | Every number shows its arithmetic, its inputs, the rows they came from, and the regulation it applies. Check any of them. That is the product. |
-| *"Is this AI deciding our compliance?"* | No. Rules are deterministic and versioned. AI reads documents and drafts language; a person validates before anything counts. |
-| *"We're a small district."* | Direct pricing starts above roughly 250 children served. Below that, talk to your ESA — the economics work through them. |
-| *"You're a new company."* | Stated plainly on the About page. What we offer instead of a customer list: an architecture built so every conclusion is reproducible and inspectable, and a rule corpus with its citations visible. Judge the work. |
-| *"Can we pay for this with IDEA funds?"* | The honest answer: it depends on how your district and SEA treat administrative costs, and we will work it through with your federal-programs director. We do not assert it. |
+| Objection                                         | Response                                                                                                                                                                                                             |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| _"We already have a spreadsheet from the state."_ | So does every district — and it answers the question once, after the year has closed. We run the same tests continuously against the open year, and we keep the evidence for the exceptions window.                  |
+| _"We can't take on another system."_              | You are not replacing anything. Read-only, no migration, no change to how staff work. Most districts start by sending the exports they already produce.                                                              |
+| _"How do I know your numbers are right?"_         | Every number shows its arithmetic, its inputs, the rows they came from, and the regulation it applies. Check any of them. That is the product.                                                                       |
+| _"Is this AI deciding our compliance?"_           | No. Rules are deterministic and versioned. AI reads documents and drafts language; a person validates before anything counts.                                                                                        |
+| _"We're a small district."_                       | Direct pricing starts above roughly 250 children served. Below that, talk to your ESA — the economics work through them.                                                                                             |
+| _"You're a new company."_                         | Stated plainly on the About page. What we offer instead of a customer list: an architecture built so every conclusion is reproducible and inspectable, and a rule corpus with its citations visible. Judge the work. |
+| _"Can we pay for this with IDEA funds?"_          | The honest answer: it depends on how your district and SEA treat administrative costs, and we will work it through with your federal-programs director. We do not assert it.                                         |
 
 ---
 
@@ -357,17 +357,17 @@ Supporting pieces, each answering a question a finance director actually types:
 - Excess cost: the calculation, worked
 - The 50% adjustment under 300.205 — and why CEIS spending eats into it
 
-Every one of these should link its authority and show real arithmetic. The content *is* the
+Every one of these should link its authority and show real arithmetic. The content _is_ the
 product demonstration.
 
 ### Editorial calendar, anchored to the real cycle
 
-| When | What districts are doing | What to publish |
-|---|---|---|
-| Feb–Apr | Building next year's budget | Eligibility standard; budgeting to pass MOE |
-| Jun–Jul | Fiscal close; certifications | Closing the year cleanly; what to document now |
-| Sep–Oct | Claim amendments close; preliminary reviews | The exceptions window; evidence checklists |
-| Feb–Mar | Final determinations and penalty notices | What to do if you received one; corrective action |
+| When    | What districts are doing                    | What to publish                                   |
+| ------- | ------------------------------------------- | ------------------------------------------------- |
+| Feb–Apr | Building next year's budget                 | Eligibility standard; budgeting to pass MOE       |
+| Jun–Jul | Fiscal close; certifications                | Closing the year cleanly; what to document now    |
+| Sep–Oct | Claim amendments close; preliminary reviews | The exceptions window; evidence checklists        |
+| Feb–Mar | Final determinations and penalty notices    | What to do if you received one; corrective action |
 
 ---
 
@@ -409,7 +409,7 @@ product demonstration.
 - **Generalizing one state's calendar to all states.** Wisconsin's dates are Wisconsin's. Say
   "typical" only where we have checked more than one, and attribute.
 - **Whether TEA's per-test-method baseline tracking is the national rule.** Texas describes the
-  baseline as the last year the LEA met MOE *for that specific test method*; Wisconsin does not
+  baseline as the last year the LEA met MOE _for that specific test method_; Wisconsin does not
   mention a per-method split. This affects the calculator and should be resolved before any
   claim about how the baseline is tracked.
 
@@ -420,6 +420,6 @@ product demonstration.
 - [Texas Education Agency — IDEA-B LEA Maintenance of Effort](https://tea.texas.gov/finance-and-grants/grants/federal-fiscal-compliance-and-reporting/idea-fiscal-compliance/idea-b-lea-maintenance-of-effort)
 - [Wisconsin DPI — IDEA Maintenance of Effort](https://dpi.wi.gov/sped/educators/fiscal/maintenance-of-effort)
 - [NYSED — LEA MOE calculator guidance, 2025–26 eligibility standard](https://www.nysed.gov/special-education/guidance-complete-lea-maintenance-effort-moe-calculator-2025-2026-eligibility)
-- [Washington OSPI — LEA MOE guidance handbook](https://ospi.k12.wa.us/sites/default/files/2023-08/moe-guidance-handbook.pdf) *(surfaced in search; not read)*
+- [Washington OSPI — LEA MOE guidance handbook](https://ospi.k12.wa.us/sites/default/files/2023-08/moe-guidance-handbook.pdf) _(surfaced in search; not read)_
 - Federal authorities and the derivation of every figure: see
   `docs/regulatory-methodology/idea-moe.md` and `docs/pricing/pricing-model.md`.

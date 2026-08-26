@@ -9,14 +9,14 @@
 
 ## 1. Authority
 
-| | |
-|---|---|
-| Primary | 34 CFR 300.203 — Maintenance of effort |
-| Exceptions | 34 CFR 300.204 — Exception to maintenance of effort |
-| Adjustment | 34 CFR 300.205 — Adjustment to local fiscal efforts in certain fiscal years |
-| Statute | IDEA § 613(a)(2)(A)(iii) |
-| Amended | 2015 final rule, effective **July 1, 2015** |
-| State overlay | Alabama — **not yet written.** This document is the federal baseline only. |
+|               |                                                                             |
+| ------------- | --------------------------------------------------------------------------- |
+| Primary       | 34 CFR 300.203 — Maintenance of effort                                      |
+| Exceptions    | 34 CFR 300.204 — Exception to maintenance of effort                         |
+| Adjustment    | 34 CFR 300.205 — Adjustment to local fiscal efforts in certain fiscal years |
+| Statute       | IDEA § 613(a)(2)(A)(iii)                                                    |
+| Amended       | 2015 final rule, effective **July 1, 2015**                                 |
+| State overlay | Alabama — **not yet written.** This document is the federal baseline only.  |
 
 The operative phrases, quoted from the regulation:
 
@@ -27,7 +27,7 @@ The operative phrases, quoted from the regulation:
   year."**
 
 Both phrases were confirmed across three independent reads (eCFR, Cornell LII, and the
-Department's 2020 IDEA fiscal-flexibility Q&A). See §10 for what was *not* confirmed.
+Department's 2020 IDEA fiscal-flexibility Q&A). See §10 for what was _not_ confirmed.
 
 ---
 
@@ -41,10 +41,10 @@ the year before.
 There are **two separate tests**, and a district can pass one and fail the other in the same
 year:
 
-- **Eligibility** is forward-looking. Before the year starts, does the district's *budget*
+- **Eligibility** is forward-looking. Before the year starts, does the district's _budget_
   commit enough of its own funds? This is a condition of receiving the subgrant at all.
-- **Compliance** is backward-looking. After the year closes, did the district's *actual
-  expenditures* hold the line? This is what a monitor tests, and what triggers repayment.
+- **Compliance** is backward-looking. After the year closes, did the district's _actual
+  expenditures_ hold the line? This is what a monitor tests, and what triggers repayment.
 
 Getting this wrong is expensive in a specific way: under § 300.203(d) the SEA must repay the
 shortfall to the Department **in non-federal funds**, and the state recovers it from the
@@ -57,12 +57,12 @@ can be changed.
 
 A district may satisfy either standard by **any one** of four methods. Only one has to pass.
 
-| # | Method | Basis |
-|---|---|---|
-| 1 | Local funds only | Total |
-| 2 | Local funds only | Per capita |
-| 3 | State and local funds combined | Total |
-| 4 | State and local funds combined | Per capita |
+| #   | Method                         | Basis      |
+| --- | ------------------------------ | ---------- |
+| 1   | Local funds only               | Total      |
+| 2   | Local funds only               | Per capita |
+| 3   | State and local funds combined | Total      |
+| 4   | State and local funds combined | Per capita |
 
 Federal funds are excluded from every method.
 
@@ -82,7 +82,7 @@ The regulation and common field practice describe the compliance baseline differ
 difference is not cosmetic.
 
 **What the text says.** § 300.203(b) names **the preceding fiscal year**. In the 2015
-rulemaking the Department considered and *rejected* a commenter proposal to use the most recent
+rulemaking the Department considered and _rejected_ a commenter proposal to use the most recent
 year in which the LEA met MOE, reasoning that a single consistent comparison year across
 methods is simpler for LEAs.
 
@@ -90,8 +90,8 @@ methods is simpler for LEAs.
 most recent year in which the district met MOE."
 
 **How both can be true.** § 300.203(c), the subsequent-years rule, provides that after a year in
-which an LEA failed to maintain effort, the level required in the following year is *the level
-that would have been required in the absence of that failure* — not the reduced amount the LEA
+which an LEA failed to maintain effort, the level required in the following year is _the level
+that would have been required in the absence of that failure_ — not the reduced amount the LEA
 actually spent.
 
 So:
@@ -105,7 +105,7 @@ answer, and why it stops producing the right answer after two consecutive failur
 of method — cases where the platform must follow the text, not the shorthand.
 
 **Practical consequence.** A district that models next year from what it actually spent, after a
-year it failed, digs the hole deeper. The platform must therefore carry the *required* level
+year it failed, digs the hole deeper. The platform must therefore carry the _required_ level
 forward as a stored fact, not recompute it from expenditures.
 
 ---
@@ -114,16 +114,16 @@ forward as a stored fact, not recompute it from expenditures.
 
 ### Compliance standard (`idea_moe_compliance_v1`)
 
-| Input | Meaning | Likely source | Period |
-|---|---|---|---|
-| `current_actual_local` | Actual local-only expenditures for children with disabilities | ERP / general ledger, year-end | FY N |
-| `current_actual_state_local` | Actual state + local expenditures, same population | ERP / general ledger, year-end | FY N |
-| `comparison_actual_local` | Local-only expenditures | ERP, closed year | FY N−1 |
-| `comparison_actual_state_local` | State + local expenditures | ERP, closed year | FY N−1 |
-| `current_child_count` | Children with disabilities served | SIS / state child-count submission | FY N |
-| `comparison_child_count` | Children with disabilities served | SIS / state child-count submission | FY N−1 |
-| `claimed_exceptions` | Reductions claimed under § 300.204, itemized by category | District attestation + supporting evidence | FY N |
-| `claimed_adjustment` | Reduction taken under § 300.205 | District attestation | FY N |
+| Input                           | Meaning                                                       | Likely source                              | Period |
+| ------------------------------- | ------------------------------------------------------------- | ------------------------------------------ | ------ |
+| `current_actual_local`          | Actual local-only expenditures for children with disabilities | ERP / general ledger, year-end             | FY N   |
+| `current_actual_state_local`    | Actual state + local expenditures, same population            | ERP / general ledger, year-end             | FY N   |
+| `comparison_actual_local`       | Local-only expenditures                                       | ERP, closed year                           | FY N−1 |
+| `comparison_actual_state_local` | State + local expenditures                                    | ERP, closed year                           | FY N−1 |
+| `current_child_count`           | Children with disabilities served                             | SIS / state child-count submission         | FY N   |
+| `comparison_child_count`        | Children with disabilities served                             | SIS / state child-count submission         | FY N−1 |
+| `claimed_exceptions`            | Reductions claimed under § 300.204, itemized by category      | District attestation + supporting evidence | FY N   |
+| `claimed_adjustment`            | Reduction taken under § 300.205                               | District attestation                       | FY N   |
 
 ### Missing from the rule as currently written
 
@@ -131,7 +131,7 @@ The subsequent-years rule in §4 cannot be evaluated from the inputs above. Two 
 required and are **not** in `IDEA-MOE-COMPLIANCE-001.yaml` today:
 
 - `comparison_year_moe_met` — did the LEA meet MOE in FY N−1?
-- `comparison_required_level_by_method` — the level that was *required* of FY N−1, per method,
+- `comparison_required_level_by_method` — the level that was _required_ of FY N−1, per method,
   carried forward from that year's assessment.
 
 The rule YAML must be amended before the calculator is written. Without these, the platform
@@ -178,11 +178,11 @@ year against the most recent fiscal year for which information is available.
 
 ## 7. Boundary cases
 
-- **Exactly equal passes.** The regulation forbids reducing *below* the prior level. Equality is
+- **Exactly equal passes.** The regulation forbids reducing _below_ the prior level. Equality is
   compliance. A strict `>` comparison would manufacture a finding.
 - **No intermediate rounding on per-capita methods.** Compute the quotient at full decimal
   precision and compare. Rounding each side to cents before comparing can flip a result that
-  sits within a dollar per child. *(Platform decision — see §10.)*
+  sits within a dollar per child. _(Platform decision — see §10.)_
 - **Zero or missing child count** on either side of a per-capita method → that method is
   `INDETERMINATE`. Never divide by zero, and never fall back to the total method silently.
 - **Child count fell** between the two years → the total-basis methods are under pressure while
@@ -199,13 +199,13 @@ year against the most recent fiscal year for which information is available.
 
 An LEA may reduce below the prior year's level to the extent the reduction is attributable to:
 
-| | |
-|---|---|
-| (a) | Voluntary departure — by retirement or otherwise — or departure for just cause, of special education or related services personnel |
-| (b) | A decrease in the enrollment of children with disabilities |
+|     |                                                                                                                                                                                         |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| (a) | Voluntary departure — by retirement or otherwise — or departure for just cause, of special education or related services personnel                                                      |
+| (b) | A decrease in the enrollment of children with disabilities                                                                                                                              |
 | (c) | Termination of the obligation to provide an exceptionally costly program for a particular child who left the jurisdiction, aged out of FAPE eligibility, or no longer needs the program |
-| (d) | Termination of costly expenditures for long-term purchases, such as equipment acquisition or facility construction |
-| (e) | Assumption of cost by the SEA's high cost fund |
+| (d) | Termination of costly expenditures for long-term purchases, such as equipment acquisition or facility construction                                                                      |
+| (e) | Assumption of cost by the SEA's high cost fund                                                                                                                                          |
 
 Each claimed exception is a **fact requiring evidence**, not a number a district may assert.
 The platform should treat an unevidenced exception as `MANUAL_REVIEW`, never as an accepted
@@ -229,13 +229,13 @@ running CEIS has less adjustment headroom than the raw arithmetic suggests.
 Missing data produces `INDETERMINATE`, never a manufactured pass or fail. The explanation must
 name the specific missing input, because the remedies differ:
 
-| Missing | Effect |
-|---|---|
-| Either child count | Per-capita methods `INDETERMINATE`; total methods may still resolve |
-| Either expenditure figure for a method | That method `INDETERMINATE` |
-| `comparison_year_moe_met` | Whole rule `INDETERMINATE` — the comparison level cannot be established |
-| Fiscal periods not exactly one year apart | Whole rule `INDETERMINATE` — do not compare |
-| Exceptions claimed without evidence | `MANUAL_REVIEW` |
+| Missing                                   | Effect                                                                  |
+| ----------------------------------------- | ----------------------------------------------------------------------- |
+| Either child count                        | Per-capita methods `INDETERMINATE`; total methods may still resolve     |
+| Either expenditure figure for a method    | That method `INDETERMINATE`                                             |
+| `comparison_year_moe_met`                 | Whole rule `INDETERMINATE` — the comparison level cannot be established |
+| Fiscal periods not exactly one year apart | Whole rule `INDETERMINATE` — do not compare                             |
+| Exceptions claimed without evidence       | `MANUAL_REVIEW`                                                         |
 
 If some methods resolve and at least one **passes**, the overall result is `PASS` — one passing
 method satisfies the requirement regardless of what could not be computed elsewhere. If some
@@ -280,11 +280,11 @@ Synthetic figures. Not a real district.
 **Example Consolidated School District**, FY2027 compliance test. The LEA met MOE in FY2026, so
 the comparison level is FY2026 actual expenditures.
 
-| | FY2026 (comparison) | FY2027 (current) |
-|---|---|---|
-| Local funds only | $4,200,000 | $4,150,000 |
-| State and local funds | $6,800,000 | $6,900,000 |
-| Children with disabilities served | 412 | 400 |
+|                                   | FY2026 (comparison) | FY2027 (current) |
+| --------------------------------- | ------------------- | ---------------- |
+| Local funds only                  | $4,200,000          | $4,150,000       |
+| State and local funds             | $6,800,000          | $6,900,000       |
+| Children with disabilities served | 412                 | 400              |
 
 **Method 1 — local only, total**
 $4,150,000 vs $4,200,000 → short **$50,000** → **FAIL**

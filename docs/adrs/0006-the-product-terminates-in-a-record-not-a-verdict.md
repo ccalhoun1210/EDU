@@ -17,7 +17,7 @@ indicators — scored Met on both IDEA fiscal indicators a calculator would own,
 maintenance of effort and 18.2 excess cost. The single Did Not Meet was 16.1, Title III
 entrance and exit procedures, because a written manual omitted four parameters and one
 student's reclassification was never considered. The corrective action was eight items of
-*write the rule down and prove you told the schools*. The federal audit record has the same
+_write the rule down and prove you told the schools_. The federal audit record has the same
 shape: ED OIG's finding against a Seattle contract was that the purchase was fine and the
 file was not.
 
