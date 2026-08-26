@@ -18,6 +18,30 @@ const config: NextConfig = {
     };
     return config;
   },
+  // Baseline security headers. These live here (rather than in a repo-root
+  // vercel.json) because the Vercel project's Root Directory is `apps/web`,
+  // so a root-level vercel.json is never read. Defining them in next.config
+  // guarantees they apply to every deployed response.
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default config;
