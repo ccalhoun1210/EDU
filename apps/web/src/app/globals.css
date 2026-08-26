@@ -8,12 +8,12 @@
   --ink: #14171c; /* body text — 17.96 AAA on white */
   --navy: #123a6b; /* primary — 11.39 AAA on white */
   --navy-hover: #0e2f57;
-  --muted: #5b6472; /* secondary text — 5.98 AA on white */
-  --surface: #ffffff;
-  --surface-muted: #f5f7fa;
-  --surface-sunken: #eef1f6;
-  --line: #d8dde5; /* DECORATIVE dividers only (1.36 — never on controls) */
-  --border-interactive: #8a93a3; /* control boundaries — 3.10, meets 1.4.11 */
+  --muted: #59564d; /* secondary text — AA on warm paper */
+  --surface: #ffffff; /* exhibits / cards — pure white pops on paper */
+  --surface-muted: #f3efe6; /* warm printed-record paper — page + bands */
+  --surface-sunken: #eae4d6; /* warm sunken ledger fill */
+  --line: #d7cfbf; /* DECORATIVE warm hairline — never on controls */
+  --border-interactive: #837c6b; /* control boundaries — meets 1.4.11 on paper */
 
   /* Status — each also has a distinct glyph; color is never the only cue */
   --pass: #1d6b45;

@@ -190,65 +190,95 @@
   }
 }
 
-/* ---------------- Docket section header ---------------- */
-/* A numbered rail beside the heading under a strong top rule —
-   like a section of a statute or an audit schedule. Replaces the
-   identical centered eyebrow that made every section look the same. */
+/* ---------------- The binding spine ----------------
+   Every mid section shares ONE document grid: a mono section number
+   hanging in the left margin, a CONTINUOUS vertical rule (the binding
+   edge), and content to its right. Horizontal hairlines cross the spine
+   at each section boundary. This replaces the repeating centered
+   section-stack that made the page read like a generic template. */
 .section {
-  padding: 4rem 0;
+  border-top: 1px solid var(--line);
 }
-.sectionAlt {
-  background: var(--surface-muted);
-}
+/* The first section after the hero opens the record with a heavier rule. */
 .sectionRule {
   border-top: 2px solid var(--ink);
 }
+/* legacy no-op — bands are uniform paper now, no alternating fills */
+.sectionAlt {
+  background: transparent;
+}
 
-.docket {
+.sectionGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.75rem 2.5rem;
-  padding-top: 1.25rem;
-  margin-bottom: 2.25rem;
+  gap: 1.5rem 0;
+  padding: 2.75rem 0;
 }
-@media (min-width: 820px) {
-  .docket {
-    grid-template-columns: 13rem 1fr;
-    gap: 0 3rem;
+@media (min-width: 860px) {
+  .sectionGrid {
+    grid-template-columns: 12rem minmax(0, 1fr);
+    gap: 0;
+    padding: 0;
   }
 }
 
-.docketTag {
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--navy);
-  line-height: 1.5;
+.gutter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
 }
-.docketTag span {
-  display: block;
+@media (min-width: 860px) {
+  .gutter {
+    position: sticky;
+    top: 5rem;
+    align-self: start;
+    padding: 2.75rem 1.75rem 2.75rem 0;
+  }
+}
+
+.gutterNo {
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--navy);
+  letter-spacing: 0.02em;
+}
+.gutterTag {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
   color: var(--muted);
 }
 
-.docketBody {
+.sectionMain {
   min-width: 0;
+}
+@media (min-width: 860px) {
+  .sectionMain {
+    border-left: 1px solid var(--ink);
+    padding: 2.75rem 0 2.75rem 2.75rem;
+  }
 }
 
 .sectionTitle {
-  font-size: clamp(1.5rem, 3vw, 2.05rem);
-  line-height: 1.18;
+  font-size: clamp(1.4rem, 2.4vw, 1.85rem);
+  font-weight: 600;
+  line-height: 1.2;
   letter-spacing: -0.02em;
+  text-transform: none;
+  color: var(--ink);
   margin: 0 0 0.75rem;
-  max-width: 32ch;
+  max-width: 34ch;
+  text-wrap: balance;
 }
 
 .sectionLede {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   color: var(--muted);
-  max-width: 64ch;
-  margin: 0;
+  max-width: 62ch;
+  margin: 0 0 1.75rem;
 }
 
 /* ---------------- Hero ---------------- */
@@ -716,6 +746,7 @@
 .cta {
   background: var(--navy);
   color: #fff;
+  padding: 3.5rem 0;
 }
 .cta .sectionRule {
   border-top-color: rgba(255, 255, 255, 0.35);
@@ -739,8 +770,10 @@
 }
 .ctaTitle {
   font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.02em;
+  text-transform: none;
   margin: 0 0 0.6rem;
   color: #fff;
   max-width: 24ch;

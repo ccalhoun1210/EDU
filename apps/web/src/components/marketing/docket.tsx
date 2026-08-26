@@ -2,32 +2,45 @@ import type { ReactNode } from 'react';
 import styles from '@/app/sales.module.css';
 
 /**
- * Numbered docket header used to open every marketing section — a
- * statute-style rail (§ NN / LABEL) beside the heading, under a strong
- * top rule. Shared by the home and pricing pages so both read as one
- * regulatory record rather than a generic card stack.
+ * A single leaf of the bound record. Every mid-page section is a
+ * LedgerSection: a mono section number (§ NN) and label hang in the left
+ * margin against a continuous vertical rule — the binding spine — with the
+ * heading, lede, and content in the column to its right. Shared by the home
+ * and pricing pages so both read as one regulatory record, not a card stack.
  */
-export function Docket({
+export function LedgerSection({
+  id,
   no,
   tag,
   title,
   lede,
+  first,
+  children,
 }: {
+  id?: string;
   no: string;
   tag: string;
   title: string;
-  lede: ReactNode;
+  lede?: ReactNode;
+  /** Opens the record with a heavier top rule (use on the first section). */
+  first?: boolean;
+  children?: ReactNode;
 }) {
   return (
-    <div className={styles.docket}>
-      <p className={styles.docketTag}>
-        {no}
-        <span>{tag}</span>
-      </p>
-      <div className={styles.docketBody}>
-        <h2 className={styles.sectionTitle}>{title}</h2>
-        <p className={styles.sectionLede}>{lede}</p>
+    <section id={id} className={`${styles.section} ${first ? styles.sectionRule : ''}`}>
+      <div className={styles.container}>
+        <div className={styles.sectionGrid}>
+          <div className={styles.gutter}>
+            <span className={styles.gutterNo}>{no}</span>
+            <span className={styles.gutterTag}>{tag}</span>
+          </div>
+          <div className={styles.sectionMain}>
+            <h2 className={styles.sectionTitle}>{title}</h2>
+            {lede ? <p className={styles.sectionLede}>{lede}</p> : null}
+            {children}
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

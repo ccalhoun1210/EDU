@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import styles from './sales.module.css';
 import { SiteHeader } from '@/components/marketing/site-header';
-import { Docket } from '@/components/marketing/docket';
+import { LedgerSection } from '@/components/marketing/docket';
 import {
   ArrowRightIcon,
   CheckIcon,
@@ -223,178 +223,165 @@ export default function Home() {
         </section>
 
         {/* ---------- The problem, in their vocabulary ---------- */}
-        <section id="problem" className={`${styles.section} ${styles.sectionRule}`}>
-          <div className={styles.container}>
-            <Docket
-              no="§ 01"
-              tag="The vocabulary"
-              title="You already know the tests. So does the engine."
-              lede="These are the checks a state monitor runs against IDEA Part B fiscal data — and the ones a spreadsheet quietly gets wrong. Each is encoded against the regulation it comes from."
-            />
-            <div className={styles.termList}>
-              {TERMS.map((t, i) => (
-                <div className={styles.termRow} key={t.abbr}>
-                  <span className={styles.termIndex}>{String(i + 1).padStart(2, '0')}</span>
-                  <span className={styles.termHead}>
-                    <span className={styles.termName}>{t.name}</span>
-                    <span className={styles.termAbbr}>{t.abbr}</span>
-                  </span>
-                  <p className={styles.termDesc}>{t.desc}</p>
-                </div>
-              ))}
-            </div>
+        <LedgerSection
+          id="problem"
+          first
+          no="§ 01"
+          tag="The vocabulary"
+          title="You already know the tests. So does the engine."
+          lede="These are the checks a state monitor runs against IDEA Part B fiscal data — and the ones a spreadsheet quietly gets wrong. Each is encoded against the regulation it comes from."
+        >
+          <div className={styles.termList}>
+            {TERMS.map((t, i) => (
+              <div className={styles.termRow} key={t.abbr}>
+                <span className={styles.termIndex}>{String(i + 1).padStart(2, '0')}</span>
+                <span className={styles.termHead}>
+                  <span className={styles.termName}>{t.name}</span>
+                  <span className={styles.termAbbr}>{t.abbr}</span>
+                </span>
+                <p className={styles.termDesc}>{t.desc}</p>
+              </div>
+            ))}
           </div>
-        </section>
+        </LedgerSection>
 
         {/* ---------- Six-state status system ---------- */}
-        <section className={`${styles.section} ${styles.sectionAlt} ${styles.sectionRule}`}>
-          <div className={styles.container}>
-            <Docket
-              no="§ 02"
-              tag="Determination states"
-              title="Six outcomes — and INDETERMINATE is not a failure."
-              lede="A spreadsheet gives you two answers and hides the third. This is the outcome the product exists to protect: when required evidence is missing, it says so plainly instead of manufacturing a passing result you cannot defend."
-            />
-            <div className={styles.legend}>
-              {STATUS_LEGEND.map(({ label, cls, Glyph, body }) => (
-                <div className={styles.legendRow} key={label}>
-                  <span className={`${styles.statusBadge} ${styles[cls]}`}>
-                    <Glyph size={15} />
-                    {label}
-                  </span>
-                  <p className={styles.legendText}>{body}</p>
-                </div>
-              ))}
-            </div>
+        <LedgerSection
+          no="§ 02"
+          tag="Determination states"
+          title="Six outcomes — and INDETERMINATE is not a failure."
+          lede="A spreadsheet gives you two answers and hides the third. This is the outcome the product exists to protect: when required evidence is missing, it says so plainly instead of manufacturing a passing result you cannot defend."
+        >
+          <div className={styles.legend}>
+            {STATUS_LEGEND.map(({ label, cls, Glyph, body }) => (
+              <div className={styles.legendRow} key={label}>
+                <span className={`${styles.statusBadge} ${styles[cls]}`}>
+                  <Glyph size={15} />
+                  {label}
+                </span>
+                <p className={styles.legendText}>{body}</p>
+              </div>
+            ))}
           </div>
-        </section>
+        </LedgerSection>
 
         {/* ---------- A worked result (anchor target) ---------- */}
-        <section id="result" className={`${styles.section} ${styles.sectionRule}`}>
-          <div className={styles.container}>
-            <Docket
-              no="§ 03"
-              tag="A worked result"
-              title="Every determination shows its work — like Exhibit A."
-              lede="Status, the citation a hearing officer would ask for, the exact rule-pack version that produced it, the inputs, and the arithmetic. No competitor screenshot looks like this, because no competitor binds the answer to its authority."
-            />
-            <div className={styles.heroActions}>
-              <Link className={`${styles.btn} ${styles.btnGhost} ${styles.btnLg}`} href="/registry">
-                Open the rule registry
-                <ArrowRightIcon size={18} />
-              </Link>
-            </div>
+        <LedgerSection
+          id="result"
+          no="§ 03"
+          tag="A worked result"
+          title="Every determination shows its work — like Exhibit A."
+          lede="Status, the citation a hearing officer would ask for, the exact rule-pack version that produced it, the inputs, and the arithmetic. No competitor screenshot looks like this, because no competitor binds the answer to its authority."
+        >
+          <div className={styles.heroActions}>
+            <Link className={`${styles.btn} ${styles.btnGhost} ${styles.btnLg}`} href="/registry">
+              Open the rule registry
+              <ArrowRightIcon size={18} />
+            </Link>
           </div>
-        </section>
+        </LedgerSection>
 
         {/* ---------- What it does NOT do ---------- */}
-        <section className={`${styles.section} ${styles.sectionAlt} ${styles.sectionRule}`}>
-          <div className={styles.container}>
-            <Docket
-              no="§ 04"
-              tag="Limits & guarantees"
-              title="The limits are the point."
-              lede="A compliance tool earns trust by what it refuses to touch. These are guarantees, not gaps."
-            />
-            <div className={styles.notGrid}>
-              <div className={styles.notCard}>
-                <span className={styles.notIcon}>
-                  <NoWriteIcon size={20} />
-                </span>
-                <h3>It never writes to your systems of record</h3>
-                <p>
-                  ComplianceOS EDU reads a copy of your fiscal and student data. It cannot alter your
-                  SIS, your IEP system, or your general ledger. Nothing it does can create a new
-                  compliance problem in the systems you rely on.
-                </p>
-              </div>
-              <div className={styles.notCard}>
-                <span className={styles.notIcon}>
-                  <IndeterminateGlyph size={20} />
-                </span>
-                <h3>It never guesses to fill a gap</h3>
-                <p>
-                  When a required input is missing, the engine returns INDETERMINATE and names what
-                  it needs. It will not infer, interpolate, or round a shortfall away to produce a
-                  cleaner-looking report.
-                </p>
-              </div>
+        <LedgerSection
+          no="§ 04"
+          tag="Limits & guarantees"
+          title="The limits are the point."
+          lede="A compliance tool earns trust by what it refuses to touch. These are guarantees, not gaps."
+        >
+          <div className={styles.notGrid}>
+            <div className={styles.notCard}>
+              <span className={styles.notIcon}>
+                <NoWriteIcon size={20} />
+              </span>
+              <h3>It never writes to your systems of record</h3>
+              <p>
+                ComplianceOS EDU reads a copy of your fiscal and student data. It cannot alter your
+                SIS, your IEP system, or your general ledger. Nothing it does can create a new
+                compliance problem in the systems you rely on.
+              </p>
+            </div>
+            <div className={styles.notCard}>
+              <span className={styles.notIcon}>
+                <IndeterminateGlyph size={20} />
+              </span>
+              <h3>It never guesses to fill a gap</h3>
+              <p>
+                When a required input is missing, the engine returns INDETERMINATE and names what it
+                needs. It will not infer, interpolate, or round a shortfall away to produce a
+                cleaner-looking report.
+              </p>
             </div>
           </div>
-        </section>
+        </LedgerSection>
 
         {/* ---------- Trust row ---------- */}
-        <section id="trust" className={`${styles.section} ${styles.sectionRule}`}>
-          <div className={styles.container}>
-            <Docket
-              no="§ 05"
-              tag="Trust & security"
-              title="The row a district reads before anything else."
-              lede="Everything here is stated at its true status. We would rather show an honest “in progress” than an unbacked badge — the same standard we hold your determinations to."
-            />
-            <div className={styles.trustList}>
-              {TRUST.map(({ Icon, title, desc, status }) => (
-                <div className={styles.trustRow} key={title}>
-                  <span className={styles.trustIcon}>
-                    <Icon size={20} />
-                  </span>
-                  <p className={styles.trustTitle}>{title}</p>
-                  <p className={styles.trustDesc}>{desc}</p>
-                  <span className={styles.trustStatus}>{status}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Proof slot — designed, left unpublished until a named pilot exists */}
-            <figure className={styles.proof}>
-              <p className={styles.proofLabel}>Practitioner proof — reserved for a named pilot</p>
-              <blockquote className={styles.proofQuote}>
-                “A district director, attributed by name and district, describes catching a finding
-                before their state monitoring visit.”
-              </blockquote>
-              <figcaption className={styles.proofAttr}>
-                We leave this slot empty rather than fill it with a stock quote.
-              </figcaption>
-            </figure>
+        <LedgerSection
+          id="trust"
+          no="§ 05"
+          tag="Trust & security"
+          title="The row a district reads before anything else."
+          lede="Everything here is stated at its true status. We would rather show an honest “in progress” than an unbacked badge — the same standard we hold your determinations to."
+        >
+          <div className={styles.trustList}>
+            {TRUST.map(({ Icon, title, desc, status }) => (
+              <div className={styles.trustRow} key={title}>
+                <span className={styles.trustIcon}>
+                  <Icon size={20} />
+                </span>
+                <p className={styles.trustTitle}>{title}</p>
+                <p className={styles.trustDesc}>{desc}</p>
+                <span className={styles.trustStatus}>{status}</span>
+              </div>
+            ))}
           </div>
-        </section>
+
+          {/* Proof slot — designed, left unpublished until a named pilot exists */}
+          <figure className={styles.proof}>
+            <p className={styles.proofLabel}>Practitioner proof — reserved for a named pilot</p>
+            <blockquote className={styles.proofQuote}>
+              “A district director, attributed by name and district, describes catching a finding
+              before their state monitoring visit.”
+            </blockquote>
+            <figcaption className={styles.proofAttr}>
+              We leave this slot empty rather than fill it with a stock quote.
+            </figcaption>
+          </figure>
+        </LedgerSection>
 
         {/* ---------- Coverage ---------- */}
-        <section id="coverage" className={`${styles.section} ${styles.sectionAlt} ${styles.sectionRule}`}>
-          <div className={styles.container}>
-            <Docket
-              no="§ 06"
-              tag="Coverage register"
-              title="Federal IDEA Part B fiscal rules today."
-              lede="We begin where audit risk is highest and expand outward. Each rule pack undergoes legal review before it leaves the registry."
-            />
-            <div className={styles.coverageWrap}>
-              <table className={styles.coverageTable}>
-                <thead>
-                  <tr>
-                    <th scope="col">Requirement</th>
-                    <th scope="col">Authority</th>
-                    <th scope="col">Status</th>
+        <LedgerSection
+          id="coverage"
+          no="§ 06"
+          tag="Coverage register"
+          title="Federal IDEA Part B fiscal rules today."
+          lede="We begin where audit risk is highest and expand outward. Each rule pack undergoes legal review before it leaves the registry."
+        >
+          <div className={styles.coverageWrap}>
+            <table className={styles.coverageTable}>
+              <thead>
+                <tr>
+                  <th scope="col">Requirement</th>
+                  <th scope="col">Authority</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COVERAGE.map((c) => (
+                  <tr key={c.name}>
+                    <td>{c.name}</td>
+                    <td className={styles.coverageCite}>{c.authority}</td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${c.live ? styles.stPass : styles.stNa}`}>
+                        {c.live ? <PassGlyph size={14} /> : <NotApplicableGlyph size={14} />}
+                        {c.live ? 'Available' : 'On roadmap'}
+                      </span>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {COVERAGE.map((c) => (
-                    <tr key={c.name}>
-                      <td>{c.name}</td>
-                      <td className={styles.coverageCite}>{c.authority}</td>
-                      <td>
-                        <span className={`${styles.statusBadge} ${c.live ? styles.stPass : styles.stNa}`}>
-                          {c.live ? <PassGlyph size={14} /> : <NotApplicableGlyph size={14} />}
-                          {c.live ? 'Available' : 'On roadmap'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </section>
+        </LedgerSection>
 
         {/* ---------- CTA ---------- */}
         <section id="contact" className={`${styles.section} ${styles.cta}`}>
