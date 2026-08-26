@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import styles from './sales.module.css';
 import { SiteHeader } from '@/components/marketing/site-header';
+import { SiteFooter } from '@/components/marketing/site-footer';
 import { LedgerSection } from '@/components/marketing/docket';
 import {
   ArrowRightIcon,
@@ -502,66 +503,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className={styles.footer}>
-        <div className={styles.container}>
-          <div className={styles.footerGrid}>
-            <div className={styles.footerBrand}>
-              <span className={styles.brandName}>
-                ComplianceOS <span>EDU</span>
-              </span>
-              <p className={styles.footerBlurb}>
-                Compliance assurance for publicly funded education programs. Versioned rule packs,
-                cited authorities, and determinations you can defend in a monitoring visit.
-              </p>
-            </div>
-            <div className={styles.footerCol}>
-              <h4>Product</h4>
-              <ul>
-                <li>
-                  <a href="#problem">The vocabulary</a>
-                </li>
-                <li>
-                  <a href="#result">A worked result</a>
-                </li>
-                <li>
-                  <a href="#coverage">Coverage</a>
-                </li>
-                <li>
-                  <Link href="/registry">Rule registry</Link>
-                </li>
-                <li>
-                  <Link href="/pricing">Pricing</Link>
-                </li>
-              </ul>
-            </div>
-            <div className={styles.footerCol}>
-              <h4>Trust</h4>
-              <ul>
-                <li>
-                  <a href="#trust">Security &amp; privacy</a>
-                </li>
-                <li>
-                  <a href="#trust">Accessibility statement</a>
-                </li>
-                <li>
-                  <a href="mailto:demo@complianceos.edu">Request a demo</a>
-                </li>
-                <li>
-                  <a href="mailto:states@complianceos.edu">Talk to us about your state</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className={styles.footerBar}>
-            <p className={styles.footerStatement}>
-              ComplianceOS EDU is an independent software vendor and is not a government agency. Our
-              rule packs cite the controlling authority and are reviewed before release; a
-              determination is decision-support, not legal advice.
-            </p>
-            <span>© 2026 ComplianceOS EDU</span>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

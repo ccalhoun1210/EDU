@@ -169,6 +169,10 @@
 .navLink:hover {
   color: var(--navy);
 }
+.navLink[aria-current='page'] {
+  color: var(--navy);
+  font-weight: 600;
+}
 
 .headerCta {
   display: flex;
@@ -957,4 +961,348 @@
 .footerStatement {
   max-width: 62ch;
   line-height: 1.5;
+}
+
+/* ============================================================
+   Shared interior-page primitives (How it works, IDEA fiscal,
+   Trust, For state agencies, Resources, About). Same record
+   language: docket kicker, ruled ledgers, mono machine voice.
+   ============================================================ */
+
+/* Interior hero — simpler than the home exhibit hero */
+.pageHero {
+  padding: 3.25rem 0 2.75rem;
+  border-bottom: 2px solid var(--ink);
+}
+.pageKicker {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--navy);
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.pageKicker::before {
+  content: '';
+  width: 1.75rem;
+  height: 1px;
+  background: var(--navy);
+}
+.pageTitle {
+  font-size: clamp(2rem, 4vw, 2.85rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin: 0 0 1.1rem;
+  color: var(--ink);
+  max-width: 22ch;
+  text-wrap: balance;
+}
+.pageIntro {
+  font-size: 1.15rem;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 60ch;
+  margin: 0;
+}
+
+/* Prose blocks inside section main */
+.prose {
+  max-width: 62ch;
+}
+.prose p {
+  font-size: 1.02rem;
+  line-height: 1.65;
+  color: var(--ink);
+  margin: 0 0 1.15rem;
+}
+.prose p:last-child {
+  margin-bottom: 0;
+}
+.prose strong {
+  color: var(--ink);
+}
+.leadLine {
+  font-size: 1.15rem;
+  line-height: 1.5;
+  color: var(--ink);
+  font-weight: 600;
+  margin: 0 0 1.15rem;
+  max-width: 52ch;
+}
+
+/* Numbered steps — statute clauses, not cards */
+.steps {
+  border-top: 1px solid var(--ink);
+  counter-reset: step;
+}
+.step {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem 2rem;
+  padding: 1.6rem 0;
+  border-bottom: 1px solid var(--line);
+}
+@media (min-width: 720px) {
+  .step {
+    grid-template-columns: 3.5rem 1fr;
+    gap: 0 2rem;
+  }
+}
+.stepNo {
+  font-family: var(--mono);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1;
+}
+.stepBody h3 {
+  font-size: 1.1rem;
+  margin: 0 0 0.4rem;
+}
+.stepBody p {
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0;
+  max-width: 58ch;
+}
+
+/* Callout — a bordered notice, tinted by intent */
+.callout {
+  display: flex;
+  gap: 0.85rem;
+  padding: 1.15rem 1.35rem;
+  border: 1px solid var(--ink);
+  border-left-width: 4px;
+  background: var(--surface);
+  margin: 1.75rem 0 0;
+  max-width: 64ch;
+}
+.callout p {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.callout p + p {
+  margin-top: 0.6rem;
+}
+.calloutMark {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+.calloutPass {
+  border-left-color: var(--pass);
+}
+.calloutPass .calloutMark {
+  color: var(--pass);
+}
+.calloutRisk {
+  border-left-color: var(--risk);
+}
+.calloutRisk .calloutMark {
+  color: var(--risk);
+}
+.calloutNavy {
+  border-left-color: var(--navy);
+}
+.calloutNavy .calloutMark {
+  color: var(--navy);
+}
+
+/* Definition rows — requirement + citation + body */
+.defList {
+  border-top: 1px solid var(--ink);
+}
+.defRow {
+  padding: 1.6rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.defHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.6rem;
+}
+.defName {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--ink);
+  margin: 0;
+}
+.defCite {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--navy);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.15rem 0.45rem;
+}
+.defRow p {
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0;
+  max-width: 62ch;
+}
+.defRow p + p {
+  margin-top: 0.7rem;
+}
+
+/* Mini exhibit — the Why panel reused on interior pages */
+.whyPanel {
+  border: 1px solid var(--ink);
+  box-shadow: 6px 6px 0 -1px var(--surface-muted), 6px 6px 0 0 var(--ink);
+  margin: 0 6px 0 0;
+  max-width: 34rem;
+}
+
+/* Simple ruled Q&A (objections, FAQs) */
+.qa {
+  border-top: 1px solid var(--ink);
+}
+.qaRow {
+  padding: 1.4rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.qaQ {
+  font-weight: 700;
+  font-size: 1.02rem;
+  margin: 0 0 0.45rem;
+  color: var(--ink);
+}
+.qaA {
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0;
+  max-width: 64ch;
+}
+
+/* Index list — for resource / state links */
+.indexList {
+  border-top: 1px solid var(--ink);
+}
+.indexRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+  color: var(--ink);
+}
+.indexRow:hover .indexName {
+  color: var(--navy);
+  text-decoration: underline;
+}
+.indexName {
+  font-weight: 600;
+  font-size: 1rem;
+}
+.indexMeta {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.indexRow[aria-disabled='true'] {
+  cursor: default;
+}
+.indexRow[aria-disabled='true']:hover .indexName {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+/* Data grid for exposure / stat tables */
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  border-top: 1px solid var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.dataTable th,
+.dataTable td {
+  text-align: left;
+  padding: 0.85rem 1rem 0.85rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.95rem;
+}
+.dataTable thead th {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  font-weight: 500;
+}
+.dataTable tbody td:not(:first-child),
+.dataTable tbody th:not(:first-child) {
+  font-family: var(--mono);
+  color: var(--navy);
+}
+.dataTable tbody th {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Requirement layout — prose beside a worked-arithmetic exhibit */
+.reqGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.75rem;
+  align-items: start;
+}
+@media (min-width: 900px) {
+  .reqGrid {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    gap: 2.5rem;
+  }
+}
+.workedBox {
+  margin: 0;
+  border: 1px solid var(--ink);
+  background: var(--surface);
+}
+.workedLabel {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #fff;
+  background: var(--navy);
+  padding: 0.55rem 0.85rem;
+}
+.workedRows {
+  padding: 0.35rem 0.85rem 0.6rem;
+}
+.workedRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px dotted var(--line);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+.workedRow:last-child {
+  border-bottom: none;
+}
+.workedRow span:first-child {
+  color: var(--muted);
+}
+.workedRow span:last-child {
+  color: var(--ink);
+  font-weight: 600;
+}
+.workedNeg {
+  color: var(--fail) !important;
 }

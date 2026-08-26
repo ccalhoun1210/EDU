@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/marketing/site-header';
+import { SiteFooter } from '@/components/marketing/site-footer';
 import { LedgerSection } from '@/components/marketing/docket';
 import { PriceCalculator } from '@/components/marketing/price-calculator';
 import { ArrowRightIcon, CheckIcon, FileCheckIcon, ShieldIcon } from '@/components/marketing/icons';
@@ -98,7 +99,7 @@ export default function PricingPage() {
       <a className={sales.skipLink} href="#main">
         Skip to content
       </a>
-      <SiteHeader />
+      <SiteHeader active="/pricing" />
 
       <main id="main">
         {/* ---------- Hero + calculator ---------- */}
@@ -336,6 +337,7 @@ export default function PricingPage() {
           </div>
         </section>
       </main>
+      <SiteFooter />
     </div>
   );
 }
