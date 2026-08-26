@@ -4,7 +4,10 @@
 
 ```
 apps/
-  web/                   Next.js application — web UI and route handlers
+  web/                   Next.js application
+    src/app/             The assessment, the finding-detail "Why" screen, the rule library
+    src/lib/             Server-side data assembly and the wording the pages delegate to
+    src/middleware.ts    The per-request Content-Security-Policy nonce
 
 packages/
   domain/                Evaluation vocabulary, exact-decimal money, calendar arithmetic,
@@ -18,10 +21,16 @@ packages/
   ingest/                CSV parsing, mapping templates, transformations, validation,
                          reconciliation, provenance, immutable data snapshots
   db/                    Migrations, RLS policies, tenant-scoped access, migration runner
+  assurance/             The seam between ingestion and evaluation: import, re-seal over both
+                         fact origins, project, evaluate; and the carry-forward that binds a
+                         prior determination to the run that made it
 
 rulepacks/
   federal/idea-b/        US-FED-IDEA-B-2026 — federal baseline pack
   sources/               Regulatory source registry with retrieval metadata
+
+scripts/
+  smoke-web.mjs          Starts the built server and checks what every route rendered
 
 docs/
   architecture/          Design documents, including the master technical buildout
@@ -44,10 +53,12 @@ apps/
 packages/
   domain/                (exists)
   rulepack-sdk/          (exists)
-  db/                    Schema, migrations, data access, RLS policies
+  db/                    (exists) Schema, migrations, data access, RLS policies
+  rules-engine/          (exists) AST compiler and evaluation runtime
+  calculators/           (exists) Audited statutory calculations + golden test corpora
+  ingest/                (exists) Parsing, mapping, validation, provenance, snapshots
+  assurance/             (exists) Ingestion to assessment, end to end
   data-contracts/        Canonical import schemas
-  rules-engine/          AST compiler and evaluation runtime
-  calculators/           Audited statutory calculations + golden test corpora
   integrations/          Connector abstractions (SIS, IEP, ERP)
   documents/             Evidence and document processing
   reporting/             Report templates and exporters
@@ -68,11 +79,11 @@ rulepacks/
 docs/
   architecture/          (exists)
   adrs/                  (exists)
-  threat-model/
+  threat-model/          (exists)
+  regulatory-methodology/  (exists)
   data-dictionary/
   api/
   runbooks/
-  regulatory-methodology/  (exists)
 ```
 
 ## Differences from the buildout

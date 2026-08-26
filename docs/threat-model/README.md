@@ -7,6 +7,9 @@ with file references — and what does not exist yet.
 A mitigation nobody can point at is a plan. And a threat model listing only what has been done
 is marketing, so the gaps are stated in the same voice as the controls.
 
+Entries 1–13 are §37's, in its order. Entry 14 is not in §37: it arrived with the product
+surfaces, because a browser-rendered page is a threat surface the buildout's list predates.
+
 **Status vocabulary**
 
 | Status        | Meaning                                                                  |
@@ -282,6 +285,44 @@ Retention anchors to a named event rather than to record creation, because 2 CFR
 period runs from submission of the final expenditure report, not from when the row was written.
 
 ---
+
+## 14. Injected script in a product surface
+
+**Status: PARTIAL**
+
+The surfaces render values a district supplied — a filename, a raw cell as it appeared, an LEA
+name. React escapes them, and nothing here builds HTML by hand or uses `dangerouslySetInnerHTML`,
+so the ordinary reflected path is closed by construction. What that does not cover is a bug
+that reopens it later, which is what a Content-Security-Policy is for.
+
+The policy was declared and, for a while, wrong in a way that read as strict. It said
+`script-src 'self'` on the premise that the application uses no inline script; the App Router
+streams its server-rendered payload through inline `<script>` tags, so the policy blocked the
+framework's own scripts and React never hydrated. Nothing on these pages needs hydration yet,
+which is precisely why it went unnoticed — the symptom was console errors, not a broken
+screen, and the first interactive control would have found it the hard way. Before that it
+lived in a `vercel.json` the deployment did not read, and was absent entirely.
+
+- The policy is issued per request by `apps/web/src/middleware.ts` with a fresh nonce, set on
+  the request headers so the renderer stamps it onto the scripts it emits and on the response
+  so the browser enforces it. `strict-dynamic` then covers the chunks those scripts load
+  without the policy enumerating them.
+- It is declared in exactly one place. A second `Content-Security-Policy` from
+  `next.config.ts` would be enforced as the intersection of the two, silently reinstating the
+  bug.
+- `scripts/smoke-web.mjs` fails the build if the header is missing, if it carries no nonce, or
+  if any inline script in the served HTML lacks that nonce. Two of the three failures above
+  were "declared and never checked"; this is the check.
+- `frame-ancestors 'none'`, `object-src 'none'`, and the static headers — HSTS, `nosniff`,
+  `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` — are asserted by the same test.
+
+**Gap.** `style-src` still allows `'unsafe-inline'`, because Next inlines critical CSS and a
+style nonce would have to be threaded through every stylesheet link the framework emits.
+Inline style is a much weaker vector than inline script, but it is not nothing: it permits
+appearance-based deception of a reader on a compliance screen. Narrowing it is separate work.
+
+There is also no authenticated surface yet, so CSRF, session fixation and clickjacking beyond
+`frame-ancestors` are untested rather than mitigated — they arrive with authentication.
 
 ## Threats this table does not cover
 
