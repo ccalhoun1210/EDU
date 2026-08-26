@@ -15,22 +15,55 @@ effective:
   start: 2015-07-01
   end: null
 
+# Every figure the computation at Appendix A needs, per level. The rule previously declared
+# seven, which could not express the five deductions the definition requires, carried no count
+# of children with disabilities to multiply the average by, and named `federal_funds_excluded`
+# — a maintenance-of-effort attestation that has no part in this test.
 inputs:
+  - serves_elementary
+  - serves_secondary
+  - preceding_fiscal_year_start
+  - current_fiscal_year_start
+
   - elementary_total_expenditures
+  - elementary_capital_outlay
+  - elementary_debt_service
+  - elementary_part_b_expenditures
+  - elementary_esea_title_i_a_expenditures
+  - elementary_esea_title_iii_expenditures
+  - elementary_state_local_sped_expenditures
+  - elementary_state_local_esea_expenditures
+  - elementary_enrollment_preceding_year
+  - elementary_children_with_disabilities
+  - elementary_non_part_b_spend_on_children
+
   - secondary_total_expenditures
-  - elementary_enrollment
-  - secondary_enrollment
-  - idea_part_b_funds
-  - state_local_sped_funds
-  - federal_funds_excluded
+  - secondary_capital_outlay
+  - secondary_debt_service
+  - secondary_part_b_expenditures
+  - secondary_esea_title_i_a_expenditures
+  - secondary_esea_title_iii_expenditures
+  - secondary_state_local_sped_expenditures
+  - secondary_state_local_esea_expenditures
+  - secondary_enrollment_preceding_year
+  - secondary_children_with_disabilities
+  - secondary_non_part_b_spend_on_children
 
 calculator: idea_excess_cost_v1
 
+# What the calculator emits. `status` and `missingInputs` were declared here previously and are
+# not calculator output at all — they are fields of the evaluation result, and declaring them
+# made the rule's contract describe a shape nothing produces.
 outputSchema:
-  status: enum
-  minimumAverageAmountPerChild: object
-  computedAverageByLevel: object
-  missingInputs: array
+  levelStatus: object
+  averagePerStudentByLevel: object
+  minimumRequiredByLevel: object
+  actualNonPartBSpendByLevel: object
+  marginByLevel: object
+  shortfallByLevel: object
+  netBaseByLevel: object
+  deductionsByLevel: object
+  levelsTested: array
 
 severityOnFailure: HIGH
 explanationTemplate: excess_cost_v1

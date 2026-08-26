@@ -88,18 +88,28 @@ with a citation, a provenance chain and a reproducible hash, and the wrong answe
 | ----------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `idea_moe_eligibility_v1`     | revised, built | The 300.205 ceiling was consumed across claims in array order, making the result depend on input ordering                               |
 | `idea_moe_compliance_v1`      | revised, built | A per-capita carve-out for the 300.204(b) exception with no textual basis, driving a CRITICAL finding and a repayment demand            |
-| `idea_excess_cost_v1`         | needs-revision | A zero children-used count produced an automatic PASS, and an unhandled branch reached a division by zero                               |
+| `idea_excess_cost_v1`         | revised, built | A zero children-used count produced an automatic PASS, and an unhandled branch reached a division by zero                               |
 | `idea_proportionate_share_v1` | needs-revision | One count date used for two different counts from two different sources, on opposite sides of the ratio                                 |
 | `idea_cceis_v1`               | needs-revision | One of two grammatical readings of 300.226(a) implemented without the other being named; missing population data became an overall PASS |
 | `risk_ratio_v1`               | needs-revision | A strictly-greater-than boundary asserted as settled law rather than left open                                                          |
 
-The two maintenance-of-effort calculators have since been respecified against those findings
-and implemented: [`idea-moe.md`](idea-moe.md) is the revised methodology, and the corpora at
-`packages/calculators/golden/` carry 47 cases between them. The ceiling is now apportioned
+Three calculators have since been respecified against those findings and implemented.
+[`idea-moe.md`](idea-moe.md) and [`idea-excess-cost.md`](idea-excess-cost.md) are the revised
+methodologies, and the corpora at `packages/calculators/golden/` carry 64 cases between them. The ceiling is now apportioned
 pro rata rather than consumed in list order; the enrollment carve-out is not decided but
-evaluated under every live reading and refused where they disagree. Revision is not clearance:
-both remain at `DRAFT` behind the source gate, and the open questions in that document still
-have to be answered by someone competent to answer them.
+evaluated under every live reading and refused where they disagree.
+
+Excess cost answered its two findings as regulatory conclusions rather than as guard clauses. A
+level with no children with disabilities is `NOT_APPLICABLE` with the count named, never `PASS`:
+the threshold is vacuous, and a requirement of nothing is not a requirement satisfied. A level
+with expenditure and an enrolment of zero is refused, because every available default — zero,
+skipping the level, calling it inapplicable — states something about the district the platform
+does not know. Both are pinned by cases in the corpus that say so in their own titles.
+
+Revision is not clearance: all three remain at `DRAFT` behind the source gate, and the open
+questions in those documents still have to be answered by someone competent to answer them. The
+first excess cost question is whether the calculator is measuring the right thing at all —
+Appendix A computes a minimum amount and does not, as recalled, state the compliance test.
 
 Recurring across the set, and worth watching for in any future specification:
 
@@ -111,7 +121,7 @@ Recurring across the set, and worth watching for in any future specification:
 4. **Order-dependent apportionment**, which breaks reproducibility outright.
 5. **An ambiguity resolved in the method and absent from the open questions.**
 
-None of these calculators may leave `DRAFT`, the two implemented ones included. Doing so
+None of these calculators may leave `DRAFT`, the three implemented ones included. Doing so
 requires, in order: retrieving and hashing the cited sources; resolving each open question with
 a reviewer competent to do so; and the domain and legal approvals that §35 requires. The
 refusal branches themselves are claims about what the law leaves open, and a reviewer may well
