@@ -213,17 +213,28 @@ export default async function AssessmentPage() {
       <div className="prose">
         <p>
           Stated rather than implied by an empty screen. Each of these is a module the buildout
-          describes and this build does not contain:
+          describes and this build does not yet finish:
         </p>
         <ul>
           <li>
-            <strong>District onboarding and sign-in.</strong> No tenant can be created and no file
-            can be uploaded, so the assessment above is the only one that exists.
+            <strong>Sign-in.</strong>{' '}
+            {session.signedIn
+              ? 'You are signed in, so this one is done — but no district export has been ' +
+                'uploaded for your organization yet, which is why the worked example is what ' +
+                'you are reading.'
+              : 'A district officer can sign in where the deployment is configured for it. ' +
+                'On this one they cannot, and the sign-in page says exactly which piece of ' +
+                'configuration is missing.'}
+          </li>
+          <li>
+            <strong>Upload.</strong> No district export can be uploaded through the product, so the
+            assessment above is the only one that exists.
           </li>
           <li>
             <strong>Persistence.</strong> The schema, its row-level security and its isolation tests
-            exist in <code>packages/db</code>; the application does not yet connect to a database,
-            so nothing is stored between requests.
+            exist in <code>packages/db</code>, and the application now connects to it to resolve who
+            is signed in — but no assessment run is stored, so nothing on this page survives the
+            request that produced it.
           </li>
           <li>
             <strong>Evidence.</strong> A finding cannot yet be linked to a document, so section
