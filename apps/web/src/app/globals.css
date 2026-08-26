@@ -1,3 +1,19 @@
+/*
+ * ComplianceOS EDU — one stylesheet, two surfaces.
+ *
+ * The marketing site and the application share a document, so they share this file. They do
+ * not share a look by accident: the palette below is the marketing side's deliberate fixed
+ * institutional light theme, and the application inherits it rather than carrying its own.
+ * That is why the app's former light/dark token pair is gone — one root layout can only have
+ * one colour scheme, and a compliance screen that prints predictably is worth more than one
+ * that follows the OS.
+ *
+ * Everything the application styles is scoped under `.app-main`, the wrapper its route-group
+ * layout adds. Bare element rules would otherwise reach the marketing pages, which use a
+ * plain `<main>` with their own containers — a 62rem cap on it would squeeze every
+ * full-bleed section on the landing page.
+ */
+
 :root {
   /* Fixed institutional light theme — does NOT follow the OS scheme.
      This is public-sector procurement software; it must always read as
@@ -31,6 +47,22 @@
   --fg: var(--ink);
   --accent: var(--navy);
 
+  /* Status tints for the application's badges. Each pairs with the status colour above at
+     4.5:1 or better, and the badge always carries the word as well as the colour. */
+  --pass-bg: #e6f4ec;
+  --fail-bg: #fdeaed;
+  --risk-bg: #fdf1de;
+  --indeterminate-bg: #eef0f4;
+  --manual-bg: #f1ecfb;
+
+  /* The application's own aliases, mapped onto the institutional palette. */
+  --bg-raised: var(--surface);
+  --bg-sunken: var(--surface-sunken);
+  --line-strong: var(--border-interactive);
+  --accent-fg: var(--surface);
+  --review: var(--manual);
+  --review-bg: var(--manual-bg);
+
   --radius: 4px;
 }
 
@@ -46,7 +78,13 @@ body {
   margin: 0;
   background: var(--surface-muted);
   color: var(--ink);
-  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family:
+    var(--font-sans),
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
   font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -121,4 +159,360 @@ a {
   padding: 0.1rem 0.55rem;
   font-size: 0.75rem;
   color: var(--muted);
+}
+
+/* ------------------------------------------------------------------ layout -- */
+
+.app-main .masthead {
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-raised);
+}
+
+.app-main .masthead-inner,
+.app-main main {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.app-main .masthead-inner {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.app-main .wordmark {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  font-size: 1rem;
+}
+
+.app-main .masthead-note {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.app-main main {
+  padding-top: 2.5rem;
+  padding-bottom: 5rem;
+}
+
+.app-main h1 {
+  font-size: 1.4rem;
+  letter-spacing: -0.015em;
+  margin: 0 0 0.35rem;
+}
+
+.app-main h2 {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+  margin: 2.75rem 0 0.85rem;
+  font-weight: 650;
+}
+
+.app-main h3 {
+  font-size: 0.95rem;
+  margin: 1.75rem 0 0.5rem;
+}
+
+.app-main .sub {
+  color: var(--muted);
+  margin: 0 0 2rem;
+  max-width: 46rem;
+}
+
+.app-main .prose {
+  max-width: 46rem;
+}
+
+/* ------------------------------------------------------------------ tables -- */
+
+.app-main .table-wrap {
+  /* A wide calculation table scrolls inside itself rather than the page. */
+  overflow-x: auto;
+}
+
+.app-main table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.app-main caption {
+  text-align: left;
+  color: var(--muted);
+  font-size: 0.8rem;
+  padding-bottom: 0.5rem;
+}
+
+.app-main th,
+.app-main td {
+  text-align: left;
+  padding: 0.55rem 0.9rem 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.app-main thead th {
+  font-weight: 650;
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom-color: var(--line-strong);
+  white-space: nowrap;
+}
+
+.app-main tbody th {
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.app-main .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------- atoms -- */
+
+.app-main code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+}
+
+.app-main .tag {
+  display: inline-block;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/*
+ * A status is a word first and a colour second. The dot is redundant reinforcement, not the
+ * signal — a monitor printing this page in greyscale must still read the result correctly.
+ */
+.app-main .status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: var(--radius);
+  padding: 0.1rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.app-main .status::before {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+.app-main .status-PASS {
+  color: var(--pass);
+  background: var(--pass-bg);
+}
+.app-main .status-FAIL {
+  color: var(--fail);
+  background: var(--fail-bg);
+}
+.app-main .status-RISK {
+  color: var(--risk);
+  background: var(--risk-bg);
+}
+.app-main .status-INDETERMINATE {
+  color: var(--indeterminate);
+  background: var(--indeterminate-bg);
+}
+.app-main .status-MANUAL_REVIEW {
+  color: var(--review);
+  background: var(--review-bg);
+}
+.app-main .status-NOT_APPLICABLE {
+  color: var(--muted);
+  background: var(--bg-sunken);
+}
+
+.app-main .note {
+  border-left: 3px solid var(--line-strong);
+  padding: 0.15rem 0 0.15rem 0.9rem;
+  color: var(--muted);
+  margin: 1rem 0;
+  max-width: 46rem;
+}
+
+.app-main .note-warn {
+  border-left-color: var(--risk);
+}
+
+.app-main .definition-list {
+  display: grid;
+  grid-template-columns: minmax(9rem, max-content) 1fr;
+  gap: 0.4rem 1.25rem;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.app-main .definition-list dt {
+  color: var(--muted);
+}
+
+.app-main .definition-list dd {
+  margin: 0;
+}
+
+@media (max-width: 34rem) {
+  .app-main .definition-list {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+
+  .app-main .definition-list dd {
+    margin-bottom: 0.6rem;
+  }
+}
+
+/* --------------------------------------------------------------- navigation -- */
+
+.app-main .site-nav {
+  margin-left: auto;
+}
+
+.app-main .site-nav ul {
+  display: flex;
+  gap: 1.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
+.app-main .site-nav a {
+  color: var(--muted);
+  text-decoration: none;
+  padding-bottom: 2px;
+  border-bottom: 2px solid transparent;
+}
+
+.app-main .site-nav a:hover {
+  color: var(--fg);
+}
+
+/* The current page is marked by weight and a rule, not by colour alone. */
+.app-main .site-nav a[aria-current='page'] {
+  color: var(--fg);
+  font-weight: 650;
+  border-bottom-color: var(--accent);
+}
+
+.app-main .breadcrumb {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0 0 1rem;
+}
+
+/* -------------------------------------------------------------- finding page -- */
+
+.app-main .headline {
+  margin: 0 0 1.5rem;
+}
+
+.app-main .headline .status {
+  font-size: 0.95rem;
+  padding: 0.3rem 0.8rem;
+}
+
+/*
+ * The machine-readable status beside the human one. A district reading "Not determined" on a
+ * screen and INDETERMINATE in an export needs to see, once, that they are the same thing.
+ */
+.app-main .status-code {
+  font-family: var(--mono);
+  font-size: 0.78em;
+  font-weight: 500;
+  opacity: 0.75;
+  letter-spacing: 0;
+}
+
+.app-main .muted {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 0.85em;
+}
+
+/* A 64-character hash must wrap rather than push a table sideways. */
+.app-main .hash {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+/*
+ * `definition-list` is a two-column grid, so a nested list inside a `dd` would inherit the
+ * grid and misalign. Wrapping each pair in a row element keeps both levels readable.
+ */
+.app-main .definition-list .nested-row {
+  display: contents;
+}
+
+.app-main .definition-list.nested {
+  grid-template-columns: minmax(7rem, max-content) 1fr;
+  gap: 0.2rem 1rem;
+  font-size: 0.95em;
+}
+
+.app-main .explanation {
+  white-space: pre-wrap;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  background: var(--bg-sunken);
+  border-radius: var(--radius);
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  margin: 0.75rem 0 0;
+}
+
+.app-main details {
+  margin: 1.5rem 0;
+  border-top: 1px solid var(--line);
+  padding-top: 0.75rem;
+}
+
+.app-main summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.app-main details[open] summary {
+  color: var(--fg);
+}
+
+.app-main .prose ul,
+.app-main .issue-list {
+  padding-left: 1.15rem;
+}
+
+.app-main .prose li,
+.app-main .issue-list li {
+  margin-bottom: 0.5rem;
+}
+
+.app-main .issue-list {
+  max-width: 46rem;
+  font-size: 0.9rem;
 }

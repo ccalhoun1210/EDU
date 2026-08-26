@@ -1,4 +1,5 @@
 ruleId: IDEA-MOE-COMPLIANCE-001
+title: IDEA Part B — LEA maintenance of effort, compliance standard
 pack: US-FED-IDEA-B-2026
 jurisdiction: US-FED
 program: IDEA_PART_B
@@ -15,23 +16,50 @@ effective:
   end: null
 
 inputs:
-  - current_actual_local
-  - current_actual_state_local
+  - current_fiscal_year_start
+  - federal_funds_excluded
+  - comparison_fiscal_year_start
+  - comparison_basis
+  - moe_status_source_run_id
   - comparison_actual_local
   - comparison_actual_state_local
-  - current_child_count
   - comparison_child_count
+  - comparison_required_level_local
+  - comparison_required_level_state_local
+  - comparison_required_level_child_count
   - claimed_exceptions
-  - claimed_adjustment
+  - claimed_adjustments_300_205
+  - part_b_611_allocation_current
+  - part_b_611_allocation_prior
+  - ceis_amount_300_226
+  - sea_prohibition_300_205_ground
+  - sea_prohibition_300_205_evidence_ref
+  - esea_use_condition_attested
+  - current_fiscal_year_end
+  - lea_part_b_subgrant_amount
+  - current_actual_local
+  - current_actual_state_local
+  - current_child_count
+  - comparison_year_moe_status
+  - comparison_year_methods_met
 
 calculator: idea_moe_compliance_v1
 
 outputSchema:
-  status: enum
+  # The determination the following year reads as `comparison_year_moe_status`.
+  moeStatus: string
   qualifyingMethods: array
+  methodStatus: object
+  marginByMethod: object
   shortfallByMethod: object
-  allowedExceptions: array
-  missingInputs: array
+  reductionBySource: object
+  comparisonYear: object
+  dataGapsObserved: array
+  smallestShortfall: string
+  largestShortfall: string
+  repaymentExposureBounds: object
+  shortfallIfUnverifiedClaimsDisallowedByMethod: object
+  qualifyingMethodsDependOnUnverifiedClaims: boolean
 
 severityOnFailure: CRITICAL
 explanationTemplate: moe_compliance_v1

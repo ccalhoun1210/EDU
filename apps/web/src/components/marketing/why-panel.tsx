@@ -62,7 +62,9 @@ export function WhyPanel() {
       <div className={styles.exLedger}>
         <div className={styles.exRow}>
           <span className={styles.exKey}>Source</span>
-          <span className={styles.exVal}>FY2028 Budget Export.xlsx — rows 412–587, fund codes 27xx</span>
+          <span className={styles.exVal}>
+            FY2028 Budget Export.xlsx — rows 412–587, fund codes 27xx
+          </span>
         </div>
         <div className={styles.exRow}>
           <span className={styles.exKey}>Next step</span>

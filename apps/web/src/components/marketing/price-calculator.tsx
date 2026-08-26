@@ -54,8 +54,8 @@ export function PriceCalculator() {
           </div>
         </div>
         <p id={`${inputId}-desc`} className={styles.srOnly}>
-          Enter the number of children with disabilities your district serves to
-          estimate the IDEA Part B grant at risk and the annual price.
+          Enter the number of children with disabilities your district serves to estimate the IDEA
+          Part B grant at risk and the annual price.
         </p>
       </div>
 
@@ -89,10 +89,9 @@ export function PriceCalculator() {
         <summary className={styles.workSummary}>How this is calculated</summary>
         <div className={styles.workBody}>
           <p className={styles.workIntro}>
-            The price is charged in marginal bands against the allocation, like
-            tax brackets. Each band of the grant is charged at a declining rate,
-            so the price always rises with size while the effective rate always
-            falls.
+            The price is charged in marginal bands against the allocation, like tax brackets. Each
+            band of the grant is charged at a declining rate, so the price always rises with size
+            while the effective rate always falls.
           </p>
 
           <table className={styles.workTable}>
@@ -110,8 +109,7 @@ export function PriceCalculator() {
               {result.breakdown.map((c, i) => (
                 <tr key={i}>
                   <td>
-                    {formatUSD(c.band.from)} –{' '}
-                    {c.band.to === null ? 'above' : formatUSD(c.band.to)}
+                    {formatUSD(c.band.from)} – {c.band.to === null ? 'above' : formatUSD(c.band.to)}
                   </td>
                   <td>{formatRate(c.band.rate)}</td>
                   <td>{formatUSD(c.portion)}</td>
@@ -152,10 +150,9 @@ export function PriceCalculator() {
 
           {result.atFloor && (
             <p className={styles.floorNote}>
-              At this size the {formatUSD(9000)} floor is{' '}
-              {formatPct(result.pctOfGrant)} of the grant. That is not a price a
-              small district should pay directly — reach this product through your{' '}
-              <a href="#esa">educational service agency</a> instead.
+              At this size the {formatUSD(9000)} floor is {formatPct(result.pctOfGrant)} of the
+              grant. That is not a price a small district should pay directly — reach this product
+              through your <a href="#esa">educational service agency</a> instead.
             </p>
           )}
         </div>
@@ -163,9 +160,8 @@ export function PriceCalculator() {
 
       <p className={styles.calcDisclaimer}>
         Estimate only. The {formatUSD(ALLOCATION_PER_CHILD)}-per-child figure assumes an
-        illustrative 15% SEA set-aside; a real quote uses your state&apos;s published
-        allocation table. Prices are for the fiscal module, which every district
-        receives in full.
+        illustrative 15% SEA set-aside; a real quote uses your state&apos;s published allocation
+        table. Prices are for the fiscal module, which every district receives in full.
       </p>
     </div>
   );

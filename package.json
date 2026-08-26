@@ -11,17 +11,20 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --build --force && pnpm --filter @complianceos/web exec tsc --noEmit",
+    "pretest": "tsc --build",
     "test": "vitest run",
     "test:watch": "vitest",
     "rules:validate": "vitest run --project rulepack-sdk",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm smoke:web",
     "dev": "pnpm --filter @complianceos/web dev",
-    "build": "pnpm --filter @complianceos/web build"
+    "build": "tsc --build && pnpm --filter @complianceos/web build",
+    "smoke:web": "pnpm exec node scripts/smoke-web.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/node": "^22.19.2",
     "eslint": "^9.39.1",
+    "next": "^15.5.6",
     "prettier": "^3.6.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.4",

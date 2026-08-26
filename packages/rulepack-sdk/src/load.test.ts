@@ -32,6 +32,7 @@ describe('the shipped federal IDEA Part B pack', () => {
 
 const baseRule = {
   ruleId: 'TEST-001',
+  title: 'A test requirement',
   pack: 'US-FED-IDEA-B-2026',
   jurisdiction: 'US-FED',
   program: 'IDEA_PART_B',

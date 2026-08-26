@@ -373,7 +373,9 @@
 .exhibit {
   background: var(--surface);
   border: 1px solid var(--ink);
-  box-shadow: 6px 6px 0 -1px var(--surface-muted), 6px 6px 0 0 var(--ink);
+  box-shadow:
+    6px 6px 0 -1px var(--surface-muted),
+    6px 6px 0 0 var(--ink);
   margin-right: 6px;
 }
 
@@ -1157,7 +1159,9 @@
 /* Mini exhibit — the Why panel reused on interior pages */
 .whyPanel {
   border: 1px solid var(--ink);
-  box-shadow: 6px 6px 0 -1px var(--surface-muted), 6px 6px 0 0 var(--ink);
+  box-shadow:
+    6px 6px 0 -1px var(--surface-muted),
+    6px 6px 0 0 var(--ink);
   margin: 0 6px 0 0;
   max-width: 34rem;
 }

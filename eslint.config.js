@@ -14,6 +14,26 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    /*
+     * Build and check scripts run under Node, not in a browser or a bundler.
+     *
+     * TypeScript files get their globals from `lib`, so `no-undef` is off for them; a plain
+     * `.mjs` has no such source of truth and every Node global reads as undefined. Listed by
+     * name rather than pulled from a `globals` package: five names is not worth a dependency,
+     * and an explicit list makes it visible when a script starts reaching for more.
+     */
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        AbortSignal: 'readonly',
+        URL: 'readonly',
+        console: 'readonly',
+        fetch: 'readonly',
+        process: 'readonly',
+      },
+    },
+  },
+  {
     rules: {
       // Compliance decisions must be reproducible: no floating-point money math.
       // See CLAUDE.md invariant 5.

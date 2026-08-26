@@ -1,0 +1,1314 @@
+calculator: idea_moe_eligibility_v1
+authority:
+  - 34 CFR 300.203(a)
+  - 34 CFR 300.203(a)(2)
+  - 34 CFR 300.203(a)(3)
+  - 34 CFR 300.203(c)
+  - 34 CFR 300.204
+  - 34 CFR 300.205
+  - 34 CFR 300.226
+  - 20 U.S.C. 1413(a)(2)
+notes: >-
+  No regulatory text was retrieved when these cases were written. eCFR is unreachable from
+  the authoring environment (ADR 0006), so every statement about what the regulation
+  requires is an unverified paraphrase and IDEA-MOE-ELIGIBILITY-001 is held at DRAFT. The
+  companion document docs/regulatory-methodology/idea-moe.md carries the input dictionary,
+  the algorithm, and the open questions for legal review; read it before reading these
+  cases. Three properties of this corpus are deliberate and are not defects. First, the
+  calculator returns no RISK status and applies no de minimis band; a forward-looking
+  signal is exposed as projectedShortfallByMethod, an output field the UI labels as a
+  platform projection, never as the statutory status. Second, wherever the adversarial
+  review of the draft specification found a genuine ambiguity that decides a case, the
+  expected status is MANUAL_REVIEW with a blocking warning naming the provision and the
+  open question - the calculator does not pick an answer. Third, an absent input that
+  could not have changed the answer does not make a result indeterminate; it is reported
+  in dataGapsObserved instead of in missingInputs, which the calculator contract reserves
+  for inputs the result actually depended on. Every figure below is synthetic.
+
+cases:
+  - case: pass-all-four-methods-with-no-reduction-claimed
+    intent: pass
+    asserts: >-
+      An LEA that budgets more than the comparison year's actual expenditure under every
+      permitted method satisfies the eligibility standard, and each per-capita method is
+      decided by cross-multiplication rather than by comparing rounded quotients.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0001
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '12400000.00'
+      comparison_actual_state_local: '18900000.00'
+      comparison_child_count: 1024
+      current_budget_local: '12650000.00'
+      current_budget_state_local: '19050000.00'
+      current_child_count: 1010
+    expect:
+      status: PASS
+      missingInputs: []
+      output:
+        qualifyingMethods:
+          - LOCAL_ONLY
+          - STATE_AND_LOCAL
+          - LOCAL_PER_CAPITA
+          - STATE_AND_LOCAL_PER_CAPITA
+        comparisonYear:
+          fiscalYearStart: '2025-07-01'
+          basis: ACTUAL_EXPENDITURE
+          selectionAuthority: 34 CFR 300.203(a)(1)
+        marginByMethod:
+          LOCAL_ONLY: '250000.00'
+          STATE_AND_LOCAL: '150000.00'
+      steps:
+        required_local: '12400000.00'
+        required_state_local: '18900000.00'
+        comparison_local_per_capita: '12109.375000'
+        budget_local_per_capita: '12524.752475'
+        comparison_state_local_per_capita: '18457.031250'
+        budget_state_local_per_capita: '18861.386139'
+    derivation: |
+      No reduction is claimed, so required = comparison amount under every method.
+
+      LOCAL_ONLY        12,650,000.00 - 12,400,000.00 = +250,000.00  -> PASS
+      STATE_AND_LOCAL   19,050,000.00 - 18,900,000.00 = +150,000.00  -> PASS
+
+      LOCAL_PER_CAPITA, decided by cross-multiplication (no division):
+        budget side   12,650,000.00 x 1,024 = 12,953,600,000.00
+        required side 12,400,000.00 x 1,010 = 12,524,000,000.00
+        12,953,600,000.00 >= 12,524,000,000.00                      -> PASS
+        Displayed quotients only: 12,400,000.00 / 1,024 = 12,109.375 exactly;
+        12,650,000.00 / 1,010 = 12,524.752475247... -> 12,524.752475 at 6 dp HALF_UP.
+
+      STATE_AND_LOCAL_PER_CAPITA:
+        budget side   19,050,000.00 x 1,024 = 19,507,200,000.00
+        required side 18,900,000.00 x 1,010 = 19,089,000,000.00
+        19,507,200,000.00 >= 19,089,000,000.00                      -> PASS
+        Displayed: 18,900,000.00 / 1,024 = 18,457.03125 exactly;
+        19,050,000.00 / 1,010 = 18,861.3861386138... -> 18,861.386139 at 6 dp HALF_UP.
+
+  - case: manual-review-budget-year-precedes-the-text-this-version-implements
+    intent: manual-review
+    asserts: >-
+      A budget year earlier than the text this calculator version implements is routed to
+      review, never reported as not applicable, because the maintenance-of-effort
+      requirement did apply to that year under the prior text.
+    inputs:
+      current_fiscal_year_start: '2014-07-01'
+      most_recent_available_fiscal_year_start: '2012-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2012-0001
+      comparison_fiscal_year_start: '2012-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '9000000.00'
+      comparison_actual_state_local: '14000000.00'
+      comparison_child_count: 900
+      current_budget_local: '9500000.00'
+      current_budget_state_local: '14500000.00'
+      current_child_count: 900
+    expect:
+      status: MANUAL_REVIEW
+      missingInputs: []
+      output:
+        qualifyingMethods: []
+      warnings:
+        - OUTSIDE_RULE_EFFECTIVE_WINDOW
+      steps:
+        fiscal_year_under_test: '2014-07-01'
+    derivation: |
+      The arithmetic would qualify on all four methods (9,500,000.00 >= 9,000,000.00 and
+      14,500,000.00 >= 14,000,000.00, child counts equal so the per-capita methods mirror
+      the totals). None of it is performed.
+
+      Budget FY start 2014-07-01 precedes the effective start of the text this version
+      implements. NOT_APPLICABLE would tell the LEA it had no obligation for that year,
+      which is false; the obligation existed under the earlier text, which this version
+      does not implement. The refusal names the version gap, not an exemption.
+
+  - case: fail-under-all-four-methods
+    intent: fail
+    asserts: >-
+      An LEA whose budget falls below the comparison-year level under every permitted
+      method fails the eligibility standard, and the projected shortfall is reported as a
+      platform figure rather than as a status band.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0002
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '12400000.00'
+      comparison_actual_state_local: '18900000.00'
+      comparison_child_count: 1031
+      current_budget_local: '12000000.00'
+      current_budget_state_local: '18300000.00'
+      current_child_count: 1002
+    expect:
+      status: FAIL
+      missingInputs: []
+      output:
+        qualifyingMethods: []
+        methodStatus:
+          LOCAL_ONLY: FAIL
+          STATE_AND_LOCAL: FAIL
+          LOCAL_PER_CAPITA: FAIL
+          STATE_AND_LOCAL_PER_CAPITA: FAIL
+        marginByMethod:
+          LOCAL_ONLY: '-400000.00'
+          STATE_AND_LOCAL: '-600000.00'
+        projectedShortfallByMethod:
+          LOCAL_ONLY: '400000.00'
+          STATE_AND_LOCAL: '600000.00'
+      steps:
+        required_local: '12400000.00'
+        required_state_local: '18900000.00'
+    derivation: |
+      LOCAL_ONLY        12,000,000.00 - 12,400,000.00 = -400,000.00  -> FAIL
+      STATE_AND_LOCAL   18,300,000.00 - 18,900,000.00 = -600,000.00  -> FAIL
+
+      LOCAL_PER_CAPITA cross-multiplied:
+        12,000,000.00 x 1,031 = 12,372,000,000.00
+        12,400,000.00 x 1,002 = 12,424,800,000.00
+        12,372,000,000.00 < 12,424,800,000.00                        -> FAIL
+
+      STATE_AND_LOCAL_PER_CAPITA cross-multiplied:
+        18,300,000.00 x 1,031 = 18,867,300,000.00
+        18,900,000.00 x 1,002 = 18,937,800,000.00
+        18,867,300,000.00 < 18,937,800,000.00                        -> FAIL
+
+      No reduction carries timing EXPECTED_BUDGET_YEAR, so the projected shortfall for a
+      total method equals its current shortfall: 400,000.00 and 600,000.00.
+      Per-capita projections are per child and are not asserted here; the derivation of
+      the local per-capita figure is
+      12,400,000.00 / 1,031 - 12,000,000.00 / 1,002 = 51.110194741... -> 51.110195.
+
+  - case: boundary-exact-equality-passes-and-one-cent-short-fails
+    intent: boundary
+    asserts: >-
+      Budgeting to the penny what was spent satisfies the at-least test, and there is no de
+      minimis tolerance below it.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0003
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '12400000.00'
+      comparison_actual_state_local: '18900000.00'
+      comparison_child_count: 1024
+      current_budget_local: '12400000.00'
+      current_budget_state_local: '18899999.99'
+      current_child_count: 1024
+    expect:
+      status: PASS
+      output:
+        qualifyingMethods:
+          - LOCAL_ONLY
+          - LOCAL_PER_CAPITA
+        methodStatus:
+          LOCAL_ONLY: PASS
+          STATE_AND_LOCAL: FAIL
+          LOCAL_PER_CAPITA: PASS
+          STATE_AND_LOCAL_PER_CAPITA: FAIL
+        marginByMethod:
+          LOCAL_ONLY: '0.00'
+          STATE_AND_LOCAL: '-0.01'
+    derivation: |
+      Child counts are equal at 1,024, so each per-capita method mirrors its total method.
+
+      LOCAL_ONLY        12,400,000.00 - 12,400,000.00 =  0.00        -> PASS
+      STATE_AND_LOCAL   18,899,999.99 - 18,900,000.00 = -0.01        -> FAIL
+
+      LOCAL_PER_CAPITA cross-multiplied:
+        12,400,000.00 x 1,024 = 12,697,600,000.00 on both sides      -> PASS
+
+      STATE_AND_LOCAL_PER_CAPITA cross-multiplied:
+        18,899,999.99 x 1,024 = 19,353,599,989.76
+        18,900,000.00 x 1,024 = 19,353,600,000.00
+        19,353,599,989.76 < 19,353,600,000.00                        -> FAIL
+
+      One qualifying method is sufficient, so the run is PASS. The one-cent shortfall on
+      the State-and-local measure is still reported on that method.
+
+  - case: boundary-per-capita-equality-at-a-repeating-quotient
+    intent: boundary
+    asserts: >-
+      Two per-capita levels that are exactly equal but non-terminating as decimals satisfy
+      the test; the equality is established by cross-multiplication, which no rounding of
+      the quotients could reproduce reliably.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0004
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '5000000.00'
+      comparison_actual_state_local: '7600000.00'
+      comparison_child_count: 1050
+      current_budget_local: '4800000.00'
+      current_budget_state_local: '7200000.00'
+      current_child_count: 1008
+    expect:
+      status: PASS
+      output:
+        qualifyingMethods:
+          - LOCAL_PER_CAPITA
+        methodStatus:
+          LOCAL_ONLY: FAIL
+          STATE_AND_LOCAL: FAIL
+          LOCAL_PER_CAPITA: PASS
+          STATE_AND_LOCAL_PER_CAPITA: FAIL
+      steps:
+        comparison_local_per_capita: '4761.904762'
+        budget_local_per_capita: '4761.904762'
+    derivation: |
+      LOCAL_ONLY        4,800,000.00 - 5,000,000.00 = -200,000.00    -> FAIL
+      STATE_AND_LOCAL   7,200,000.00 - 7,600,000.00 = -400,000.00    -> FAIL
+
+      LOCAL_PER_CAPITA cross-multiplied:
+        4,800,000.00 x 1,050 = 5,040,000,000.00
+        5,000,000.00 x 1,008 = 5,040,000,000.00
+        equal                                                        -> PASS
+        Both quotients are 4,761.904761904761... which rounds to 4,761.904762 at 6 dp.
+        The displayed values agreeing is a coincidence of this case, not the test: the
+        decision never touches them.
+
+      STATE_AND_LOCAL_PER_CAPITA cross-multiplied:
+        7,200,000.00 x 1,050 = 7,560,000,000.00
+        7,600,000.00 x 1,008 = 7,660,800,000.00
+        7,560,000,000.00 < 7,660,800,000.00                          -> FAIL
+
+  - case: missing-comparison-child-count-cannot-produce-a-failure
+    intent: missing-data
+    asserts: >-
+      A gap that disables only the per-capita methods leaves the year unanswerable rather
+      than failed, because an unevaluated method might have qualified.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0005
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '12400000.00'
+      comparison_actual_state_local: '18900000.00'
+      current_budget_local: '12000000.00'
+      current_budget_state_local: '18300000.00'
+      current_child_count: 1002
+    expect:
+      status: INDETERMINATE
+      missingInputs:
+        - comparison_child_count
+      output:
+        qualifyingMethods: []
+        methodStatus:
+          LOCAL_ONLY: FAIL
+          STATE_AND_LOCAL: FAIL
+          LOCAL_PER_CAPITA: INDETERMINATE
+          STATE_AND_LOCAL_PER_CAPITA: INDETERMINATE
+    derivation: |
+      LOCAL_ONLY        12,000,000.00 - 12,400,000.00 = -400,000.00  -> FAIL
+      STATE_AND_LOCAL   18,300,000.00 - 18,900,000.00 = -600,000.00  -> FAIL
+      Both per-capita methods need the comparison-year child count for their required
+      side; it is absent, so neither can be evaluated.
+
+      Two failures plus two unanswerable methods is not a failure of the standard: the
+      standard is satisfied by any one method, and two of them were never run. The result
+      the district owes is the missing count, not a finding.
+
+  - case: missing-state-and-local-figures-do-not-defeat-a-qualifying-method
+    intent: missing-data
+    asserts: >-
+      An absent input that could not have changed the answer is reported as an observed
+      data gap, not as a missing input, because the calculator contract reserves
+      missingInputs for inputs the result depended on.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0006
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '12400000.00'
+      comparison_child_count: 1024
+      current_budget_local: '12650000.00'
+      current_child_count: 1010
+    expect:
+      status: PASS
+      missingInputs: []
+      output:
+        qualifyingMethods:
+          - LOCAL_ONLY
+          - LOCAL_PER_CAPITA
+        methodStatus:
+          LOCAL_ONLY: PASS
+          STATE_AND_LOCAL: INDETERMINATE
+          LOCAL_PER_CAPITA: PASS
+          STATE_AND_LOCAL_PER_CAPITA: INDETERMINATE
+        dataGapsObserved:
+          - comparison_actual_state_local
+          - current_budget_state_local
+    derivation: |
+      LOCAL_ONLY        12,650,000.00 - 12,400,000.00 = +250,000.00  -> PASS
+      LOCAL_PER_CAPITA  12,650,000.00 x 1,024 = 12,953,600,000.00
+                        12,400,000.00 x 1,010 = 12,524,000,000.00    -> PASS
+
+      Neither State-and-local figure is present, so those two methods are unanswerable.
+      Satisfying one method is sufficient, and no value of the absent figures could have
+      unmade a qualifying method, so the result did not depend on them: missingInputs is
+      empty and the two gaps are reported in dataGapsObserved for the administrator.
+
+  - case: manual-review-claimed-exception-names-no-enumerated-ground
+    intent: manual-review
+    asserts: >-
+      A claimed reduction that does not name one of the enumerated 34 CFR 300.204 grounds
+      is a validation failure, not a silently ignored claim, even where the LEA would
+      qualify without it.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0007
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '12400000.00'
+      comparison_actual_state_local: '18900000.00'
+      comparison_child_count: 1000
+      current_budget_local: '12650000.00'
+      current_budget_state_local: '19050000.00'
+      current_child_count: 1000
+      claimed_exceptions:
+        - ground: GENERAL_BUDGET_REDUCTION
+          source: LOCAL
+          amount: '250000.00'
+          timing: TAKEN_INTERVENING
+          event_fiscal_year_start: '2026-07-01'
+    expect:
+      status: MANUAL_REVIEW
+      missingInputs: []
+      output:
+        qualifyingMethods: []
+      warnings:
+        - UNRECOGNISED_EXCEPTION_GROUND
+      steps:
+        fiscal_year_under_test: '2027-07-01'
+    derivation: |
+      Without the claim the LEA qualifies on all four methods
+      (12,650,000.00 >= 12,400,000.00 and 19,050,000.00 >= 18,900,000.00, equal child
+      counts). The calculator does not reach that arithmetic.
+
+      GENERAL_BUDGET_REDUCTION is not one of the five enumerated grounds. Admitting it
+      silently would let the platform report a status on a submission whose premise it
+      cannot read; ignoring it silently would report a PASS while the LEA believes it is
+      relying on a 250,000.00 reduction the platform discarded. Both are refused.
+
+  - case: manual-review-claimed-reduction-equals-the-comparison-amount
+    intent: manual-review
+    asserts: >-
+      Total claimed reductions at or above the comparison-year amount refuse the whole run;
+      a required level of zero is never a pass, and an untouched qualifying method does not
+      cure the defect.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0008
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '12400000.00'
+      comparison_actual_state_local: '18900000.00'
+      comparison_child_count: 1000
+      current_budget_local: '500000.00'
+      current_budget_state_local: '19100000.00'
+      current_child_count: 1000
+      claimed_exceptions:
+        - ground: TERMINATION_OF_LONG_TERM_PURCHASE
+          source: LOCAL
+          amount: '12400000.00'
+          timing: TAKEN_INTERVENING
+          event_fiscal_year_start: '2026-07-01'
+          evidence_ref: EV-204D-0009
+    expect:
+      status: MANUAL_REVIEW
+      missingInputs: []
+      output:
+        qualifyingMethods: []
+      warnings:
+        - REDUCTION_NOT_LESS_THAN_COMPARISON_AMOUNT
+      steps:
+        fiscal_year_under_test: '2027-07-01'
+    derivation: |
+      Claimed reduction against local funds = 12,400,000.00.
+      Comparison-year local amount          = 12,400,000.00.
+      Clamping the required level to 0.00 would make 500,000.00 - a budget five percent of
+      last year's - a PASS on the local-only and local per-capita methods.
+
+      The State-and-local measure would qualify on its own
+      (19,100,000.00 >= 18,900,000.00). The refusal is still whole-run: a claim that
+      consumes an entire comparison-year measure is a data-integrity event that puts the
+      whole submission in question, and a blocking warning may not accompany a PASS.
+
+  - case: manual-review-amounts-not-stated-net-of-federal-funds
+    intent: manual-review
+    asserts: >-
+      Where the LEA has not attested that federally accountable expenditures are excluded,
+      the amounts are not on the statutory basis and no arithmetic on them is meaningful.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0010
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: false
+      comparison_actual_local: '12400000.00'
+      comparison_actual_state_local: '18900000.00'
+      comparison_child_count: 1000
+      current_budget_local: '12650000.00'
+      current_budget_state_local: '19050000.00'
+      current_child_count: 1000
+    expect:
+      status: MANUAL_REVIEW
+      missingInputs: []
+      output:
+        qualifyingMethods: []
+      warnings:
+        - FEDERAL_FUNDS_NOT_EXCLUDED
+      steps:
+        fiscal_year_under_test: '2027-07-01'
+    derivation: |
+      Every figure would qualify. None is evaluated.
+
+      The attestation is present and false, which is a known-bad input rather than a gap:
+      the amounts include expenditures the LEA or SEA must account for federally, so they
+      are not the quantities the eligibility standard speaks about. INDETERMINATE would
+      misdescribe the problem as a missing figure; the figures arrived, on the wrong basis.
+
+  - case: exception-300-204-reduces-the-required-level-and-secures-a-pass
+    intent: exception
+    asserts: >-
+      An evidenced reduction on an enumerated 34 CFR 300.204 ground lowers the required
+      level for the methods it is claimed against, and one qualifying method is sufficient.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0011
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '12400000.00'
+      comparison_actual_state_local: '18900000.00'
+      comparison_child_count: 1000
+      current_budget_local: '12250000.00'
+      current_budget_state_local: '18800000.00'
+      current_child_count: 1000
+      claimed_exceptions:
+        - ground: TERMINATION_OF_LONG_TERM_PURCHASE
+          source: LOCAL
+          amount: '200000.00'
+          timing: TAKEN_INTERVENING
+          event_fiscal_year_start: '2026-07-01'
+          evidence_ref: EV-204D-0011
+    expect:
+      status: PASS
+      output:
+        qualifyingMethods:
+          - LOCAL_ONLY
+          - LOCAL_PER_CAPITA
+        marginByMethod:
+          LOCAL_ONLY: '50000.00'
+          STATE_AND_LOCAL: '-100000.00'
+      steps:
+        reduction_local: '200000.00'
+        reduction_state_local: '0.00'
+        required_local: '12200000.00'
+        required_state_local: '18900000.00'
+    derivation: |
+      Reduction against local funds     = 200,000.00 (one 300.204(d) entry)
+      Reduction against State and local = 0.00 (no entry with that source)
+
+      LOCAL_ONLY        required 12,400,000.00 - 200,000.00 = 12,200,000.00
+                        12,250,000.00 - 12,200,000.00 = +50,000.00     -> PASS
+      STATE_AND_LOCAL   required 18,900,000.00
+                        18,800,000.00 - 18,900,000.00 = -100,000.00    -> FAIL
+
+      Child counts are equal at 1,000, so the two readings of how a reduction enters a
+      per-capita method coincide and no dispute arises:
+      LOCAL_PER_CAPITA  12,250,000.00 x 1,000 = 12,250,000,000.00
+                        12,200,000.00 x 1,000 = 12,200,000,000.00      -> PASS
+      STATE_AND_LOCAL_PER_CAPITA
+                        18,800,000.00 x 1,000 = 18,800,000,000.00
+                        18,900,000.00 x 1,000 = 18,900,000,000.00      -> FAIL
+
+  - case: manual-review-per-capita-reduction-basis-decides-the-method
+    intent: manual-review
+    asserts: >-
+      Where the two readings of how a 34 CFR 300.204 reduction enters a per-capita method
+      give different answers, the calculator refuses that method rather than choosing one.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0012
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '10000000.00'
+      comparison_actual_state_local: '15000000.00'
+      comparison_child_count: 1000
+      current_budget_local: '7600000.00'
+      current_budget_state_local: '11000000.00'
+      current_child_count: 800
+      claimed_exceptions:
+        - ground: TERMINATION_OF_LONG_TERM_PURCHASE
+          source: LOCAL
+          amount: '400000.00'
+          timing: TAKEN_INTERVENING
+          event_fiscal_year_start: '2026-07-01'
+          evidence_ref: EV-204D-0012
+    expect:
+      status: MANUAL_REVIEW
+      missingInputs: []
+      output:
+        qualifyingMethods: []
+        methodStatus:
+          LOCAL_ONLY: FAIL
+          STATE_AND_LOCAL: FAIL
+          LOCAL_PER_CAPITA: MANUAL_REVIEW
+          STATE_AND_LOCAL_PER_CAPITA: FAIL
+      warnings:
+        - PER_CAPITA_REDUCTION_BASIS_DISPUTED
+      steps:
+        fiscal_year_under_test: '2027-07-01'
+    derivation: |
+      LOCAL_ONLY        required 10,000,000.00 - 400,000.00 = 9,600,000.00
+                        7,600,000.00 - 9,600,000.00 = -2,000,000.00    -> FAIL
+      STATE_AND_LOCAL   15,000,000.00 required; 11,000,000.00 budgeted -> FAIL
+      STATE_AND_LOCAL_PER_CAPITA (no reduction on that source, so the readings coincide):
+                        11,000,000.00 x 1,000 = 11,000,000,000.00
+                        15,000,000.00 x   800 = 12,000,000,000.00      -> FAIL
+
+      LOCAL_PER_CAPITA, the two readings:
+        Reading A - the reduction is a budget-year event spread over budget-year children:
+          required per child = 10,000,000.00/1,000 - 400,000.00/800 = 10,000 - 500 = 9,500
+          cross form: (7,600,000.00 + 400,000.00) x 1,000 = 8,000,000,000.00
+                       10,000,000.00 x 800                = 8,000,000,000.00
+          equal                                                        -> PASS
+        Reading B - the reduction comes off the comparison-year numerator:
+          required per child = (10,000,000.00 - 400,000.00)/1,000 = 9,600
+          cross form: 7,600,000.00 x 1,000 = 7,600,000,000.00
+                       9,600,000.00 x   800 = 7,680,000,000.00
+          7,600,000,000.00 < 7,680,000,000.00                          -> FAIL
+
+      The readings agree only when the child counts are equal; here 1,000 against 800 puts
+      the budgeted level exactly on reading A's boundary and below reading B's. Which
+      reading the regulation requires is unresolved, so the method is refused. No method
+      qualifies and one is refused, so the run is refused.
+
+  - case: manual-review-enrollment-decrease-exception-against-a-per-capita-method
+    intent: manual-review
+    asserts: >-
+      Whether the 34 CFR 300.204(b) enrollment-decrease reduction may be claimed against a
+      per-capita method - which already normalises for enrollment through its denominator -
+      is unresolved, so where it decides the method the calculator refuses.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0013
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '10000000.00'
+      comparison_actual_state_local: '15000000.00'
+      comparison_child_count: 1000
+      current_budget_local: '8640000.00'
+      current_budget_state_local: '13000000.00'
+      current_child_count: 900
+      claimed_exceptions:
+        - ground: DECREASE_IN_ENROLLMENT_OF_CHILDREN_WITH_DISABILITIES
+          source: LOCAL
+          amount: '450000.00'
+          timing: TAKEN_INTERVENING
+          event_fiscal_year_start: '2026-07-01'
+          evidence_ref: EV-204B-0013
+    expect:
+      status: MANUAL_REVIEW
+      missingInputs: []
+      output:
+        qualifyingMethods: []
+        methodStatus:
+          LOCAL_ONLY: FAIL
+          STATE_AND_LOCAL: FAIL
+          LOCAL_PER_CAPITA: MANUAL_REVIEW
+          STATE_AND_LOCAL_PER_CAPITA: FAIL
+      warnings:
+        - ENROLLMENT_EXCEPTION_PER_CAPITA_DISPUTED
+      steps:
+        fiscal_year_under_test: '2027-07-01'
+    derivation: |
+      LOCAL_ONLY        required 10,000,000.00 - 450,000.00 = 9,550,000.00
+                        8,640,000.00 - 9,550,000.00 = -910,000.00      -> FAIL
+      STATE_AND_LOCAL   15,000,000.00 required; 13,000,000.00 budgeted -> FAIL
+      STATE_AND_LOCAL_PER_CAPITA (no claim on that source):
+                        13,000,000.00 x 1,000 = 13,000,000,000.00
+                        15,000,000.00 x   900 = 13,500,000,000.00      -> FAIL
+
+      LOCAL_PER_CAPITA, three live readings. Budgeted per child = 8,640,000.00/900 = 9,600.
+        Claim admitted, reading A: 10,000 - 450,000.00/900 = 10,000 - 500 = 9,500
+          9,600 >= 9,500                                               -> PASS
+        Claim admitted, reading B: (10,000,000.00 - 450,000.00)/1,000  = 9,550
+          9,600 >= 9,550                                               -> PASS
+        Claim excluded from the per-capita method: 10,000,000.00/1,000 = 10,000
+          9,600 <  10,000                                              -> FAIL
+
+      The readings are not unanimous, so the method is refused. Excluding the claim is a
+      platform interpretation with no textual hook and it runs against the LEA; admitting
+      it may credit one enrollment decline twice. The calculator states the conflict and
+      declines to resolve it.
+
+  - case: exception-300-205-ceiling-applies-to-the-total-and-is-apportioned-pro-rata
+    intent: exception
+    asserts: >-
+      The 34 CFR 300.205 ceiling is applied to the total claimed under that section and
+      apportioned across the claims in proportion to their amounts, so no claim is favoured
+      by its position in the list.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0014
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '10000000.00'
+      comparison_actual_state_local: '15000000.00'
+      comparison_child_count: 1000
+      current_budget_local: '9930000.00'
+      current_budget_state_local: '14940000.00'
+      current_child_count: 1000
+      part_b_611_allocation_current: '1480000.00'
+      part_b_611_allocation_prior: '1180000.00'
+      ceis_amount_300_226: '20000.00'
+      esea_use_condition_attested: true
+      sea_prohibition_300_205_ground: NONE
+      claimed_adjustments_300_205:
+        - source: LOCAL
+          amount: '120000.00'
+        - source: STATE_AND_LOCAL
+          amount: '80000.00'
+    expect:
+      status: PASS
+      output:
+        qualifyingMethods:
+          - LOCAL_ONLY
+          - LOCAL_PER_CAPITA
+      steps:
+        adjustment_300_205_allocation_increase: '300000.00'
+        adjustment_300_205_ceiling: '130000.00'
+        adjustment_allowed_local: '78000.00'
+        adjustment_allowed_state_local: '52000.00'
+        required_local: '9922000.00'
+        required_state_local: '14948000.00'
+      warnings:
+        - ADJUSTMENT_300_205_CAPPED
+    derivation: |
+      Ceiling:
+        allocation increase = 1,480,000.00 - 1,180,000.00 =   300,000.00
+        half the increase, rounded toward zero at the cent =  150,000.00
+        less coordinated early intervening services         -  20,000.00
+        ceiling                                             =  130,000.00
+
+      Claimed under 300.205: 120,000.00 (local) + 80,000.00 (State and local) = 200,000.00,
+      which exceeds the ceiling. Apportioned pro rata by claim amount:
+        local            120,000.00 x 130,000.00 / 200,000.00 = 78,000.00
+        State and local   80,000.00 x 130,000.00 / 200,000.00 = 52,000.00
+        sum 130,000.00, exactly the ceiling, with no cent left to distribute.
+
+      LOCAL_ONLY        required 10,000,000.00 - 78,000.00 = 9,922,000.00
+                        9,930,000.00 - 9,922,000.00 = +8,000.00        -> PASS
+      STATE_AND_LOCAL   required 15,000,000.00 - 52,000.00 = 14,948,000.00
+                        14,940,000.00 - 14,948,000.00 = -8,000.00      -> FAIL
+
+      Child counts are equal at 1,000, so the per-capita methods mirror the totals:
+      LOCAL_PER_CAPITA PASS, STATE_AND_LOCAL_PER_CAPITA FAIL.
+
+  - case: exception-300-205-claim-order-does-not-change-the-result
+    intent: exception
+    asserts: >-
+      Reversing the order of the 34 CFR 300.205 claim list produces an identical result;
+      apportionment is a function of the claims, not of their position, which is what
+      reproducibility of a finalized run requires.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0014
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '10000000.00'
+      comparison_actual_state_local: '15000000.00'
+      comparison_child_count: 1000
+      current_budget_local: '9930000.00'
+      current_budget_state_local: '14940000.00'
+      current_child_count: 1000
+      part_b_611_allocation_current: '1480000.00'
+      part_b_611_allocation_prior: '1180000.00'
+      ceis_amount_300_226: '20000.00'
+      esea_use_condition_attested: true
+      sea_prohibition_300_205_ground: NONE
+      claimed_adjustments_300_205:
+        - source: STATE_AND_LOCAL
+          amount: '80000.00'
+        - source: LOCAL
+          amount: '120000.00'
+    expect:
+      status: PASS
+      output:
+        qualifyingMethods:
+          - LOCAL_ONLY
+          - LOCAL_PER_CAPITA
+      steps:
+        adjustment_300_205_ceiling: '130000.00'
+        adjustment_allowed_local: '78000.00'
+        adjustment_allowed_state_local: '52000.00'
+        required_local: '9922000.00'
+        required_state_local: '14948000.00'
+    derivation: |
+      Identical to exception-300-205-ceiling-applies-to-the-total-and-is-apportioned-pro-rata
+      in every input except the order of claimed_adjustments_300_205, which is reversed.
+
+      Ceiling 130,000.00 as before. Apportionment is computed from each claim's share of
+      the claimed total, so the local claim still receives
+      120,000.00 x 130,000.00 / 200,000.00 = 78,000.00 and the State-and-local claim
+      52,000.00. Where a residual cent exists it is assigned to the LOCAL claim first,
+      which is a property of the source, not of the list. Every output value matches the
+      unreversed case.
+
+      Consuming the ceiling in list order - the draft algorithm - would instead have given
+      the first-listed claim its full 80,000.00 and the second only 50,000.00, so the
+      required levels, and here the qualifying methods, would depend on how an upstream
+      ingest happened to order a logically unordered array.
+
+  - case: missing-611-allocation-that-could-not-have-changed-the-answer
+    intent: missing-data
+    asserts: >-
+      Where a method qualifies without the reduction the calculator could not validate, the
+      absent allocation figures did not decide anything and the result is not indeterminate.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0016
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '10000000.00'
+      comparison_actual_state_local: '15000000.00'
+      comparison_child_count: 1000
+      current_budget_local: '10050000.00'
+      current_budget_state_local: '14900000.00'
+      current_child_count: 1000
+      part_b_611_allocation_prior: '1180000.00'
+      ceis_amount_300_226: '0.00'
+      esea_use_condition_attested: true
+      sea_prohibition_300_205_ground: NONE
+      claimed_adjustments_300_205:
+        - source: LOCAL
+          amount: '100000.00'
+    expect:
+      status: PASS
+      missingInputs: []
+      output:
+        qualifyingMethods:
+          - LOCAL_ONLY
+          - LOCAL_PER_CAPITA
+        dataGapsObserved:
+          - part_b_611_allocation_current
+      steps:
+        adjustment_allowed_local: '0.00'
+        required_local: '10000000.00'
+      warnings:
+        - ADJUSTMENT_300_205_UNVALIDATABLE
+    derivation: |
+      The budget-year section 611 allocation is absent, so the ceiling cannot be computed
+      and the 100,000.00 claim is set aside rather than admitted. A set-aside claim is
+      allowed at 0.00, which is the conservative direction: it can only raise the bar.
+
+      LOCAL_ONLY        required 10,000,000.00 - 0.00 = 10,000,000.00
+                        10,050,000.00 - 10,000,000.00 = +50,000.00     -> PASS
+      LOCAL_PER_CAPITA  counts equal, mirrors LOCAL_ONLY                -> PASS
+      STATE_AND_LOCAL   14,900,000.00 - 15,000,000.00 = -100,000.00     -> FAIL
+
+      The method clears the higher bar, so admitting the claim could only have widened the
+      margin. No value of the missing allocation could have changed the answer, so the run
+      is PASS with an empty missingInputs and the gap recorded for the administrator.
+
+  - case: missing-611-allocation-that-decides-the-answer
+    intent: missing-data
+    asserts: >-
+      Where the method fails without the unvalidatable reduction but would have passed with
+      it, the missing allocation figure decided the outcome and the method is indeterminate.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0017
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '10000000.00'
+      comparison_actual_state_local: '15000000.00'
+      comparison_child_count: 1000
+      current_budget_local: '9950000.00'
+      current_budget_state_local: '14900000.00'
+      current_child_count: 1000
+      part_b_611_allocation_prior: '1180000.00'
+      ceis_amount_300_226: '0.00'
+      esea_use_condition_attested: true
+      sea_prohibition_300_205_ground: NONE
+      claimed_adjustments_300_205:
+        - source: LOCAL
+          amount: '100000.00'
+    expect:
+      status: INDETERMINATE
+      missingInputs:
+        - part_b_611_allocation_current
+      output:
+        qualifyingMethods: []
+        methodStatus:
+          LOCAL_ONLY: INDETERMINATE
+          STATE_AND_LOCAL: FAIL
+          LOCAL_PER_CAPITA: INDETERMINATE
+          STATE_AND_LOCAL_PER_CAPITA: FAIL
+      warnings:
+        - ADJUSTMENT_300_205_UNVALIDATABLE
+    derivation: |
+      Same set-aside as the preceding case: allowed adjustment 0.00, required local level
+      10,000,000.00.
+
+      LOCAL_ONLY        9,950,000.00 - 10,000,000.00 = -50,000.00
+      Had the ceiling admitted as little as 50,000.00 of the 100,000.00 claim, the required
+      level would have been 9,950,000.00 and the method would have passed at exactly zero
+      margin. The absent allocation therefore decides the method, and the honest answer is
+      that the question cannot be reached, not that the LEA failed.
+
+      STATE_AND_LOCAL   14,900,000.00 - 15,000,000.00 = -100,000.00     -> FAIL
+      Child counts are equal at 1,000, so each per-capita method takes its total method's
+      disposition. Two failures plus two unanswerable methods is INDETERMINATE.
+
+  - case: exception-300-205-adjustment-prohibited-by-an-sea-determination
+    intent: exception
+    asserts: >-
+      Where the SEA has prohibited the adjustment on an enumerated ground, the claim is
+      allowed at zero and the unreduced comparison level governs.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0018
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '10000000.00'
+      comparison_actual_state_local: '15000000.00'
+      comparison_child_count: 1000
+      current_budget_local: '9950000.00'
+      current_budget_state_local: '14900000.00'
+      current_child_count: 1000
+      part_b_611_allocation_current: '1480000.00'
+      part_b_611_allocation_prior: '1180000.00'
+      ceis_amount_300_226: '0.00'
+      esea_use_condition_attested: true
+      sea_prohibition_300_205_ground: ENFORCEMENT_ACTION_UNDER_SECTION_616
+      sea_prohibition_300_205_evidence_ref: EV-SEA-616-0018
+      claimed_adjustments_300_205:
+        - source: LOCAL
+          amount: '100000.00'
+    expect:
+      status: FAIL
+      missingInputs: []
+      output:
+        qualifyingMethods: []
+        marginByMethod:
+          LOCAL_ONLY: '-50000.00'
+          STATE_AND_LOCAL: '-100000.00'
+      steps:
+        adjustment_allowed_local: '0.00'
+        required_local: '10000000.00'
+      warnings:
+        - ADJUSTMENT_300_205_PROHIBITED_BY_SEA
+    derivation: |
+      The allocation increase of 300,000.00 would otherwise have supported a ceiling of
+      150,000.00 and admitted the whole 100,000.00 claim. The prohibition is a determination
+      of record on an enumerated ground with an evidence reference, so the allowed amount
+      is 0.00 and the ceiling is not reached.
+
+      LOCAL_ONLY        9,950,000.00 - 10,000,000.00 = -50,000.00       -> FAIL
+      STATE_AND_LOCAL   14,900,000.00 - 15,000,000.00 = -100,000.00     -> FAIL
+      Child counts are equal at 1,000, so both per-capita methods fail with them.
+      All four methods evaluated and failed, so the run is FAIL. Nothing here is
+      indeterminate: the prohibition is a supplied fact, not a gap.
+
+  - case: manual-review-comparison-basis-inconsistent-with-a-prior-year-failure
+    intent: manual-review
+    asserts: >-
+      After a failure the comparison basis must be the level that would have been required
+      absent the failure; the calculator refuses a declared basis that would let the LEA
+      measure against its own reduced level.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: NOT_MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0019
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '11700000.00'
+      comparison_actual_state_local: '17800000.00'
+      comparison_child_count: 1031
+      current_budget_local: '12000000.00'
+      current_budget_state_local: '18300000.00'
+      current_child_count: 1002
+    expect:
+      status: MANUAL_REVIEW
+      missingInputs: []
+      output:
+        qualifyingMethods: []
+      warnings:
+        - COMPARISON_BASIS_INCONSISTENT
+      steps:
+        fiscal_year_under_test: '2027-07-01'
+    derivation: |
+      Against the failure year's own actuals the LEA would appear to qualify on the
+      local-only measure by 12,000,000.00 - 11,700,000.00 = +300,000.00. That comparison is
+      not available to it: the declared prior-year status is NOT_MET, and a basis of
+      ACTUAL_EXPENDITURE would carry the reduced level forward as the bar - the ratchet-down
+      the subsequent-years rule exists to prevent.
+
+      The two declared facts contradict each other. Selecting the correct basis requires
+      reading prior finalized runs, which a pure calculator may not do, so the calculator
+      validates the declaration and refuses when it does not hold together.
+
+  - case: subsequent-year-uses-the-declared-required-level-not-the-failure-year-actual
+    intent: fail
+    asserts: >-
+      After a failure the level carried forward is the declared required level, a distinct
+      input from the failure year's actual expenditure, and the calculator uses the
+      declared level.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: NOT_MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0020
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: REQUIRED_LEVEL_AFTER_FAILURE
+      federal_funds_excluded: true
+      comparison_actual_local: '11700000.00'
+      comparison_actual_state_local: '17800000.00'
+      comparison_child_count: 1015
+      comparison_required_level_local: '12400000.00'
+      comparison_required_level_state_local: '18900000.00'
+      comparison_required_level_child_count: 1031
+      current_budget_local: '12000000.00'
+      current_budget_state_local: '18300000.00'
+      current_child_count: 1002
+    expect:
+      status: FAIL
+      missingInputs: []
+      output:
+        qualifyingMethods: []
+        comparisonYear:
+          basis: REQUIRED_LEVEL_AFTER_FAILURE
+          selectionAuthority: 34 CFR 300.203(c)
+        marginByMethod:
+          LOCAL_ONLY: '-400000.00'
+          STATE_AND_LOCAL: '-600000.00'
+      steps:
+        comparison_amount_local: '12400000.00'
+        comparison_amount_state_local: '18900000.00'
+        required_local: '12400000.00'
+    derivation: |
+      Both the failure year's actuals (11,700,000.00 and 17,800,000.00) and the declared
+      required levels (12,400,000.00 and 18,900,000.00) are supplied. Under the declared
+      basis the calculator reads the required levels; the actuals are carried in the step
+      list for the reviewer but take no part in the arithmetic, which is the point of
+      modelling them as separate inputs rather than overloading one pair of names.
+
+      LOCAL_ONLY        12,000,000.00 - 12,400,000.00 = -400,000.00     -> FAIL
+      STATE_AND_LOCAL   18,300,000.00 - 18,900,000.00 = -600,000.00     -> FAIL
+
+      The per-capita methods pair the declared level with its own declared child count,
+      1,031, again a separate input from comparison_child_count:
+      LOCAL_PER_CAPITA  12,000,000.00 x 1,031 = 12,372,000,000.00
+                        12,400,000.00 x 1,002 = 12,424,800,000.00       -> FAIL
+      STATE_AND_LOCAL_PER_CAPITA
+                        18,300,000.00 x 1,031 = 18,867,300,000.00
+                        18,900,000.00 x 1,002 = 18,937,800,000.00       -> FAIL
+
+      Which fiscal year's child count belongs with a reconstructed required level is an
+      open question; the calculator does not infer it, it consumes the declaration.
+
+  - case: not-applicable-zero-comparison-child-count-is-not-a-zero-requirement
+    intent: not-applicable
+    asserts: >-
+      A per-capita method whose denominator is zero is not applicable for that method; a
+      zero denominator is never treated as a zero requirement.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0021
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '10000000.00'
+      comparison_actual_state_local: '15000000.00'
+      comparison_child_count: 0
+      current_budget_local: '9500000.00'
+      current_budget_state_local: '14500000.00'
+      current_child_count: 1000
+    expect:
+      status: FAIL
+      missingInputs: []
+      output:
+        qualifyingMethods: []
+        methodStatus:
+          LOCAL_ONLY: FAIL
+          STATE_AND_LOCAL: FAIL
+          LOCAL_PER_CAPITA: NOT_APPLICABLE
+          STATE_AND_LOCAL_PER_CAPITA: NOT_APPLICABLE
+      warnings:
+        - ZERO_COMPARISON_CHILD_COUNT
+    derivation: |
+      LOCAL_ONLY        9,500,000.00 - 10,000,000.00 = -500,000.00      -> FAIL
+      STATE_AND_LOCAL   14,500,000.00 - 15,000,000.00 = -500,000.00     -> FAIL
+
+      The comparison-year child count is zero, so no comparison-year per-capita level
+      exists. Cross-multiplication would compare 9,500,000.00 x 0 = 0 against
+      10,000,000.00 x 1,000 and, with the operands the other way round, would report a
+      requirement of zero that any budget clears. Neither is a determination about the
+      LEA, so both per-capita methods are not applicable.
+
+      Both computable methods were evaluated and both failed, and no method is
+      unanswerable for want of data, so the run is FAIL rather than INDETERMINATE.
+
+  - case: manual-review-prior-year-moe-status-unknown
+    intent: manual-review
+    asserts: >-
+      An unknown prior-year maintenance-of-effort status leaves the comparison basis
+      undetermined; the field was supplied, so the refusal names a remedy rather than
+      reporting the field as missing.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: UNKNOWN
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '12400000.00'
+      comparison_actual_state_local: '18900000.00'
+      comparison_child_count: 1000
+      current_budget_local: '12650000.00'
+      current_budget_state_local: '19050000.00'
+      current_child_count: 1000
+    expect:
+      status: MANUAL_REVIEW
+      missingInputs: []
+      output:
+        qualifyingMethods: []
+      warnings:
+        - COMPARISON_YEAR_MOE_STATUS_UNKNOWN
+      steps:
+        fiscal_year_under_test: '2027-07-01'
+    derivation: |
+      Every amount needed is present and would qualify on all four methods. Whether they
+      are the right amounts depends on whether the most recent available year was a
+      failure, which is exactly what UNKNOWN declines to say.
+
+      The status input arrived with a value, so listing it in missingInputs would tell the
+      district to supply a field it already supplied, and would make two different
+      situations - the field absent from the extract, and no finalized compliance run
+      existing for that year - indistinguishable. The warning names the remedy: a finalized
+      idea_moe_compliance_v1 run for that fiscal year, or an SEA determination of record.
+
+  - case: exception-budget-qualifies-only-on-a-reduction-not-yet-taken
+    intent: exception
+    asserts: >-
+      34 CFR 300.203(a)(2) permits a budget to anticipate a reduction, so a budget that
+      balances only because of one still satisfies the standard; the dependence is reported
+      as a named output and a warning, never as a status of its own.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0022
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '10000000.00'
+      comparison_actual_state_local: '15000000.00'
+      comparison_child_count: 1000
+      current_budget_local: '9700000.00'
+      current_budget_state_local: '14700000.00'
+      current_child_count: 1000
+      claimed_exceptions:
+        - ground: TERMINATION_OF_LONG_TERM_PURCHASE
+          source: LOCAL
+          amount: '300000.00'
+          timing: EXPECTED_BUDGET_YEAR
+          event_fiscal_year_start: '2027-07-01'
+          evidence_ref: EV-204D-0022
+    expect:
+      status: PASS
+      missingInputs: []
+      output:
+        qualifyingMethods:
+          - LOCAL_ONLY
+          - LOCAL_PER_CAPITA
+        marginByMethod:
+          LOCAL_ONLY: '0.00'
+        qualifiesOnlyOnExpectedReductions: true
+        projectedShortfallByMethod:
+          LOCAL_ONLY: '300000.00'
+      steps:
+        required_local: '9700000.00'
+      warnings:
+        - QUALIFICATION_DEPENDS_ON_EXPECTED_REDUCTIONS
+    derivation: |
+      The LEA expects to terminate a long-term purchase during the budget year and has
+      budgeted on that basis. 300.203(a)(2) permits exactly this, so the reduction counts.
+
+      LOCAL_ONLY        required 10,000,000.00 - 300,000.00 = 9,700,000.00
+                        9,700,000.00 - 9,700,000.00 = 0.00             -> PASS
+      STATE_AND_LOCAL   15,000,000.00 required; 14,700,000.00 budgeted -> FAIL
+      Child counts are equal at 1,000, so each per-capita measure mirrors its total measure.
+
+      The budget clears by exactly nothing, so if the purchase is not in fact terminated the
+      year does not meet the standard. That is what the projection reports: with the
+      anticipated reduction removed the required level returns to 10,000,000.00 and the
+      shortfall is 300,000.00. It is a projection and not a status - the regulation permits
+      the anticipation, so the year passes today - but a consumer reading only `warnings`
+      would otherwise see an unqualified clean year.
+
+  - case: boundary-a-required-level-of-one-cent-is-still-a-requirement
+    intent: boundary
+    asserts: >-
+      The refusal at the comparison amount is exact, not proportional: a claimed reduction
+      one cent below the comparison amount leaves a required level of one cent, which any
+      budget clears. Open question 17 accepts that position; this pins what it produces.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0023
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '10000000.00'
+      comparison_actual_state_local: '15000000.00'
+      comparison_child_count: 1000
+      current_budget_local: '0.01'
+      current_budget_state_local: '14000000.00'
+      current_child_count: 1000
+      claimed_exceptions:
+        - ground: TERMINATION_OF_LONG_TERM_PURCHASE
+          source: LOCAL
+          amount: '9999999.99'
+          timing: TAKEN_INTERVENING
+          event_fiscal_year_start: '2026-07-01'
+          evidence_ref: EV-204D-0023
+    expect:
+      status: PASS
+      output:
+        qualifyingMethods:
+          - LOCAL_ONLY
+          - LOCAL_PER_CAPITA
+        marginByMethod:
+          LOCAL_ONLY: '0.00'
+      steps:
+        reduction_local: '9999999.99'
+        required_local: '0.01'
+    derivation: |
+      Reduction against local funds = 9,999,999.99, one cent below the comparison-year local
+      amount of 10,000,000.00. The whole-run refusal triggers at greater-than-or-equal, so it
+      does not fire here.
+
+      LOCAL_ONLY        required 10,000,000.00 - 9,999,999.99 = 0.01
+                        0.01 - 0.01 = 0.00                             -> PASS
+      STATE_AND_LOCAL   15,000,000.00 required; 14,000,000.00 budgeted -> FAIL
+      Counts equal at 1,000, so the per-capita measures mirror the totals.
+
+      A budget of one cent therefore satisfies the local measures, and one qualifying measure
+      satisfies the standard. The refusal's own rationale - that a single bad ingest mapping
+      should not produce a clean result on the most consequential requirement in the module -
+      applies at 99.999999 percent of the comparison amount very nearly as forcefully as at
+      100 percent. Open question 17 records that a proportionality test was considered and
+      rejected, on the ground that requiring the claim to be no larger than the observed
+      year-over-year decrease is arithmetically equivalent to demanding exact equality and
+      would forbid every use of the exceptions rather than constrain them. This case exists so
+      that an attorney signing off that question sees what the accepted position produces.
+
+  - case: manual-review-two-adjustments-claimed-against-one-measure
+    intent: manual-review
+    asserts: >-
+      At most one 34 CFR 300.205 claim per source. A second against the same measure is a
+      validation failure rather than a merge, because summing them silently would let the
+      pro-rata apportionment depend on how an upstream ingest ordered a list.
+    inputs:
+      current_fiscal_year_start: '2027-07-01'
+      most_recent_available_fiscal_year_start: '2025-07-01'
+      most_recent_available_year_moe_status: MET
+      moe_status_source_run_id: RUN-MOE-COMPLIANCE-2025-0024
+      comparison_fiscal_year_start: '2025-07-01'
+      comparison_basis: ACTUAL_EXPENDITURE
+      federal_funds_excluded: true
+      comparison_actual_local: '10000000.00'
+      comparison_actual_state_local: '15000000.00'
+      comparison_child_count: 1000
+      current_budget_local: '9950000.00'
+      current_budget_state_local: '14950000.00'
+      current_child_count: 1000
+      part_b_611_allocation_current: '1480000.00'
+      part_b_611_allocation_prior: '1180000.00'
+      ceis_amount_300_226: '0.00'
+      esea_use_condition_attested: true
+      sea_prohibition_300_205_ground: NONE
+      claimed_adjustments_300_205:
+        - source: LOCAL
+          amount: '30000.00'
+        - source: LOCAL
+          amount: '40000.00'
+    expect:
+      status: MANUAL_REVIEW
+      missingInputs: []
+      output:
+        qualifyingMethods: []
+      warnings:
+        - DUPLICATE_ADJUSTMENT_SOURCE
+      steps:
+        fiscal_year_under_test: '2027-07-01'
+    derivation: |
+      Taken together the two claims would total 70,000.00 against a ceiling of 150,000.00, so
+      both would be admitted in full and the local measure would qualify by 20,000.00. The
+      calculator does not reach that arithmetic.
+
+      The regulation contemplates one adjustment, and the platform models it as one entry per
+      measure. Two entries against LOCAL is a submission the calculator cannot read: summing
+      them assumes they are separate components of one adjustment, and taking either assumes
+      the other is a duplicate. Both are guesses about what the district meant.

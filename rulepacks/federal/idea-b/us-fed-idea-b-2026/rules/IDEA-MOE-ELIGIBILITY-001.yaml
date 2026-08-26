@@ -1,4 +1,5 @@
 ruleId: IDEA-MOE-ELIGIBILITY-001
+title: IDEA Part B — LEA maintenance of effort, eligibility standard
 pack: US-FED-IDEA-B-2026
 jurisdiction: US-FED
 program: IDEA_PART_B
@@ -15,20 +16,43 @@ effective:
   end: null
 
 inputs:
-  - current_budget_local
-  - current_budget_state_local
+  - current_fiscal_year_start
+  - federal_funds_excluded
+  - comparison_fiscal_year_start
+  - comparison_basis
+  - moe_status_source_run_id
   - comparison_actual_local
   - comparison_actual_state_local
-  - current_child_count
   - comparison_child_count
+  - comparison_required_level_local
+  - comparison_required_level_state_local
+  - comparison_required_level_child_count
+  - claimed_exceptions
+  - claimed_adjustments_300_205
+  - part_b_611_allocation_current
+  - part_b_611_allocation_prior
+  - ceis_amount_300_226
+  - sea_prohibition_300_205_ground
+  - sea_prohibition_300_205_evidence_ref
+  - esea_use_condition_attested
+  - most_recent_available_fiscal_year_start
+  - most_recent_available_year_moe_status
+  - current_budget_local
+  - current_budget_state_local
+  - current_child_count
 
 calculator: idea_moe_eligibility_v1
 
 outputSchema:
-  status: enum
   qualifyingMethods: array
+  methodStatus: object
   marginByMethod: object
-  missingInputs: array
+  shortfallByMethod: object
+  reductionBySource: object
+  comparisonYear: object
+  dataGapsObserved: array
+  projectedShortfallByMethod: object
+  qualifiesOnlyOnExpectedReductions: boolean
 
-severityOnFailure: CRITICAL
+severityOnFailure: HIGH
 explanationTemplate: moe_eligibility_v1

@@ -42,6 +42,61 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # Every page is force-dynamic and reads the rule packs off disk at request time, so a
+      # build proves only that the code compiles. This starts the built server and checks what
+      # each route actually returns — the failure mode a green build hides.
+      - name: Web route smoke test
+        run: pnpm smoke:web
+
+  # Tenant isolation is the severest threat in a multi-tenant compliance platform
+  # (threat model row 1), and the controls that prevent it are Postgres features —
+  # FORCE row level security, composite tenant foreign keys, a non-owner application
+  # role. None of that can be exercised without a real server, so the suite skips
+  # locally and this job is where it actually runs. A green `verify` job does not
+  # mean isolation holds; this one does.
+  database:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: complianceos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Workspace packages resolve through their built `dist/`, so the suite needs a build
+      # before it can import `@complianceos/domain`. The `verify` job gets this for free from
+      # `pnpm typecheck`; this job has to ask for it.
+      - name: Build workspace packages
+        run: pnpm exec tsc --build
+
+      - name: Tenant isolation and migration tests
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/complianceos_test
+          # Turns a skipped isolation suite into a failure. Only this job sets it: the
+          # `verify` job runs the same project and legitimately has no database.
+          REQUIRE_DATABASE_TESTS: '1'
+        run: pnpm exec vitest run --project db
+
   data-hygiene:
     runs-on: ubuntu-latest
     steps:
