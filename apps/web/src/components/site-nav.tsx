@@ -9,10 +9,13 @@ import { usePathname } from 'next/navigation';
  * CLAUDE.md forbids a menu item that leads nowhere, so the navigation is short by design. The
  * portfolio dashboard section 24 describes needs many districts and a database to hold them;
  * until those exist, an "Overview" entry over one synthetic district would be furniture.
+ *
+ * These are the application's routes only. The marketing site has its own header and its own
+ * nav; linking across from here would blur which of the two products a reader is standing in.
  */
 const LINKS = [
-  { href: '/', label: 'Assessment' },
-  { href: '/rules', label: 'Rule library' },
+  { href: '/assessment', label: 'Assessment' },
+  { href: '/registry', label: 'Rule registry' },
 ] as const;
 
 export function SiteNav() {
@@ -24,10 +27,9 @@ export function SiteNav() {
         {LINKS.map((link) => {
           // A finding lives under the assessment it belongs to, so the assessment entry stays
           // marked while a reader is reading one.
-          const current =
-            link.href === '/'
-              ? pathname === '/' || pathname.startsWith('/finding')
-              : pathname.startsWith(link.href);
+          // A finding lives under the assessment it belongs to, so `startsWith` marks the
+          // assessment entry while a reader is reading one.
+          const current = pathname.startsWith(link.href);
           return (
             <li key={link.href}>
               <Link href={link.href} aria-current={current ? 'page' : undefined}>

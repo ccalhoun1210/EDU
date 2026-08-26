@@ -10,9 +10,9 @@
  */
 
 import Link from 'next/link';
-import { StatusBadge } from '../components/status-badge.js';
-import { byAttention, outstanding, rollUpSentence } from '../lib/summary.js';
-import { SUBJECT, UPLOAD, workedExample } from '../lib/worked-example.js';
+import { StatusBadge } from '@/components/status-badge';
+import { byAttention, outstanding, rollUpSentence } from '@/lib/summary';
+import { SUBJECT, UPLOAD, workedExample } from '@/lib/worked-example';
 
 // Recomputed per request so a deployment missing its regulatory content fails here, visibly,
 // rather than serving a value baked in at build time. See `worked-example.ts`.
@@ -102,7 +102,7 @@ export default async function AssessmentPage() {
               return (
                 <tr key={result.ruleId}>
                   <th scope="row">
-                    <Link href={`/finding/${encodeURIComponent(result.ruleId)}`}>
+                    <Link href={`/assessment/finding/${encodeURIComponent(result.ruleId)}`}>
                       {result.ruleTitle}
                     </Link>
                     <br />
