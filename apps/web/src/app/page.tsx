@@ -81,6 +81,40 @@ const TERMS = [
   },
 ];
 
+/* The four MOE methods — synthetic figures, arithmetic verified against the
+   methodology doc. Three of four pass, so a single-method check would report a
+   false $50,000 failure. This is the product's core insight. */
+const METHODS = [
+  {
+    method: 'Local funds, total',
+    comparison: '$4,200,000',
+    current: '$4,150,000',
+    margin: 'Short $50,000',
+    pass: false,
+  },
+  {
+    method: 'Local funds, per child',
+    comparison: '$10,194.17',
+    current: '$10,375.00',
+    margin: 'Passes by $180.83',
+    pass: true,
+  },
+  {
+    method: 'State + local, total',
+    comparison: '$6,800,000',
+    current: '$6,900,000',
+    margin: 'Passes by $100,000',
+    pass: true,
+  },
+  {
+    method: 'State + local, per child',
+    comparison: '$16,504.85',
+    current: '$17,250.00',
+    margin: 'Passes by $745.15',
+    pass: true,
+  },
+];
+
 const COVERAGE = [
   { name: 'IDEA Part B — Maintenance of Effort', authority: '34 CFR §300.203', live: true },
   { name: 'IDEA Part B — Excess Cost', authority: '34 CFR §300.16', live: true },
@@ -245,9 +279,58 @@ export default function Home() {
           </div>
         </LedgerSection>
 
+        {/* ---------- The four methods — the core insight ---------- */}
+        <LedgerSection
+          id="methods"
+          no="§ 02"
+          tag="The four-method test"
+          title="IDEA gives you four ways to satisfy MOE. You only need one."
+          lede="Most tools — and every state spreadsheet — check the one method that looks obvious. When your child count falls, the total-basis methods come under pressure while the per-child methods pass comfortably. Check only the first and you report a failure that is not a failure."
+        >
+          <div className={styles.methodsWrap}>
+            <table className={styles.methodsTable}>
+              <thead>
+                <tr>
+                  <th scope="col">Method</th>
+                  <th scope="col">Comparison year</th>
+                  <th scope="col">Current year</th>
+                  <th scope="col">Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                {METHODS.map((m) => (
+                  <tr key={m.method}>
+                    <th scope="row">{m.method}</th>
+                    <td className={styles.methodsNum}>{m.comparison}</td>
+                    <td className={styles.methodsNum}>{m.current}</td>
+                    <td>
+                      <span
+                        className={`${styles.methodResult} ${m.pass ? styles.methodPass : styles.methodShort}`}
+                      >
+                        {m.pass ? <PassGlyph size={13} /> : <FailGlyph size={13} />}
+                        {m.margin}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className={styles.methodsVerdict}>
+            <span className={styles.methodsVerdictMark}>
+              <PassGlyph size={16} />
+            </span>
+            <span>
+              <strong>Three of four methods qualify. This district is compliant.</strong> A
+              single-method check would have reported a $50,000 failure and started a repayment
+              conversation over money that was never owed.
+            </span>
+          </p>
+        </LedgerSection>
+
         {/* ---------- Six-state status system ---------- */}
         <LedgerSection
-          no="§ 02"
+          no="§ 03"
           tag="Determination states"
           title="Six outcomes — and INDETERMINATE is not a failure."
           lede="A spreadsheet gives you two answers and hides the third. This is the outcome the product exists to protect: when required evidence is missing, it says so plainly instead of manufacturing a passing result you cannot defend."
@@ -268,7 +351,7 @@ export default function Home() {
         {/* ---------- A worked result (anchor target) ---------- */}
         <LedgerSection
           id="result"
-          no="§ 03"
+          no="§ 04"
           tag="A worked result"
           title="Every determination shows its work — like Exhibit A."
           lede="Status, the citation a hearing officer would ask for, the exact rule-pack version that produced it, the inputs, and the arithmetic. No competitor screenshot looks like this, because no competitor binds the answer to its authority."
@@ -283,7 +366,7 @@ export default function Home() {
 
         {/* ---------- What it does NOT do ---------- */}
         <LedgerSection
-          no="§ 04"
+          no="§ 05"
           tag="Limits & guarantees"
           title="The limits are the point."
           lede="A compliance tool earns trust by what it refuses to touch. These are guarantees, not gaps."
@@ -317,7 +400,7 @@ export default function Home() {
         {/* ---------- Trust row ---------- */}
         <LedgerSection
           id="trust"
-          no="§ 05"
+          no="§ 06"
           tag="Trust & security"
           title="The row a district reads before anything else."
           lede="Everything here is stated at its true status. We would rather show an honest “in progress” than an unbacked badge — the same standard we hold your determinations to."
@@ -351,7 +434,7 @@ export default function Home() {
         {/* ---------- Coverage ---------- */}
         <LedgerSection
           id="coverage"
-          no="§ 06"
+          no="§ 07"
           tag="Coverage register"
           title="Federal IDEA Part B fiscal rules today."
           lede="We begin where audit risk is highest and expand outward. Each rule pack undergoes legal review before it leaves the registry."
