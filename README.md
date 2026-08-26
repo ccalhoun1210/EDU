@@ -32,7 +32,7 @@ out, on screen, with every figure traceable to the cell or the prior run it came
 | `packages/assurance`    | The seam: a district export in, an assessment out — import, re-seal, project, evaluate, with the prior determinations bound to the runs that made them |
 | `apps/web`              | The assessment surface, the finding-detail "Why" screen, and the rule library                                                                          |
 
-1,167 tests: 1,138 run anywhere, 29 exercise tenant isolation against a real Postgres. A route
+1,168 tests: 1,139 run anywhere, 29 exercise tenant isolation against a real Postgres. A route
 smoke test fetches every page from a built server and checks what it rendered.
 
 **No rule evaluates district data, and that is enforced rather than merely true.** No

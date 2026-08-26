@@ -46,7 +46,9 @@ the computation it came from by that computation's own evaluation hash.
   result's identifiers on. A fact cannot claim a status the run it cites did not reach.
 - `verifyCarriedForward` checks the other direction: the run and rule must be among the
   finalized results, the hash must match, and the value must still read out of the recorded
-  path.
+  path. Three roots are readable — `status`, `assessmentRunId` and `output.*`. A rule's inputs
+  and steps are how it reached its conclusion, not the conclusion, and carrying one forward
+  would let a later run treat a working figure as a determination of record.
 - The whole determination record is inside the snapshot content hash. Outside it, the binding
   could be repointed at a run that concluded the opposite and `verifySnapshot` would certify
   the result.

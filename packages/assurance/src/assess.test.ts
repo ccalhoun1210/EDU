@@ -174,7 +174,6 @@ describe('ingesting a district export and assessing it', () => {
     expect(carried.length).toBeGreaterThan(0);
 
     for (const fact of carried) {
-      if (fact.field === 'moe_status_source_run_id') continue; // the run's name, not its result
       expect(verifyCarriedForward(fact, [NORTHFIELD_PRIOR_RESULT]), fact.field).toEqual({
         ok: true,
       });

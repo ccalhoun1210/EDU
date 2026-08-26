@@ -34,7 +34,12 @@
  * moment anything about that conclusion is different.
  */
 
-import type { CanonicalValue, DataClassification, FactOrigin } from '@complianceos/domain';
+import {
+  hashCanonical,
+  type CanonicalValue,
+  type DataClassification,
+  type FactOrigin,
+} from '@complianceos/domain';
 import type { CanonicalFact, DeterminationProvenance } from '@complianceos/ingest';
 import { isDeterminationProvenance } from '@complianceos/ingest';
 import type { EvaluationResult } from '@complianceos/rules-engine';
@@ -60,9 +65,11 @@ export interface CarryForwardRequest {
   /**
    * Which part of the result the value is, as a dotted path: `status`, `output.methodStatus`.
    *
-   * Only `status` and paths under `output` are readable. A rule's inputs and steps are how it
-   * reached its conclusion, not the conclusion; carrying one forward would let a later run
-   * treat an intermediate as a determination.
+   * Three readable roots and no others. `status` and `output.*` are what the rule concluded.
+   * `assessmentRunId` is the run's own identity, which is not an intermediate and is exactly
+   * what a field like `moe_status_source_run_id` is defined to hold. Everything else is
+   * refused: a rule's inputs and steps are how it reached its conclusion, not the conclusion,
+   * and carrying one forward would let a later run treat a working figure as a determination.
    */
   readonly derivedFrom: string;
   readonly subjectType: string;
@@ -91,8 +98,12 @@ function readPath(source: unknown, path: readonly string[]): unknown {
 
 function valueAt(result: EvaluationResult, derivedFrom: string): CanonicalValue | undefined {
   const [head, ...rest] = derivedFrom.split('.');
-  if (head === 'status' && rest.length === 0) return result.status;
-  if (head !== 'output' || rest.length === 0) return undefined;
+  if (rest.length === 0) {
+    if (head === 'status') return result.status;
+    if (head === 'assessmentRunId') return result.assessmentRunId;
+    return undefined;
+  }
+  if (head !== 'output') return undefined;
   const value = readPath(result.output, rest);
   return value === undefined ? undefined : (value as CanonicalValue);
 }
@@ -112,8 +123,9 @@ export function carryForward(request: CarryForwardRequest): CanonicalFact {
   if (value === undefined) {
     throw new CarryForwardError(
       `"${derivedFrom}" reads nothing on ${result.ruleId} in run ${result.assessmentRunId}. ` +
-        'Only "status" and paths under "output" may be carried forward, and the path must ' +
-        'exist — a fact derived from nothing would be sealed with a chain pointing at nothing.',
+        'Only "status", "assessmentRunId" and paths under "output" may be carried forward, ' +
+        'and the path must exist — a fact derived from nothing would be sealed with a ' +
+        'provenance chain pointing at nothing.',
     );
   }
 
@@ -185,7 +197,11 @@ export function verifyCarriedForward(
   }
 
   const expected = valueAt(source, provenance.derivedFrom);
-  if (JSON.stringify(expected) !== JSON.stringify(fact.value)) {
+  // Compared through the canonical hash rather than by serialising both sides. `JSON.stringify`
+  // preserves insertion order, so two objects that are the same fact would compare unequal if
+  // the keys happened to be built in a different order — a verifier that fails on a value it
+  // should accept teaches operators to ignore it.
+  if (hashCanonical({ value: expected ?? null }) !== hashCanonical({ value: fact.value })) {
     return {
       ok: false,
       reason:

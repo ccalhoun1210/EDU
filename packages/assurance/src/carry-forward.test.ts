@@ -104,6 +104,20 @@ describe('carryForward', () => {
     expect(fact.value).toBe('PASS');
   });
 
+  it('carries the run’s own identity, which is what attributes the status', () => {
+    // `moe_status_source_run_id` exists so the subsequent-years branch does not dead-end at an
+    // unattributed enum. Derived rather than typed, so the id and the status it attributes
+    // cannot name different runs.
+    const fact = carryForward({
+      ...SUBJECT,
+      result: priorResult(),
+      field: 'moe_status_source_run_id',
+      derivedFrom: 'assessmentRunId',
+    });
+    expect(fact.value).toBe('RUN-2025-0001');
+    expect(verifyCarriedForward(fact, [priorResult()])).toEqual({ ok: true });
+  });
+
   it('refuses a path that reads nothing', () => {
     expect(() =>
       carryForward({
@@ -118,7 +132,15 @@ describe('carryForward', () => {
   it('refuses to reach outside the conclusion', () => {
     // An input is how the rule reached its answer, not the answer. Carrying one forward would
     // let a later year treat an intermediate figure as a determination of record.
-    for (const path of ['computedInputs.current_actual_local', 'steps.0.value', 'evaluationHash']) {
+    for (const path of [
+      'computedInputs.current_actual_local',
+      'steps.0.value',
+      // The binding itself, not a determination. A fact whose value is the hash that proves it
+      // would be circular.
+      'evaluationHash',
+      'dataSnapshotId',
+      'explanation',
+    ]) {
       expect(
         () => carryForward({ ...SUBJECT, result: priorResult(), field: 'x', derivedFrom: path }),
         path,

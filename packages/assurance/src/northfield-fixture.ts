@@ -333,27 +333,13 @@ export const NORTHFIELD_METHODS_MET: CanonicalFact = carryForward({
 /**
  * The run that established the prior status.
  *
- * Not carried forward from a path in the result, because it is not part of what the result
- * concluded — it is the result's own identity. It still travels with determination provenance
- * so the chain is uniform, and its value is taken from the same record rather than typed.
+ * Not a conclusion the run reached — it is the run's own identity, which the calculator
+ * requires whenever a prior status is asserted so that the subsequent-years branch does not
+ * dead-end at an unattributed enum. Derived from the same record as the status it attributes,
+ * so the two cannot drift apart.
  */
-export const NORTHFIELD_STATUS_SOURCE: CanonicalFact = {
-  subjectType: CARRIED.subjectType,
-  subjectId: CARRIED.subjectId,
+export const NORTHFIELD_STATUS_SOURCE: CanonicalFact = carryForward({
+  ...CARRIED,
   field: 'moe_status_source_run_id',
-  value: NORTHFIELD_PRIOR_RESULT.assessmentRunId,
-  classification: 'CONFIDENTIAL',
-  origin: 'PLATFORM_DETERMINATION',
-  provenance: {
-    kind: 'DETERMINATION',
-    assessmentRunId: NORTHFIELD_PRIOR_RESULT.assessmentRunId,
-    ruleId: NORTHFIELD_PRIOR_RESULT.ruleId,
-    rulePackId: NORTHFIELD_PRIOR_RESULT.pack.packId,
-    rulePackVersion: NORTHFIELD_PRIOR_RESULT.pack.version,
-    dataSnapshotId: NORTHFIELD_PRIOR_RESULT.dataSnapshotId,
-    engineVersion: NORTHFIELD_PRIOR_RESULT.engineVersion,
-    evaluationHash: NORTHFIELD_PRIOR_RESULT.evaluationHash,
-    derivedFrom: 'assessmentRunId',
-    determinedAt: NORTHFIELD_PRIOR_RESULT.evaluatedAt,
-  },
-};
+  derivedFrom: 'assessmentRunId',
+});
