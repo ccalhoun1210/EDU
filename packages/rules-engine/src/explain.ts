@@ -70,6 +70,7 @@ export function formatStepValue(step: CalculationStep): string {
   switch (step.unit) {
     case 'USD':
     case 'USD_PER_CHILD':
+    case 'USD_PER_STUDENT':
       return isAmountString(step.value) ? formatUsd(amount(step.value)) : step.value;
     case 'PERCENT':
       return `${step.value}%`;

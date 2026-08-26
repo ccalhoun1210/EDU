@@ -54,6 +54,17 @@ export type CalculatorOutput = { readonly [key: string]: CalculatorValue | undef
 export const STEP_UNITS = [
   'USD',
   'USD_PER_CHILD',
+  /**
+   * Money per enrolled student, over the whole student body.
+   *
+   * Distinct from `USD_PER_CHILD`, which is money per child with a disability. The two are
+   * both money-per-head at six places and are the denominators of different tests: the excess
+   * cost requirement divides by every student the LEA enrolled and then multiplies by the
+   * children with disabilities alone. Labelling that average `USD_PER_CHILD` on a finding
+   * screen would tell a district the figure is per child with a disability, which is the one
+   * misreading that makes the threshold look wrong by an order of magnitude.
+   */
+  'USD_PER_STUDENT',
   'COUNT',
   'RATIO',
   'PERCENT',

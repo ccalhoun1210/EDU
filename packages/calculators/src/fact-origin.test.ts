@@ -49,6 +49,28 @@ const DISTRICT_MAY_ASSERT: ReadonlySet<string> = new Set([
   'esea_use_condition_attested',
   'federal_funds_excluded',
   'ceis_amount_300_226',
+
+  // Excess cost, 34 CFR 300.16 and Appendix A. Every figure is the district's own ledger and
+  // its own head count, split by level because the regulation forbids combining them. Nothing
+  // here is a determination: the calculator computes the threshold from these rather than
+  // reading one somebody else concluded, which is what makes the whole set district-assertable
+  // where the maintenance-of-effort prior-year status is not.
+  'serves_elementary',
+  'serves_secondary',
+  'preceding_fiscal_year_start',
+  ...['elementary', 'secondary'].flatMap((level) => [
+    `${level}_total_expenditures`,
+    `${level}_capital_outlay`,
+    `${level}_debt_service`,
+    `${level}_part_b_expenditures`,
+    `${level}_esea_title_i_a_expenditures`,
+    `${level}_esea_title_iii_expenditures`,
+    `${level}_state_local_sped_expenditures`,
+    `${level}_state_local_esea_expenditures`,
+    `${level}_enrollment_preceding_year`,
+    `${level}_children_with_disabilities`,
+    `${level}_non_part_b_spend_on_children`,
+  ]),
 ]);
 
 const implemented = [...CALCULATORS.values()];

@@ -62,7 +62,15 @@ const ROUTES = [
   {
     path: '/finding/IDEA-EXCESS-COST-001',
     status: 200,
-    contains: ['idea_excess_cost_v1', 'gap in the platform'],
+    contains: [
+      // The Appendix A computation, both levels, off the same uploaded row.
+      'Average annual per-student expenditure, elementary',
+      '$37,800,000.00 ÷ 5400 students enrolled',
+      'Minimum the LEA must spend on secondary children with disabilities',
+      '34 CFR 300.16(b)',
+      // Separate obligations: elementary cleared its threshold and the requirement still fails.
+      'Not satisfied',
+    ],
   },
   { path: '/rules', status: 200, contains: ['Rule library', 'IDEA-MOE-COMPLIANCE-001'] },
   { path: '/finding/NOT-A-RULE', status: 404, contains: ['No such page'] },

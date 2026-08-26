@@ -44,6 +44,12 @@ const pack = await loadRulePack(
 
 const SUBJECT = { subjectType: 'lea_fiscal_year', subjectId: 'LEA-0417:2026' } as const;
 
+/** The export with one extra column, header and value, on the end of each line. */
+function hostileColumn(header: string, value: string): string {
+  const [head = '', row = ''] = NORTHFIELD_EXPORT_CSV.split('\r\n');
+  return [`${head},${header}`, `${row},${value}`].join('\r\n');
+}
+
 function request(
   overrides: Partial<AssessDistrictExportRequest> = {},
 ): AssessDistrictExportRequest {
@@ -124,6 +130,59 @@ describe('ingesting a district export and assessing it', () => {
     const output = compliance?.output as { marginByMethod: Record<string, string> } | undefined;
     expect(output?.marginByMethod['LOCAL_ONLY']).toBe('-70000.00');
     expect(output?.marginByMethod['STATE_AND_LOCAL']).toBe('125000.00');
+  });
+
+  it('computes the excess cost requirement from the same upload, level by level', () => {
+    // The second implemented requirement, off the same row of the same file. Elementary and
+    // secondary are separate obligations under 34 CFR 300.16, so a district that cleared its
+    // elementary threshold and fell short at secondary has not satisfied the requirement —
+    // averaging the +115,000.00 against the −79,000.00 is exactly what computing the levels
+    // apart forbids.
+    const excessCost = outcome.assessment?.results.find(
+      (result) => result.ruleId === 'IDEA-EXCESS-COST-001',
+    );
+    expect(excessCost?.status, `missing: ${JSON.stringify(excessCost?.missingInputs)}`).toBe(
+      'FAIL',
+    );
+    expect(excessCost?.missingInputs).toEqual([]);
+
+    const output = excessCost?.output as
+      | {
+          levelStatus: Record<string, string>;
+          averagePerStudentByLevel: Record<string, string>;
+          minimumRequiredByLevel: Record<string, string>;
+          shortfallByLevel: Record<string, string>;
+        }
+      | undefined;
+
+    // 37,800,000.00 over 5,400 elementary students is 7,000.000000 each; times 620 children
+    // with disabilities is a 4,340,000.00 floor, and the district put 4,455,000.00 behind them.
+    expect(output?.levelStatus['ELEMENTARY']).toBe('PASS');
+    expect(output?.averagePerStudentByLevel['ELEMENTARY']).toBe('7000.000000');
+    expect(output?.minimumRequiredByLevel['ELEMENTARY']).toBe('4340000.00');
+
+    // 26,000,000.00 over 3,200 secondary students is 8,125.000000; times 384 is 3,120,000.00
+    // against 3,041,000.00 actually spent.
+    expect(output?.levelStatus['SECONDARY']).toBe('FAIL');
+    expect(output?.minimumRequiredByLevel['SECONDARY']).toBe('3120000.00');
+    expect(output?.shortfallByLevel['SECONDARY']).toBe('79000.00');
+  });
+
+  it('carries one head count consistently across two requirements', () => {
+    // The export states 1,004 children with disabilities for maintenance of effort and splits
+    // them 620/384 by level for excess cost. Two rules reading the same district's figures must
+    // not disagree about how many children it serves, and a fixture that let them drift would
+    // hide the class of bug where a level's column is mapped to the wrong target.
+    const excessCost = outcome.assessment?.results.find(
+      (result) => result.ruleId === 'IDEA-EXCESS-COST-001',
+    );
+    const compliance = outcome.assessment?.results.find(
+      (result) => result.ruleId === 'IDEA-MOE-COMPLIANCE-001',
+    );
+
+    const elementary = Number(excessCost?.computedInputs['elementary_children_with_disabilities']);
+    const secondary = Number(excessCost?.computedInputs['secondary_children_with_disabilities']);
+    expect(elementary + secondary).toBe(Number(compliance?.computedInputs['current_child_count']));
   });
 
   it('leaves the eligibility rule unanswerable, and says which determination is missing', () => {
@@ -252,9 +311,9 @@ describe('what the path refuses', () => {
     const hostile = request({
       import: {
         ...request().import,
-        content: `${NORTHFIELD_EXPORT_CSV},NOT_MET`
-          .replace('Federal Funds Excluded', 'Federal Funds Excluded,Prior Yr Status')
-          .replace('Yes,NOT_MET', 'Yes,NOT_MET'),
+        // Appended as a new last column on both lines rather than spliced in by name, so the
+        // attack keeps working as the export grows columns.
+        content: hostileColumn('Prior Yr Status', 'NOT_MET'),
         template: {
           ...NORTHFIELD_TEMPLATE,
           fields: [

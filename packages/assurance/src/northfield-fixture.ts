@@ -48,10 +48,34 @@ import { carryForward } from './carry-forward.js';
  * symbols and thousands separators, an `FY` prefix on the fiscal year, `Yes`/`No` for the
  * attestation, quoted fields containing commas, and CRLF endings so the line counting that
  * feeds `sourceLine` on the provenance panel is exercised rather than assumed.
+ *
+ * Two lines, each assembled from four joined pieces so the header and the row can be read
+ * against one another without counting commas across a 39-column line. The pieces are string
+ * literals and the joins add nothing but the separator, so the exact bytes are still in the
+ * diff — which is the property that made the export a literal rather than a builder.
+ *
+ * The figures are internally consistent across the two requirements, because a real export
+ * would be and an inconsistent one would hide a class of bug. The excess cost columns put 620
+ * children with disabilities in elementary schools and 384 in secondary, totalling the 1,004
+ * the maintenance-of-effort columns report; and the Part B expended at the two levels totals
+ * the 1,450,000.00 subgrant.
  */
 export const NORTHFIELD_EXPORT_CSV = [
-  'LEA ID,LEA Name,Fiscal Year,Fiscal Year End,Basis,Comparison FY,Comparison Local Actual,Comparison State+Local Actual,Comparison Child Count,Local Actual,State+Local Actual,Child Count,Part B Subgrant,Federal Funds Excluded',
-  'LEA-0417,"Northfield Consolidated School District, Unit 3",FY2026,2026-06-30,ACTUAL_EXPENDITURE,FY2025,"$4,900,000.00","$7,850,000.00",991,"$4,830,000.00","$7,975,000.00",1004,"$1,450,000.00",Yes',
+  [
+    // Maintenance of effort — 34 CFR 300.203.
+    'LEA ID,LEA Name,Fiscal Year,Fiscal Year End,Basis,Comparison FY,Comparison Local Actual,Comparison State+Local Actual,Comparison Child Count,Local Actual,State+Local Actual,Child Count,Part B Subgrant,Federal Funds Excluded',
+    // Excess cost — 34 CFR 300.16 and Appendix A. Elementary and secondary are separate
+    // columns because the regulation computes them separately and forbids combining them.
+    'Serves Elementary,Serves Secondary,Prior FY',
+    'Elem Total Exp,Elem Capital Outlay,Elem Debt Service,Elem Part B Exp,Elem Title I A Exp,Elem Title III Exp,Elem SPED State Local,Elem ESEA State Local,Elem Enrollment,Elem Children With Disabilities,Elem Non Part B Spend',
+    'Sec Total Exp,Sec Capital Outlay,Sec Debt Service,Sec Part B Exp,Sec Title I A Exp,Sec Title III Exp,Sec SPED State Local,Sec ESEA State Local,Sec Enrollment,Sec Children With Disabilities,Sec Non Part B Spend',
+  ].join(','),
+  [
+    'LEA-0417,"Northfield Consolidated School District, Unit 3",FY2026,2026-06-30,ACTUAL_EXPENDITURE,FY2025,"$4,900,000.00","$7,850,000.00",991,"$4,830,000.00","$7,975,000.00",1004,"$1,450,000.00",Yes',
+    'Yes,Yes,FY2025',
+    '"$48,600,000.00","$2,400,000.00","$1,200,000.00","$900,000.00","$1,800,000.00","$300,000.00","$3,600,000.00","$600,000.00",5400,620,"$4,455,000.00"',
+    '"$33,000,000.00","$1,500,000.00","$700,000.00","$550,000.00","$1,100,000.00","$200,000.00","$2,600,000.00","$350,000.00",3200,384,"$3,041,000.00"',
+  ].join(','),
 ].join('\r\n');
 
 /** SHA-256 of the bytes above, as an uploaded artifact would carry. Synthetic but fixed. */
@@ -65,6 +89,54 @@ export const NORTHFIELD_SOURCE_HASH =
  * determinations, and a template that targeted one would be refused at projection — which is
  * the point of `fact-origin.ts` and is asserted in `assess.test.ts`.
  */
+/**
+ * The twenty-two excess cost figures, as mapping fields.
+ *
+ * Built from a table rather than written out twice because the two levels are mechanically
+ * identical — same eleven figures, same transforms, different prefix — and a hand-written
+ * second copy is where a `secondary_` target ends up reading an `Elem` column. That mistake
+ * would not fail validation: both are money, the row parses, the reconciliation balances, and
+ * the district gets a secondary threshold computed from its elementary ledger.
+ *
+ * The source column names stay literal so the template can still be read against the header.
+ */
+const CURRENCY = [
+  { transform: 'trim' as const },
+  { transform: 'parseCurrency' as const, allowSymbol: true },
+];
+const WHOLE = [{ transform: 'trim' as const }, { transform: 'parseInteger' as const }];
+
+const EXCESS_COST_FIGURES: readonly {
+  readonly target: string;
+  readonly source: string;
+  readonly valueType: 'money' | 'count';
+}[] = (
+  [
+    ['total_expenditures', 'Total Exp', 'money'],
+    ['capital_outlay', 'Capital Outlay', 'money'],
+    ['debt_service', 'Debt Service', 'money'],
+    ['part_b_expenditures', 'Part B Exp', 'money'],
+    ['esea_title_i_a_expenditures', 'Title I A Exp', 'money'],
+    ['esea_title_iii_expenditures', 'Title III Exp', 'money'],
+    ['state_local_sped_expenditures', 'SPED State Local', 'money'],
+    ['state_local_esea_expenditures', 'ESEA State Local', 'money'],
+    ['enrollment_preceding_year', 'Enrollment', 'count'],
+    ['children_with_disabilities', 'Children With Disabilities', 'count'],
+    ['non_part_b_spend_on_children', 'Non Part B Spend', 'money'],
+  ] as const
+).flatMap(([suffix, column, valueType]) =>
+  (
+    [
+      ['elementary', 'Elem'],
+      ['secondary', 'Sec'],
+    ] as const
+  ).map(([prefix, header]) => ({
+    target: `${prefix}_${suffix}`,
+    source: `${header} ${column}`,
+    valueType,
+  })),
+);
+
 export const NORTHFIELD_TEMPLATE: MappingTemplate = {
   templateId: 'NORTHFIELD-FISCAL-V1',
   version: '1.0.0',
@@ -225,6 +297,62 @@ export const NORTHFIELD_TEMPLATE: MappingTemplate = {
       required: true,
       classification: 'CONFIDENTIAL',
     },
+    {
+      // Declared, never inferred from the presence of a level's figures. See the excess cost
+      // calculator: an LEA that operates secondary schools and failed to export them looks
+      // identical to one that operates none.
+      target: 'serves_elementary',
+      valueType: 'boolean',
+      sources: ['Serves Elementary'],
+      transforms: [
+        { transform: 'trim' },
+        {
+          transform: 'parseBoolean',
+          trueValues: ['Yes', 'Y', 'TRUE'],
+          falseValues: ['No', 'N', 'FALSE'],
+        },
+      ],
+      required: true,
+      classification: 'CONFIDENTIAL',
+    },
+    {
+      target: 'serves_secondary',
+      valueType: 'boolean',
+      sources: ['Serves Secondary'],
+      transforms: [
+        { transform: 'trim' },
+        {
+          transform: 'parseBoolean',
+          trueValues: ['Yes', 'Y', 'TRUE'],
+          falseValues: ['No', 'N', 'FALSE'],
+        },
+      ],
+      required: true,
+      classification: 'CONFIDENTIAL',
+    },
+    {
+      // The expenditure base is the preceding year, and the calculator refuses a pair that is
+      // not consecutive. Mapped from the district's own prior-year label rather than derived,
+      // so a district that exported the wrong year is caught rather than corrected silently.
+      target: 'preceding_fiscal_year_start',
+      valueType: 'date',
+      sources: ['Prior FY'],
+      transforms: [
+        { transform: 'trim' },
+        { transform: 'stripPrefix', prefix: 'FY' },
+        { transform: 'crosswalk', codes: { '2025': '2024-07-01' } },
+      ],
+      required: true,
+      classification: 'CONFIDENTIAL',
+    },
+    ...EXCESS_COST_FIGURES.map((figure) => ({
+      target: figure.target,
+      valueType: figure.valueType,
+      sources: [figure.source],
+      transforms: figure.valueType === 'money' ? CURRENCY : WHOLE,
+      required: true,
+      classification: 'CONFIDENTIAL' as const,
+    })),
   ],
 };
 

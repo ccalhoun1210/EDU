@@ -15,10 +15,10 @@ and ERP remain authoritative. Integrations are read-only.
 
 ## Status
 
-**Platform core, the first two statutory calculators, and the screens that render them.** The
-engine and the data path are built and tested. The two IDEA maintenance-of-effort calculators
-are implemented against a 47-case golden corpus and run end to end through the engine; the
-other four are specified and waiting. A district export goes in and a cited assessment comes
+**Platform core, the first three statutory calculators, and the screens that render them.** The
+engine and the data path are built and tested. Both IDEA maintenance-of-effort calculators and
+the excess cost calculator are implemented against a 64-case golden corpus and run end to end
+through the engine; the other three are specified and waiting. A district export goes in and a cited assessment comes
 out, on screen, with every figure traceable to the cell or the prior run it came from.
 
 | Package                 | What it does                                                                                                                                           |
@@ -28,11 +28,11 @@ out, on screen, with every figure traceable to the cell or the prior run it came
 | `packages/rules-engine` | Three-valued evaluator, pack layering, deterministic explanations, evaluation hash, run orchestration                                                  |
 | `packages/ingest`       | Strict parsing, versioned mapping templates, validation, reconciliation, provenance, immutable snapshots                                               |
 | `packages/db`           | Migrations with composite tenant keys, forced RLS, immutability triggers, append-only audit log                                                        |
-| `packages/calculators`  | Calculator contract, registry, golden-corpus runner, purity scan, and the two IDEA maintenance-of-effort calculators                                   |
+| `packages/calculators`  | Calculator contract, registry, golden-corpus runner, purity scan, and the three implemented IDEA fiscal calculators                                    |
 | `packages/assurance`    | The seam: a district export in, an assessment out — import, re-seal, project, evaluate, with the prior determinations bound to the runs that made them |
 | `apps/web`              | The assessment surface, the finding-detail "Why" screen, and the rule library                                                                          |
 
-1,168 tests: 1,139 run anywhere, 29 exercise tenant isolation against a real Postgres. A route
+1,193 tests: 1,164 run anywhere, 29 exercise tenant isolation against a real Postgres. A route
 smoke test fetches every page from a built server and checks what it rendered.
 
 **No rule evaluates district data, and that is enforced rather than merely true.** No
@@ -50,15 +50,24 @@ provision named where it is not.
 [ADR 0007](docs/adrs/0007-a-calculator-refuses-rather-than-guesses.md) explains why that is
 the right behaviour for a compliance product, and what it costs.
 
-The two maintenance-of-effort calculators are what that policy looks like in code. Where the
+The three implemented calculators are what that policy looks like in code. Where the
 regulation is clear they answer exactly — the four measures, the exceptions at 34 CFR 300.204,
 the adjustment ceiling at 300.205 apportioned pro rata so no claim is favoured by its position
 in a list, per-capita comparisons decided by cross-multiplication so no rounding can flip a
 boundary. Where it is not, they evaluate every live reading and refuse when the readings
 disagree, naming the provision and the open question. A zero requirement is never a pass, and a
 compliance failure is never issued on a calculation that could not be completed.
-[`docs/regulatory-methodology/idea-moe.md`](docs/regulatory-methodology/idea-moe.md) is the
-specification; `packages/calculators/golden/` is the test corpus a domain reviewer reads.
+Excess cost is the same policy against a different shape of question. It computes the average
+annual per-student expenditure separately for elementary and secondary, as 34 CFR 300.16 and
+Appendix A require, and never combines them — so an LEA that cleared its elementary threshold
+and fell short at secondary fails, because the levels are separate obligations rather than
+alternative methods. A level with no children with disabilities is reported inapplicable and
+never satisfied: the threshold is vacuous, and a requirement of nothing is not a requirement
+met. Both of those were blocking findings against the first specification.
+
+[`idea-moe.md`](docs/regulatory-methodology/idea-moe.md) and
+[`idea-excess-cost.md`](docs/regulatory-methodology/idea-excess-cost.md) are the
+specifications; `packages/calculators/golden/` is the test corpus a domain reviewer reads.
 
 ### What you can see
 

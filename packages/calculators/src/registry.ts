@@ -18,6 +18,7 @@
  */
 
 import { CALCULATOR_REGISTRY, type CalculatorName } from '@complianceos/rulepack-sdk';
+import { ideaExcessCostV1 } from './idea-excess-cost.js';
 import { ideaMoeComplianceV1 } from './idea-moe-compliance.js';
 import { ideaMoeEligibilityV1 } from './idea-moe-eligibility.js';
 import type { Calculator } from './types.js';
@@ -28,7 +29,11 @@ import type { Calculator } from './types.js';
  * Adding one here means removing its name from `NOT_YET_IMPLEMENTED`; the test enforces it,
  * so the two lists cannot silently disagree.
  */
-const IMPLEMENTATIONS: readonly Calculator[] = [ideaMoeEligibilityV1, ideaMoeComplianceV1];
+const IMPLEMENTATIONS: readonly Calculator[] = [
+  ideaMoeEligibilityV1,
+  ideaMoeComplianceV1,
+  ideaExcessCostV1,
+];
 
 export const CALCULATORS: ReadonlyMap<CalculatorName, Calculator> = new Map(
   IMPLEMENTATIONS.map((calculator) => [calculator.name, calculator]),
@@ -43,7 +48,6 @@ export const CALCULATORS: ReadonlyMap<CalculatorName, Calculator> = new Map(
  */
 export const NOT_YET_IMPLEMENTED: readonly CalculatorName[] = [
   // IDEA fiscal — specifications and golden corpora authored; implementations in progress.
-  'idea_excess_cost_v1',
   'idea_proportionate_share_v1',
   'idea_cceis_v1',
   // Significant disproportionality — Phase 5. Every threshold is a State parameter and must
