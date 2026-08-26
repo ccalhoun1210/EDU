@@ -82,7 +82,11 @@ const ROUTES = [
     // because a sign-in list on a build with no database would mean the config seam leaked.
     path: '/sign-in',
     status: 200,
-    contains: ['Sign-in is not available on this deployment', 'no database configured'],
+    // The page renders the configuration's own reason rather than fixed prose, because
+    // there is more than one way to be unconnected. This build has no DATABASE_URL, so the
+    // reason must name that — and must not be the one about a missing SESSION_SECRET, which
+    // would send a deploying engineer to fix something that was never broken.
+    contains: ['Sign-in is not available on this deployment', 'no DATABASE_URL'],
   },
   { path: '/assessment/finding/NOT-A-RULE', status: 404, contains: ['No such page'] },
   // The marketing site now owns the root. Both surfaces are smoked, because a route group

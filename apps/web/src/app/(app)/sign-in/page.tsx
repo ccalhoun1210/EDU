@@ -11,6 +11,7 @@
  */
 
 import Link from 'next/link';
+import { appConfig } from '@/lib/config';
 import { connected, demoRoster } from '@/lib/roster';
 import { currentSession } from '@/lib/session';
 
@@ -62,12 +63,17 @@ export default async function SignInPage({
 
   const config = connected();
   if (config === null) {
+    const current = appConfig();
     return (
       <>
         <h1>Sign-in is not available on this deployment</h1>
+        {/* The reason comes from the configuration rather than being written here, because
+            there is more than one way to be unconnected and telling someone the wrong one
+            sends them to fix something that was never broken. */}
         <p className="sub">
-          This build has no database configured, so there are no districts, no users and nothing to
-          sign in to.
+          {current.kind === 'UNCONNECTED'
+            ? current.reason
+            : 'Sign-in is not configured on this deployment.'}
         </p>
         <p>
           What it does have is the whole pipeline running over a synthetic district. Open the{' '}

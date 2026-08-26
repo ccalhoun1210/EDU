@@ -17,10 +17,22 @@ import 'server-only';
  *   `worked-example.ts` and ADR 0010. It is the product demonstrating its own pipeline over
  *   an export whose figures are invented.
  *
- * What must never happen is the third shape: a deployment that half-configured itself and
- * then decided to carry on. A `DATABASE_URL` with no `SESSION_SECRET` would mean real
- * district data behind a session this process cannot seal — so it throws, at startup, in
- * one place, rather than serving the first request and discovering it at sign-in.
+ * ## A misconfiguration downgrades capability; it never takes the site down
+ *
+ * An earlier version of this file threw when `DATABASE_URL` was set without
+ * `SESSION_SECRET`, reasoning that district data behind an unsealed session was worse than
+ * no deployment. That was wrong twice over, and it took a 500 on a live preview to see it.
+ *
+ * It was wrong about the danger: with no secret, no session can be sealed at all, so nobody
+ * can sign in and no district data is reachable. The unconnected branch is already the safe
+ * one. And it was wrong about the blast radius: the marketing site and the rule registry
+ * need no database, and refusing to boot took them down too, on a deployment where a
+ * platform integration had injected `DATABASE_URL` without anyone asking for it.
+ *
+ * So every configuration problem here resolves to UNCONNECTED, carrying a reason that the
+ * sign-in page renders. The downgrade is always toward less access, and it is always
+ * visible on the page that would have used what is missing — which beats both a silent
+ * carry-on and a site-wide 500.
  *
  * ## Read once
  *
@@ -40,13 +52,6 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Session lifetime. Under the package ceiling, and a working day for a district officer. */
 const SESSION_TTL_SECONDS = 8 * 60 * 60;
-
-export class ConfigurationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ConfigurationError';
-  }
-}
 
 /**
  * A deployment with a database and a way to seal sessions.
@@ -84,48 +89,39 @@ function build(env: Readonly<Record<string, string | undefined>>): AppConfig {
   const secret = env['SESSION_SECRET'];
 
   if (databaseUrl === undefined || databaseUrl.length === 0) {
-    if (secret !== undefined && secret.length > 0) {
-      // Not merely unhelpful — it means somebody intended this deployment to be connected
-      // and it silently is not. Saying so beats rendering a demonstration they will mistake
-      // for their district.
-      throw new ConfigurationError(
-        'SESSION_SECRET is set but DATABASE_URL is not. A session with nothing to resolve ' +
-          'against cannot sign anyone in. Set both, or neither.',
-      );
-    }
     return {
       kind: 'UNCONNECTED',
       reason:
-        'This deployment has no DATABASE_URL, so there is no district data to read and ' +
-        'nowhere to put an upload.',
+        secret !== undefined && secret.length > 0
+          ? 'SESSION_SECRET is set but DATABASE_URL is not, so a session would have nothing ' +
+            'to resolve against. Set both, or neither.'
+          : 'This deployment has no DATABASE_URL, so there is no district data to read and ' +
+            'nowhere to put an upload.',
     };
   }
 
   if (secret === undefined || secret.length === 0) {
-    throw new ConfigurationError(
-      'DATABASE_URL is set but SESSION_SECRET is not. Refusing to start: district data ' +
-        'behind a session this process cannot seal is worse than no deployment at all.',
-    );
+    // The common case on a platform that injects a database for you: Neon's Vercel
+    // integration sets DATABASE_URL on the project, and nothing sets a session secret.
+    // Sign-in stays off — no secret, no sealed session, no way in — and the rest of the
+    // site serves normally.
+    return {
+      kind: 'UNCONNECTED',
+      reason:
+        'This deployment has a DATABASE_URL but no SESSION_SECRET, so sessions cannot be ' +
+        'sealed and sign-in is disabled. Generate one with `openssl rand -base64 48`.',
+    };
   }
 
   const demoTenantId = env['DEMO_TENANT_ID'];
   const demoConfigured = demoTenantId !== undefined && demoTenantId.length > 0;
 
-  if (demoConfigured && looksLikeProduction(env)) {
-    // The provider refuses this too, at construction. Refusing here as well means a
-    // production deployment carrying the variable fails to boot rather than failing at the
-    // first sign-in attempt, when whoever set it has stopped watching.
-    throw new ConfigurationError(
-      'DEMO_TENANT_ID is set on a production deployment. The demonstration sign-in ' +
-        'authenticates nobody and must not be reachable there.',
-    );
-  }
-  if (demoConfigured && !UUID.test(demoTenantId)) {
-    throw new ConfigurationError(
-      `DEMO_TENANT_ID is not a uuid: ${JSON.stringify(demoTenantId)}. It names a tenant row, ` +
-        'not a slug — see the note on ConnectedConfig.',
-    );
-  }
+  // Both of these disable the demonstration sign-in rather than failing the deployment.
+  // The provider refuses production at construction as well, so this is the second of two
+  // independent controls and not the only one; what it adds is that the refusal happens
+  // before anyone is offered a form, instead of at the first attempt to use it.
+  const demoUsable =
+    demoConfigured && !looksLikeProduction(env) && UUID.test(demoTenantId as string);
 
   return {
     kind: 'CONNECTED',
@@ -138,7 +134,7 @@ function build(env: Readonly<Record<string, string | undefined>>): AppConfig {
     }),
     sealer: new SessionSealer(secret, Math.min(SESSION_TTL_SECONDS, MAX_SESSION_TTL_SECONDS)),
     sessionTtlSeconds: Math.min(SESSION_TTL_SECONDS, MAX_SESSION_TTL_SECONDS),
-    demoTenantId: demoConfigured ? demoTenantId : undefined,
+    demoTenantId: demoUsable ? demoTenantId : undefined,
   };
 }
 

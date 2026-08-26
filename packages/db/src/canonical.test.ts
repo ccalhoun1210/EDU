@@ -569,6 +569,33 @@ describe('privileges granted to the application role', () => {
       expect(isTenantOwned(byName.get(table)), `${table} should be global content`).toBe(false);
     }
   });
+
+  it('keeps the identity bindings global, readable, and not writable by the app', () => {
+    // This table is the one deliberate exception to "a row that names a tenant is tenant
+    // data", and it is asserted rather than merely permitted. A sign-in must read it before
+    // tenant context exists, so it cannot be behind the GUC — which makes it worth pinning
+    // that it is also the narrowest thing it can be.
+    const table = 'identity_organization_bindings';
+    const declared = byName.get(table);
+    expect(declared, `${table} should be declared`).toBeDefined();
+
+    // Not tenant-owned, by construction: the column is `bound_tenant_id`, because a row here
+    // points at a district rather than belonging to one. If someone renames it to
+    // `tenant_id`, the isolation guards above start applying and will fail — which is the
+    // correct outcome, since a table called that must be isolated.
+    expect(isTenantOwned(declared), `${table} names a tenant but does not belong to one`).toBe(
+      false,
+    );
+    expect(
+      declared?.columns.some((column) => column.name === 'bound_tenant_id'),
+      `${table} should carry bound_tenant_id`,
+    ).toBe(true);
+
+    // Read only. Onboarding a district is an administrative act performed by the owner; if
+    // the application could write this table, a bug in a tenant-facing path could rebind a
+    // federated connection to a different district.
+    expect([...privilegesFor(table)], table).toEqual(['SELECT']);
+  });
 });
 
 describe('money and dates (invariants 5 and 6)', () => {
