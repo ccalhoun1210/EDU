@@ -25,10 +25,10 @@ import {
   type DataSnapshot,
 } from '@complianceos/ingest';
 import { ABSENT, formatStepValue, renderValue } from '@complianceos/rules-engine';
-import { StatusBadge } from '../../../components/status-badge.js';
-import { humanizeKey } from '../../../lib/display.js';
-import { inputSpecs } from '../../../lib/inputs.js';
-import { SUBJECT, workedExample } from '../../../lib/worked-example.js';
+import { StatusBadge } from '@/components/status-badge';
+import { humanizeKey } from '@/lib/display';
+import { inputSpecs } from '@/lib/inputs';
+import { SUBJECT, workedExample } from '@/lib/worked-example';
 
 export const dynamic = 'force-dynamic';
 
@@ -123,7 +123,7 @@ export default async function FindingPage({ params }: { params: Promise<{ ruleId
   return (
     <>
       <p className="breadcrumb">
-        <Link href="/">{SUBJECT.displayName}</Link> · {SUBJECT.fiscalYear}
+        <Link href="/assessment">{SUBJECT.displayName}</Link> · {SUBJECT.fiscalYear}
       </p>
 
       <h1>{result.ruleTitle}</h1>

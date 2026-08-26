@@ -24,7 +24,8 @@
  * twice — first living in a `vercel.json` the deployment did not read, then blocking the
  * framework's own scripts. `scripts/smoke-web.mjs` fetches a page and fails if the header is
  * missing, if it carries no nonce, or if the served HTML's inline scripts do not carry that
- * same nonce. The control is not trusted; it is tested.
+ * same nonce. The control is not trusted; it is tested. It is tested on both surfaces, because
+ * they do not get the same policy — see `PRERENDERED` below.
  */
 
 import { NextResponse, type NextRequest } from 'next/server';
@@ -48,22 +49,59 @@ const BASE_DIRECTIVES = [
   "object-src 'none'",
 ];
 
+/**
+ * The marketing pages, which are statically prerendered.
+ *
+ * A nonce cannot reach them. Next bakes its inline bootstrap scripts into the HTML at build
+ * time, and a per-request nonce generated afterwards matches none of them — the policy would
+ * be perfectly formed and would block twenty-one scripts on the landing page. That is not
+ * hypothetical: it is what the smoke test caught the first time the two surfaces were merged.
+ *
+ * So these routes get `'unsafe-inline'` instead, and the trade is worth stating rather than
+ * burying. `'unsafe-inline'` guards against injected script; these pages render no input at
+ * all — no district data, no query parameters, no user content, only fixed copy — so there is
+ * nothing to inject through. The application pages do render district-supplied strings, and
+ * they keep the nonce.
+ *
+ * An allow-list of the *relaxed* routes rather than of the strict ones, so a route added
+ * tomorrow is strict by default. Forgetting to list a marketing route here costs a visibly
+ * broken page and a failing smoke test; the opposite arrangement would have cost a silently
+ * weakened policy on exactly the pages that matter.
+ */
+const PRERENDERED: ReadonlySet<string> = new Set([
+  '/',
+  '/about',
+  '/for-state-agencies',
+  '/how-it-works',
+  '/idea-fiscal',
+  '/pricing',
+  '/resources',
+  '/trust',
+]);
+
 export function middleware(request: NextRequest) {
   // `crypto` is the Web Crypto global in the Edge runtime; there is no Node `Buffer` here.
   const nonce = btoa(crypto.randomUUID());
+  const prerendered = PRERENDERED.has(request.nextUrl.pathname);
 
   const policy = [
     // `strict-dynamic` makes browsers that understand it ignore the host allow-list and trust
     // only what a nonced script loads. `'self'` stays for the ones that do not.
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    prerendered
+      ? "script-src 'self' 'unsafe-inline'"
+      : `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
     ...BASE_DIRECTIVES,
   ].join('; ');
 
   const requestHeaders = new Headers(request.headers);
   // Read by the renderer. Without this the response carries a nonce that nothing was stamped
   // with, which is worse than no policy: every script is blocked and the header looks correct.
-  requestHeaders.set('content-security-policy', policy);
-  requestHeaders.set('x-nonce', nonce);
+  // Deliberately skipped for a prerendered route: there is no render left to stamp, and
+  // handing Next a nonce there is what produces the broken-but-plausible header above.
+  if (!prerendered) {
+    requestHeaders.set('content-security-policy', policy);
+    requestHeaders.set('x-nonce', nonce);
+  }
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set('content-security-policy', policy);

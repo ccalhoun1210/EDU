@@ -23,7 +23,7 @@ const BASE = `http://127.0.0.1:${PORT}`;
 /** Strings that can only be present if the whole path ran, not just the framework. */
 const ROUTES = [
   {
-    path: '/',
+    path: '/assessment',
     status: 200,
     contains: [
       'Northfield Consolidated School District',
@@ -37,7 +37,7 @@ const ROUTES = [
     ],
   },
   {
-    path: '/finding/IDEA-MOE-COMPLIANCE-001',
+    path: '/assessment/finding/IDEA-MOE-COMPLIANCE-001',
     status: 200,
     contains: [
       'maintenance of effort',
@@ -54,13 +54,13 @@ const ROUTES = [
     ],
   },
   {
-    path: '/finding/IDEA-MOE-ELIGIBILITY-001',
+    path: '/assessment/finding/IDEA-MOE-ELIGIBILITY-001',
     status: 200,
     // Invariant 9 on screen: the missing determination is named rather than assumed.
     contains: ['most_recent_available_year_moe_status', 'Not determined'],
   },
   {
-    path: '/finding/IDEA-EXCESS-COST-001',
+    path: '/assessment/finding/IDEA-EXCESS-COST-001',
     status: 200,
     contains: [
       // The Appendix A computation, both levels, off the same uploaded row.
@@ -72,8 +72,12 @@ const ROUTES = [
       'Not satisfied',
     ],
   },
-  { path: '/rules', status: 200, contains: ['Rule library', 'IDEA-MOE-COMPLIANCE-001'] },
-  { path: '/finding/NOT-A-RULE', status: 404, contains: ['No such page'] },
+  { path: '/registry', status: 200, contains: ['Rule registry', 'IDEA-MOE-COMPLIANCE-001'] },
+  { path: '/assessment/finding/NOT-A-RULE', status: 404, contains: ['No such page'] },
+  // The marketing site now owns the root. Both surfaces are smoked, because a route group
+  // split is exactly the change that leaves one of them rendering into the void.
+  { path: '/', status: 200, contains: ['ComplianceOS', 'Request a demo'] },
+  { path: '/pricing', status: 200, contains: ['Pricing'] },
 ];
 
 /**
@@ -160,36 +164,68 @@ try {
     }
   }
 
-  const response = await fetch(BASE);
-  const body = await response.text();
-  for (const header of REQUIRED_HEADERS) {
-    if (response.headers.get(header) === null) failures.push(`/: missing ${header} header`);
+  /*
+   * Security headers, on both surfaces.
+   *
+   * The two do not get the same policy and must both be checked. A statically prerendered
+   * page cannot carry a per-request nonce — Next bakes its inline bootstrap into the HTML at
+   * build time — so the marketing routes get `'unsafe-inline'` and the application routes get
+   * the nonce. Checking only one would let the other regress silently, which is how the CSP
+   * came to be wrong the first two times.
+   */
+  const APP_PATH = '/assessment';
+  const MARKETING_PATH = '/';
+
+  for (const path of [MARKETING_PATH, APP_PATH]) {
+    const headers = (await fetch(BASE + path)).headers;
+    for (const header of REQUIRED_HEADERS) {
+      if (headers.get(header) === null) failures.push(`${path}: missing ${header} header`);
+    }
   }
 
   /*
-   * The nonce, end to end.
+   * The nonce, end to end, on an application route.
    *
    * A CSP header carrying a nonce that the renderer never stamped onto anything is worse than
    * no policy at all: every inline script the App Router emits is blocked, React never
    * hydrates, and the header looks correct to anyone auditing it. So this checks both halves
    * — the policy names a nonce, and the scripts in the document carry that same one.
    */
-  const policy = response.headers.get('content-security-policy') ?? '';
+  const appResponse = await fetch(BASE + APP_PATH);
+  const appBody = await appResponse.text();
+  const policy = appResponse.headers.get('content-security-policy') ?? '';
   const nonce = /'nonce-([A-Za-z0-9+/=]+)'/.exec(policy)?.[1];
   if (nonce === undefined) {
-    failures.push(`/: content-security-policy carries no nonce: ${policy}`);
+    failures.push(`${APP_PATH}: content-security-policy carries no nonce: ${policy}`);
   } else {
-    const inlineScripts = body.match(/<script(?![^>]*\bsrc=)[^>]*>/g) ?? [];
+    const inlineScripts = appBody.match(/<script(?![^>]*\bsrc=)[^>]*>/g) ?? [];
     if (inlineScripts.length === 0) {
-      failures.push('/: no inline scripts found, so the nonce check proved nothing');
+      failures.push(`${APP_PATH}: no inline scripts found, so the nonce check proved nothing`);
     }
     const unnonced = inlineScripts.filter((tag) => !tag.includes(nonce));
     if (unnonced.length > 0) {
       failures.push(
-        `/: ${unnonced.length} of ${inlineScripts.length} inline scripts lack the CSP nonce ` +
-          `— the first is ${unnonced[0]}`,
+        `${APP_PATH}: ${unnonced.length} of ${inlineScripts.length} inline scripts lack the ` +
+          `CSP nonce — the first is ${unnonced[0]}`,
       );
     }
+  }
+
+  /*
+   * And the marketing side: relaxed, but deliberately so rather than by omission.
+   *
+   * A prerendered route must NOT advertise a nonce — one that matches nothing blocks every
+   * script on the page while looking perfectly formed. It must still carry a policy.
+   */
+  const marketingPolicy =
+    (await fetch(BASE + MARKETING_PATH)).headers.get('content-security-policy') ?? '';
+  if (marketingPolicy.includes('nonce-')) {
+    failures.push(
+      `${MARKETING_PATH}: prerendered route advertises a nonce nothing was stamped with`,
+    );
+  }
+  if (!marketingPolicy.includes("script-src 'self' 'unsafe-inline'")) {
+    failures.push(`${MARKETING_PATH}: unexpected script-src: ${marketingPolicy}`);
   }
 } finally {
   stopServer();

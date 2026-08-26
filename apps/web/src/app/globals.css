@@ -1,67 +1,69 @@
 /*
- * ComplianceOS EDU — design tokens and base styles.
+ * ComplianceOS EDU — one stylesheet, two surfaces.
  *
- * The audience is a district business officer or special education director checking a number
- * against their own ledger, and occasionally a state monitor reading the same screen. That
- * shapes every choice here: dense tables over cards, tabular figures so columns of money line
- * up, status colours that survive being printed in greyscale, and no animation.
+ * The marketing site and the application share a document, so they share this file. They do
+ * not share a look by accident: the palette below is the marketing side's deliberate fixed
+ * institutional light theme, and the application inherits it rather than carrying its own.
+ * That is why the app's former light/dark token pair is gone — one root layout can only have
+ * one colour scheme, and a compliance screen that prints predictably is worth more than one
+ * that follows the OS.
  *
- * Section 26.7 targets WCAG 2.2 AA. Every foreground/background pair below is chosen for at
- * least 4.5:1 on body text and 3:1 on large text and non-text indicators, in both schemes.
+ * Everything the application styles is scoped under `.app-main`, the wrapper its route-group
+ * layout adds. Bare element rules would otherwise reach the marketing pages, which use a
+ * plain `<main>` with their own containers — a 62rem cap on it would squeeze every
+ * full-bleed section on the landing page.
  */
 
 :root {
-  color-scheme: light dark;
+  /* Fixed institutional light theme — does NOT follow the OS scheme.
+     This is public-sector procurement software; it must always read as
+     formal, legible, and print-friendly. */
+  color-scheme: light;
 
-  --bg: #ffffff;
-  --bg-raised: #f7f8fa;
-  --bg-sunken: #eef0f4;
-  --fg: #16181d;
-  --muted: #555c6b;
-  --line: #dfe3ea;
-  --line-strong: #c3c9d4;
-  --accent: #1a46c4;
-  --accent-fg: #ffffff;
+  /* Core (contrast ratios verified against the design direction) */
+  --ink: #14171c; /* body text — 17.96 AAA on white */
+  --navy: #123a6b; /* primary — 11.39 AAA on white */
+  --navy-hover: #0e2f57;
+  --muted: #59564d; /* secondary text — AA on warm paper */
+  --surface: #ffffff; /* exhibits / cards — pure white pops on paper */
+  --surface-muted: #f3efe6; /* warm printed-record paper — page + bands */
+  --surface-sunken: #eae4d6; /* warm sunken ledger fill */
+  --line: #d7cfbf; /* DECORATIVE warm hairline — never on controls */
+  --border-interactive: #837c6b; /* control boundaries — meets 1.4.11 on paper */
 
-  /* Evaluation statuses. Never colour alone — every use is paired with a label. */
-  --pass: #17603a;
+  /* Status — each also has a distinct glyph; color is never the only cue */
+  --pass: #1d6b45;
+  --fail: #a8231c;
+  --risk: #8a5a12;
+  --indeterminate: #4a5568;
+  --manual: #5b3e90;
+  --na: #6b7280;
+
+  /* Machine-record voice: citations, rule-pack IDs, statuses, figures. */
+  --mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Aliases kept for the legacy registry page */
+  --bg: var(--surface);
+  --fg: var(--ink);
+  --accent: var(--navy);
+
+  /* Status tints for the application's badges. Each pairs with the status colour above at
+     4.5:1 or better, and the badge always carries the word as well as the colour. */
   --pass-bg: #e6f4ec;
-  --fail: #a5162b;
   --fail-bg: #fdeaed;
-  --risk: #8a5000;
   --risk-bg: #fdf1de;
-  --indeterminate: #4a4f5c;
   --indeterminate-bg: #eef0f4;
-  --review: #5a3a9e;
-  --review-bg: #f1ecfb;
+  --manual-bg: #f1ecfb;
 
-  --radius: 6px;
-  --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
-}
+  /* The application's own aliases, mapped onto the institutional palette. */
+  --bg-raised: var(--surface);
+  --bg-sunken: var(--surface-sunken);
+  --line-strong: var(--border-interactive);
+  --accent-fg: var(--surface);
+  --review: var(--manual);
+  --review-bg: var(--manual-bg);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f1115;
-    --bg-raised: #161922;
-    --bg-sunken: #1d212b;
-    --fg: #e8eaee;
-    --muted: #a0a7b6;
-    --line: #272c38;
-    --line-strong: #3a4152;
-    --accent: #8fabff;
-    --accent-fg: #0f1115;
-
-    --pass: #6bd39b;
-    --pass-bg: #12261c;
-    --fail: #ff8f9f;
-    --fail-bg: #2c1418;
-    --risk: #e8b463;
-    --risk-bg: #2a1f0e;
-    --indeterminate: #b6bccb;
-    --indeterminate-bg: #1d212b;
-    --review: #c3a9ff;
-    --review-bg: #201a30;
-  }
+  --radius: 4px;
 }
 
 * {
@@ -69,77 +71,111 @@
 }
 
 html {
-  /* A finding page is long and full of anchors; jumping to one should not lose context. */
-  scroll-padding-top: 2rem;
+  background: var(--surface-muted);
 }
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font:
-    15px/1.6 ui-sans-serif,
+  background: var(--surface-muted);
+  color: var(--ink);
+  font-family:
+    var(--font-sans),
+    ui-sans-serif,
     system-ui,
     -apple-system,
     'Segoe UI',
     sans-serif;
-  /* Money in a column has to line up, everywhere, without per-cell styling. */
-  font-variant-numeric: tabular-nums;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Respect a reader who has asked for less motion; there is none to lose here. */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
+/* Visible keyboard focus everywhere (WCAG 2.4.7) */
+:focus-visible {
+  outline: 3px solid var(--navy);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* -------- legacy /registry page styles (kept, retinted) -------- */
+main {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+}
+
+main h1 {
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.25rem;
+}
+
+.sub {
+  color: var(--muted);
+  margin: 0 0 2.5rem;
+}
+
+main h2 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 2.5rem 0 0.75rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.6rem 0.75rem 0.6rem 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+th {
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
 }
 
 a {
-  color: var(--accent);
-  text-underline-offset: 2px;
+  color: var(--navy);
 }
 
-a:focus-visible,
-button:focus-visible,
-summary:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
-/* Keyboard users land here first; it must be reachable and visible. */
-.skip-link {
-  position: absolute;
-  left: -9999px;
-  top: 0;
-  background: var(--accent);
-  color: var(--accent-fg);
-  padding: 0.5rem 1rem;
-  z-index: 10;
-}
-
-.skip-link:focus {
-  left: 0;
+.tag {
+  display: inline-block;
+  border: 1px solid var(--border-interactive);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.75rem;
+  color: var(--muted);
 }
 
 /* ------------------------------------------------------------------ layout -- */
 
-.masthead {
+.app-main .masthead {
   border-bottom: 1px solid var(--line);
   background: var(--bg-raised);
 }
 
-.masthead-inner,
-main {
+.app-main .masthead-inner,
+.app-main main {
   max-width: 62rem;
   margin: 0 auto;
   padding: 0 1.5rem;
 }
 
-.masthead-inner {
+.app-main .masthead-inner {
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
@@ -148,29 +184,29 @@ main {
   flex-wrap: wrap;
 }
 
-.wordmark {
+.app-main .wordmark {
   font-weight: 650;
   letter-spacing: -0.01em;
   font-size: 1rem;
 }
 
-.masthead-note {
+.app-main .masthead-note {
   color: var(--muted);
   font-size: 0.8rem;
 }
 
-main {
+.app-main main {
   padding-top: 2.5rem;
   padding-bottom: 5rem;
 }
 
-h1 {
+.app-main h1 {
   font-size: 1.4rem;
   letter-spacing: -0.015em;
   margin: 0 0 0.35rem;
 }
 
-h2 {
+.app-main h2 {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.09em;
@@ -179,50 +215,50 @@ h2 {
   font-weight: 650;
 }
 
-h3 {
+.app-main h3 {
   font-size: 0.95rem;
   margin: 1.75rem 0 0.5rem;
 }
 
-.sub {
+.app-main .sub {
   color: var(--muted);
   margin: 0 0 2rem;
   max-width: 46rem;
 }
 
-.prose {
+.app-main .prose {
   max-width: 46rem;
 }
 
 /* ------------------------------------------------------------------ tables -- */
 
-.table-wrap {
+.app-main .table-wrap {
   /* A wide calculation table scrolls inside itself rather than the page. */
   overflow-x: auto;
 }
 
-table {
+.app-main table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
 }
 
-caption {
+.app-main caption {
   text-align: left;
   color: var(--muted);
   font-size: 0.8rem;
   padding-bottom: 0.5rem;
 }
 
-th,
-td {
+.app-main th,
+.app-main td {
   text-align: left;
   padding: 0.55rem 0.9rem 0.55rem 0;
   border-bottom: 1px solid var(--line);
   vertical-align: top;
 }
 
-thead th {
+.app-main thead th {
   font-weight: 650;
   color: var(--muted);
   font-size: 0.75rem;
@@ -232,13 +268,13 @@ thead th {
   white-space: nowrap;
 }
 
-tbody th {
+.app-main tbody th {
   font-weight: 500;
   color: var(--muted);
   white-space: nowrap;
 }
 
-.num {
+.app-main .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -246,12 +282,12 @@ tbody th {
 
 /* ------------------------------------------------------------------- atoms -- */
 
-code {
+.app-main code {
   font-family: var(--mono);
   font-size: 0.85em;
 }
 
-.tag {
+.app-main .tag {
   display: inline-block;
   border: 1px solid var(--line-strong);
   border-radius: 999px;
@@ -265,7 +301,7 @@ code {
  * A status is a word first and a colour second. The dot is redundant reinforcement, not the
  * signal — a monitor printing this page in greyscale must still read the result correctly.
  */
-.status {
+.app-main .status {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -277,7 +313,7 @@ code {
   white-space: nowrap;
 }
 
-.status::before {
+.app-main .status::before {
   content: '';
   width: 0.45rem;
   height: 0.45rem;
@@ -286,32 +322,32 @@ code {
   flex: none;
 }
 
-.status-PASS {
+.app-main .status-PASS {
   color: var(--pass);
   background: var(--pass-bg);
 }
-.status-FAIL {
+.app-main .status-FAIL {
   color: var(--fail);
   background: var(--fail-bg);
 }
-.status-RISK {
+.app-main .status-RISK {
   color: var(--risk);
   background: var(--risk-bg);
 }
-.status-INDETERMINATE {
+.app-main .status-INDETERMINATE {
   color: var(--indeterminate);
   background: var(--indeterminate-bg);
 }
-.status-MANUAL_REVIEW {
+.app-main .status-MANUAL_REVIEW {
   color: var(--review);
   background: var(--review-bg);
 }
-.status-NOT_APPLICABLE {
+.app-main .status-NOT_APPLICABLE {
   color: var(--muted);
   background: var(--bg-sunken);
 }
 
-.note {
+.app-main .note {
   border-left: 3px solid var(--line-strong);
   padding: 0.15rem 0 0.15rem 0.9rem;
   color: var(--muted);
@@ -319,11 +355,11 @@ code {
   max-width: 46rem;
 }
 
-.note-warn {
+.app-main .note-warn {
   border-left-color: var(--risk);
 }
 
-.definition-list {
+.app-main .definition-list {
   display: grid;
   grid-template-columns: minmax(9rem, max-content) 1fr;
   gap: 0.4rem 1.25rem;
@@ -331,32 +367,32 @@ code {
   font-size: 0.875rem;
 }
 
-.definition-list dt {
+.app-main .definition-list dt {
   color: var(--muted);
 }
 
-.definition-list dd {
+.app-main .definition-list dd {
   margin: 0;
 }
 
 @media (max-width: 34rem) {
-  .definition-list {
+  .app-main .definition-list {
     grid-template-columns: 1fr;
     gap: 0.1rem;
   }
 
-  .definition-list dd {
+  .app-main .definition-list dd {
     margin-bottom: 0.6rem;
   }
 }
 
 /* --------------------------------------------------------------- navigation -- */
 
-.site-nav {
+.app-main .site-nav {
   margin-left: auto;
 }
 
-.site-nav ul {
+.app-main .site-nav ul {
   display: flex;
   gap: 1.25rem;
   list-style: none;
@@ -365,25 +401,25 @@ code {
   font-size: 0.85rem;
 }
 
-.site-nav a {
+.app-main .site-nav a {
   color: var(--muted);
   text-decoration: none;
   padding-bottom: 2px;
   border-bottom: 2px solid transparent;
 }
 
-.site-nav a:hover {
+.app-main .site-nav a:hover {
   color: var(--fg);
 }
 
 /* The current page is marked by weight and a rule, not by colour alone. */
-.site-nav a[aria-current='page'] {
+.app-main .site-nav a[aria-current='page'] {
   color: var(--fg);
   font-weight: 650;
   border-bottom-color: var(--accent);
 }
 
-.breadcrumb {
+.app-main .breadcrumb {
   font-size: 0.8rem;
   color: var(--muted);
   margin: 0 0 1rem;
@@ -391,11 +427,11 @@ code {
 
 /* -------------------------------------------------------------- finding page -- */
 
-.headline {
+.app-main .headline {
   margin: 0 0 1.5rem;
 }
 
-.headline .status {
+.app-main .headline .status {
   font-size: 0.95rem;
   padding: 0.3rem 0.8rem;
 }
@@ -404,7 +440,7 @@ code {
  * The machine-readable status beside the human one. A district reading "Not determined" on a
  * screen and INDETERMINATE in an export needs to see, once, that they are the same thing.
  */
-.status-code {
+.app-main .status-code {
   font-family: var(--mono);
   font-size: 0.78em;
   font-weight: 500;
@@ -412,14 +448,14 @@ code {
   letter-spacing: 0;
 }
 
-.muted {
+.app-main .muted {
   color: var(--muted);
   font-weight: 400;
   font-size: 0.85em;
 }
 
 /* A 64-character hash must wrap rather than push a table sideways. */
-.hash {
+.app-main .hash {
   overflow-wrap: anywhere;
   word-break: break-all;
 }
@@ -428,17 +464,17 @@ code {
  * `definition-list` is a two-column grid, so a nested list inside a `dd` would inherit the
  * grid and misalign. Wrapping each pair in a row element keeps both levels readable.
  */
-.definition-list .nested-row {
+.app-main .definition-list .nested-row {
   display: contents;
 }
 
-.definition-list.nested {
+.app-main .definition-list.nested {
   grid-template-columns: minmax(7rem, max-content) 1fr;
   gap: 0.2rem 1rem;
   font-size: 0.95em;
 }
 
-.explanation {
+.app-main .explanation {
   white-space: pre-wrap;
   font-family: var(--mono);
   font-size: 0.78rem;
@@ -450,33 +486,33 @@ code {
   margin: 0.75rem 0 0;
 }
 
-details {
+.app-main details {
   margin: 1.5rem 0;
   border-top: 1px solid var(--line);
   padding-top: 0.75rem;
 }
 
-summary {
+.app-main summary {
   cursor: pointer;
   font-size: 0.85rem;
   color: var(--muted);
 }
 
-details[open] summary {
+.app-main details[open] summary {
   color: var(--fg);
 }
 
-.prose ul,
-.issue-list {
+.app-main .prose ul,
+.app-main .issue-list {
   padding-left: 1.15rem;
 }
 
-.prose li,
-.issue-list li {
+.app-main .prose li,
+.app-main .issue-list li {
   margin-bottom: 0.5rem;
 }
 
-.issue-list {
+.app-main .issue-list {
   max-width: 46rem;
   font-size: 0.9rem;
 }

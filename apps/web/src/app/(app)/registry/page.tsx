@@ -10,7 +10,7 @@ import {
   type RegulatorySource,
   type Rule,
 } from '@complianceos/rulepack-sdk';
-import { PACK_DIR, SOURCES_DIR } from '../../lib/repo.js';
+import { PACK_DIR, SOURCES_DIR } from '@/lib/repo';
 
 // The deployed build must prove the rule pack it shipped with actually parses, and that the
 // source-verification gate still holds against the content that shipped. Reading both at
@@ -41,10 +41,11 @@ export default async function RuleLibraryPage() {
 
   return (
     <>
-      <h1>Rule library</h1>
+      <h1>Rule registry</h1>
       <p className="sub">
-        The regulatory content this deployment shipped with, read from disk on each request. To see
-        these rules applied, open the <Link href="/">assessment</Link>.
+        The regulatory content this deployment shipped with, read from disk on each request — so
+        this page is proof the deployed build carries a pack that actually parses, not a claim that
+        it does. To see these rules applied, open the <Link href="/assessment">assessment</Link>.
       </p>
 
       <h2>Pack</h2>

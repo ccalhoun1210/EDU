@@ -53,6 +53,15 @@ const config: NextConfig = {
   },
 
   /**
+   * The same `.js`-means-`.ts` problem for `next dev`, which runs Turbopack rather than
+   * webpack. Both resolvers have to be told, or the dev server and the production build
+   * disagree about whether the monorepo resolves at all.
+   */
+  turbopack: {
+    resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.json', '.mjs'],
+  },
+
+  /**
    * The workspace packages are ESM TypeScript importing siblings with explicit `.js`
    * specifiers, which is what `verbatimModuleSyntax` and Node ESM require of the *emitted*
    * code. Next compiles the `.ts` source directly, so webpack has to be told that a `.js`
