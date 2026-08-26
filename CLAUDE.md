@@ -72,7 +72,9 @@ swapped and what that costs.
 apps/web/              Next.js application (web + API routes)
 packages/domain/       Core vocabulary — evaluation statuses, org model, access rules
 packages/rulepack-sdk/ Rule schema, restricted DSL, pack loader, calculator allow-list
+packages/evidence/     Instruments, indicators, assertions, workpapers, binders
 rulepacks/             Regulatory content as YAML — federal baseline, then state overlays
+instruments/           State monitoring instruments as YAML — the indicators we are scored on
 docs/architecture/     Design documents, including the master buildout
 docs/adrs/             Architecture decision records
 ```

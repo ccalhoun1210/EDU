@@ -1,0 +1,46 @@
+# Georgia's parent mentor budget minimum.
+#
+# This rule exists to prove the state overlay layer carries its weight: a Georgia-only
+# requirement, with no federal analogue, scored as its own indicator (GaDOE CFM 18.5), and
+# expressible in the restricted DSL without a calculator.
+#
+# LIFECYCLE: DRAFT, and it stays DRAFT until the authority below is replaced.
+# The $14,400 figure and the requirement itself are transcribed from a published LEA
+# monitoring result rather than from a GaDOE regulation or the issued CFM Document, which
+# is not currently retrievable from gadoe.org. Per the working agreement in CLAUDE.md — if
+# you cannot point at the state regulation, the rule is not ready — this must be traced to
+# GaDOE's own issuance before it is promoted.
+
+ruleId: GA-IDEA-PARENT-MENTOR-001
+pack: US-GA-IDEA-B-2026
+jurisdiction: US-GA
+program: IDEA_PART_B
+subjectType: LEA_FISCAL_YEAR
+lifecycle: DRAFT
+
+authority:
+  citation: 'GaDOE Cross-Functional Monitoring FY2025, Indicator 18.5'
+  sourceId: GA-CFM-FY2025-18-5
+  url: 'https://resources.finalsite.net/images/v1768941340/cherokeek12net/mtyyxadyaimsnqj3jbni/CrossFunctionalMonitoringIndicatorReport2025.pdf'
+
+effective:
+  start: 2024-07-01
+  end: null
+
+inputs:
+  - parent_mentor_budgeted_amount
+
+condition:
+  op: gte
+  left:
+    input: parent_mentor_budgeted_amount
+  right:
+    literal: 14400
+
+outputSchema:
+  status: enum
+  budgetedAmount: string
+  requiredMinimum: string
+
+severityOnFailure: MEDIUM
+explanationTemplate: ga_parent_mentor_v1

@@ -1,0 +1,13 @@
+packId: US-GA-IDEA-B-2026
+version: 0.1.0
+jurisdiction: US-GA
+program: IDEA_PART_B
+layer: STATE
+extendsPack: US-FED-IDEA-B-2026
+effective:
+  start: 2026-07-01
+  end: null
+description: >-
+  Georgia state overlay for IDEA Part B fiscal compliance. Adds requirements Georgia
+  imposes on top of the federal baseline and tightens federal thresholds where Georgia is
+  stricter. It never rewrites the underlying statutory requirement.

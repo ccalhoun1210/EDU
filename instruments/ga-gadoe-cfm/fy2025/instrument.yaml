@@ -1,0 +1,99 @@
+# Georgia Department of Education — Cross-Functional Monitoring (CFM), FY2025.
+#
+# PROVENANCE, read this before trusting the text below.
+#
+# GaDOE issues the CFM Document annually and it is the master evidence list a Georgia LEA
+# is scored against. GaDOE's own published instrument PDFs (FY20 CFM Document) now 404
+# after the department's site migration, so the section and indicator structure here was
+# transcribed from a real, published LEA monitoring result — the Cross Functional
+# Monitoring Indicator Report, FY2025, Cherokee County School District #628 — which
+# reproduces GaDOE's numbering and scoring verbatim.
+#
+# Consequences of that, stated plainly:
+#   * The `title` and `requirement` text is PARAPHRASED from one district's report, not
+#     transcribed from GaDOE's issued instrument.
+#   * Only Section 18 is modelled here. The full FY2025 instrument carries 16 sections and
+#     57 indicators; the rest are deliberately out of scope rather than half-entered.
+#   * This file must be reconciled against GaDOE's own FY2027 CFM Document before any
+#     rule referencing it leaves DRAFT.
+#
+# Source: https://resources.finalsite.net/images/v1768941340/cherokeek12net/mtyyxadyaimsnqj3jbni/CrossFunctionalMonitoringIndicatorReport2025.pdf
+
+instrumentId: GA-GADOE-CFM
+version: FY2025
+jurisdiction: US-GA
+issuingAgency: Georgia Department of Education
+sourceUrl: 'https://gadoe.org/federal-programs/'
+
+effective:
+  start: 2024-07-01
+  end: 2025-06-30
+
+# Every LEA is monitored at least once every four years; off-cycle years require a
+# self-monitoring checklist submitted to GaDOE.
+monitoringCycleYears: 4
+
+description: >-
+  Georgia's Cross-Functional Monitoring instrument. Federal Programs, Finance and Special
+  Education monitor the same visit, which is why IDEA fiscal indicators and ESSA
+  programmatic indicators appear in one document. Indicators are scored Met, Did Not Meet,
+  or N/A; a Did Not Meet moves the LEA to a Corrective Action Plan.
+
+sections:
+  - sectionNumber: '18'
+    title: 'Individuals with Disabilities Education Act (IDEA) — Fiscal Indicators'
+    indicators:
+      - indicatorId: '18.1'
+        title: 'Maintenance of effort'
+        requirement: >-
+          The LEA complies with maintenance of effort procedures, budgeting and expending at
+          least the same amount for the education of children with disabilities as in the
+          preceding fiscal year, under one of the four permitted methods of comparison.
+        authority:
+          citation: '34 CFR 300.203'
+          sourceId: REG-US-IDEA-300-203
+          url: 'https://www.ecfr.gov/current/title-34/subtitle-B/chapter-III/part-300/subpart-C/subject-group-ECFR8e2ff1adc6c0451/section-300.203'
+        satisfiedByRules:
+          - IDEA-MOE-ELIGIBILITY-001
+          - IDEA-MOE-COMPLIANCE-001
+
+      - indicatorId: '18.2'
+        title: 'Annual excess cost calculation'
+        requirement: >-
+          The LEA conducts an annual excess cost calculation, computed separately for
+          elementary and secondary levels.
+        authority:
+          citation: '34 CFR 300.202(b)'
+          sourceId: REG-US-IDEA-300-202
+          url: 'https://www.ecfr.gov/current/title-34/subtitle-B/chapter-III/part-300/subpart-C/section-300.202'
+        satisfiedByRules:
+          - IDEA-EXCESS-COST-001
+
+      - indicatorId: '18.3'
+        title: 'Comprehensive CEIS'
+        requirement: >-
+          The LEA completes the CCEIS tab where it has been identified with significant
+          disproportionality and is therefore required to reserve funds for comprehensive
+          coordinated early intervening services.
+        authority:
+          citation: '34 CFR 300.646(d)'
+          sourceId: REG-US-IDEA-300-646
+          url: 'https://www.ecfr.gov/current/title-34/subtitle-B/chapter-III/part-300/subpart-F/subject-group-ECFR2c2c5d4b2b12b4a/section-300.646'
+        conditional: true
+        requiresNarrative: true
+
+      - indicatorId: '18.4'
+        title: 'High-cost grant'
+        requirement: >-
+          The LEA uses funds received under the state high-cost grant for their intended
+          purpose and can evidence the costs claimed.
+        conditional: true
+        requiresNarrative: true
+
+      - indicatorId: '18.5'
+        title: 'Parent mentor minimum'
+        requirement: >-
+          The LEA budgets at least $14,400 for a parent mentor. This is a Georgia
+          requirement with no federal analogue.
+        satisfiedByRules:
+          - GA-IDEA-PARENT-MENTOR-001

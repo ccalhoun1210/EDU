@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@complianceos/domain": "workspace:*",
+    "@complianceos/evidence": "workspace:*",
     "@complianceos/rulepack-sdk": "workspace:*",
     "next": "^15.5.6",
     "react": "^19.2.0",

@@ -6,6 +6,9 @@
     },
     {
       "path": "./packages/rulepack-sdk"
+    },
+    {
+      "path": "./packages/evidence"
     }
   ]
 }
