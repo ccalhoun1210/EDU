@@ -116,25 +116,38 @@ what it costs, including the procurement questions to close before a district co
 
 ### How it deploys
 
-The Next application lives in `apps/web`, and the Vercel project's Root Directory points at
-it, so `apps/web/vercel.json` is the config that gets read. A repository-root `vercel.json`
-would be ignored under that setting, which is why there isn't one — a config file nothing
-reads is worse than no config file, because it looks like the setting is in force.
+The Next application lives in `apps/web`, and a Vercel project can be pointed at it two ways.
+Both work, deliberately:
 
-Two consequences worth knowing:
+| Project Root Directory | Config read            | Output           |
+| ---------------------- | ---------------------- | ---------------- |
+| repository root        | `vercel.json`          | `apps/web/.next` |
+| `apps/web`             | `apps/web/vercel.json` | `.next`          |
 
-- **Workspace packages resolve from TypeScript source**, not from a built `dist/`. Each
-  package's `exports` points at `./src/index.ts` and Next transpiles them, so a deploy needs
-  no separate build step for the monorepo. The packages are ESM and import siblings with
-  explicit `.js` specifiers, so `next.config.ts` teaches webpack that a `.js` specifier means
-  the `.ts` file beside it. `tsc --build` still runs in CI — it is the typecheck, not a
-  prerequisite of the bundle.
+Supporting only one is fragile, and it has already broken twice. The Root Directory lives in
+the Vercel dashboard, not in this repository: nothing here can test it, nobody reviewing a
+diff can see it, and changing it turns every build red with `No Next.js version detected` —
+an error that reads like a code problem and is not one. Supporting both removes the class.
+
+Three details make it work, and each looks odd without the reason:
+
+- **`next` is a devDependency of the workspace root**, though the root builds no Next
+  application. Vercel's framework detection reads the `package.json` at whichever directory
+  the project is rooted at and refuses a root-directory deployment when it finds no `next`
+  there, whatever `vercel.json` says. It is a detection shim, not a dependency any root code
+  imports.
+- **Workspace packages resolve from TypeScript source**, not a built `dist/`. Each package's
+  `exports` points at `./src/index.ts` and Next transpiles them, so a deploy needs no separate
+  build step for the monorepo. The packages are ESM and import siblings with explicit `.js`
+  specifiers, so `next.config.ts` teaches webpack that a `.js` specifier means the `.ts` file
+  beside it. `tsc --build` still runs in CI as the typecheck, not as a prerequisite of the
+  bundle.
 - **The rule packs are read from disk at request time** and nothing imports them, so Next's
   dependency tracing cannot see them. `outputFileTracingIncludes` pulls them into the bundle;
   without it the build succeeds and the deployed application fails on its first request.
 
-Security headers are declared in `next.config.ts` rather than in `vercel.json`, so they apply
-under `next start` and in local development as well as on Vercel.
+Security headers are declared in `next.config.ts` rather than in either `vercel.json`, so they
+apply under both layouts and under `next start`.
 
 ## Contributing
 
