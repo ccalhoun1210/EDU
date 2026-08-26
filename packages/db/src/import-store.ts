@@ -45,7 +45,9 @@ export interface StorableFact {
   readonly subjectType: string;
   readonly subjectId: string;
   readonly field: string;
-  readonly value: { readonly kind: string; readonly value?: unknown } | unknown;
+  readonly value: unknown;
+  /** `money`, `count`, `date`, `boolean` or `text`. Decides which column the value lands in. */
+  readonly valueType: string;
   readonly classification: string;
   readonly origin: string;
   readonly provenance: Readonly<Record<string, unknown>>;
@@ -62,6 +64,19 @@ export interface StorableFile {
   readonly fileName: string;
   readonly mediaType: string;
   readonly bytes: Buffer;
+  /**
+   * The malware-scan verdict this file was admitted under, and what produced it.
+   *
+   * Required, not defaulted. `import_files` defaults the column to PENDING, which is the
+   * right default for a row nobody has told anything about — but a row written by this
+   * module *has* been told, and letting the caller omit it would store PENDING for a file
+   * that was in fact accepted unscanned. Migration 0010 is where the vocabulary is set out.
+   */
+  readonly scan: {
+    readonly status: string;
+    readonly scanner: string;
+    readonly scannedAt: string;
+  };
   /** Each parsed row, in file order. Written to `raw_records` one row at a time. */
   readonly rows: readonly Readonly<Record<string, unknown>>[];
 }
@@ -109,50 +124,43 @@ export function factKey(fact: { subjectType: string; subjectId: string; field: s
 /**
  * Split a canonical value into the typed columns `canonical_facts` provides.
  *
- * The schema has `numeric_value`, `text_value` and `boolean_value` rather than one jsonb
- * blob, so that a fiscal figure is a NUMERIC the database can compare and sum — invariant 5
- * is enforced by the column type, not by everyone remembering. Money arrives here as a
- * decimal *string* and is handed to the driver as one, so it reaches NUMERIC without passing
- * through a float on the way.
+ * The schema has `numeric_value`, `text_value` and `boolean_value` rather than one jsonb blob,
+ * so that a fiscal figure is a NUMERIC the database can compare and sum — invariant 5 is
+ * enforced by the column type, not by everyone remembering.
+ *
+ * Which column a value belongs in comes from `valueType`, which the mapping template declared
+ * and the fact carries. It is emphatically *not* inferred from the value: money is a decimal
+ * string, a date is a `YYYY-MM-DD` string and an enum is just a string, so a rule that guessed
+ * by spelling would file `"4830000.00"` as text whenever a template called it text — and a
+ * fiscal figure sitting in a text column is invariant 5 lost at the very last step, silently,
+ * after every layer above it did the right thing.
+ *
+ * Money reaches the driver as the decimal string it already is and lands in NUMERIC exactly.
+ * Parsing it here would be the float round trip invariant 5 forbids.
  */
-function columnsFor(value: unknown): {
-  numeric: string | null;
-  text: string | null;
-  boolean: boolean | null;
-  unit: string | null;
-} {
-  const empty = { numeric: null, text: null, boolean: null, unit: null };
-  if (typeof value !== 'object' || value === null) {
-    if (typeof value === 'boolean') return { ...empty, boolean: value };
-    if (typeof value === 'string') return { ...empty, text: value };
-    if (typeof value === 'number') return { ...empty, numeric: String(value) };
-    return empty;
-  }
+function columnsFor(
+  value: unknown,
+  valueType: string,
+): { numeric: string | null; text: string | null; boolean: boolean | null } {
+  const empty = { numeric: null, text: null, boolean: null };
+  if (value === null || value === undefined) return empty;
 
-  const tagged = value as { kind?: unknown; value?: unknown; unit?: unknown };
-  const unit = typeof tagged.unit === 'string' ? tagged.unit : null;
-  const inner = tagged.value;
-
-  switch (tagged.kind) {
-    case 'MONEY':
-    case 'DECIMAL':
-    case 'RATIO':
-    case 'COUNT':
-    case 'INTEGER':
-      // String, never Number: a decimal string handed to the driver lands in NUMERIC
-      // exactly. Parsing it here would be the float round-trip invariant 5 forbids.
+  switch (valueType) {
+    case 'money':
+    case 'count':
+      return { ...empty, numeric: String(value) };
+    case 'boolean':
+      return { ...empty, boolean: typeof value === 'boolean' ? value : null };
+    case 'date':
+    case 'text':
+    default:
+      // A list-valued fact — the four MOE methods a comparison year was met under — is stored
+      // as its JSON rather than dropped. It is not a figure and not an enum, and losing it
+      // would break the finding that cites it.
       return {
         ...empty,
-        unit,
-        numeric: inner === null || inner === undefined ? null : String(inner),
+        text: typeof value === 'string' ? value : JSON.stringify(value),
       };
-    case 'BOOLEAN':
-      return { ...empty, unit, boolean: typeof inner === 'boolean' ? inner : null };
-    case 'DATE':
-    case 'TEXT':
-    case 'ENUM':
-    default:
-      return { ...empty, unit, text: inner === null || inner === undefined ? null : String(inner) };
   }
 }
 
@@ -226,7 +234,7 @@ async function writeFacts(
   const factIds = new Map<string, string>();
 
   for (const fact of request.snapshot.facts) {
-    const columns = columnsFor(fact.value);
+    const columns = columnsFor(fact.value, fact.valueType);
 
     // Facts are versioned, never updated (0005). A corrected general ledger produces a new
     // row that supersedes the old one, and the old one keeps its place in every snapshot
@@ -245,9 +253,9 @@ async function writeFacts(
     const inserted = await db.query<{ id: string }>(
       `INSERT INTO canonical_facts
          (tenant_id, organization_id, fact_type, subject_type, subject_key,
-          numeric_value, text_value, boolean_value, unit, classification,
+          numeric_value, text_value, boolean_value, classification,
           version, supersedes_fact_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING id`,
       [
         request.tenantId,
@@ -258,7 +266,6 @@ async function writeFacts(
         columns.numeric,
         columns.text,
         columns.boolean,
-        columns.unit,
         fact.classification,
         (supersedes?.version ?? 0) + 1,
         supersedes?.id ?? null,
@@ -329,8 +336,8 @@ export function persistImport(
     const file = await db.query<{ id: string }>(
       `INSERT INTO import_files
          (tenant_id, import_job_id, file_name, media_type, byte_size, content_hash,
-          storage_ref, content, row_count)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          storage_ref, content, row_count, scan_status, scanner, scanned_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING id`,
       [
         request.tenantId,
@@ -342,6 +349,9 @@ export function persistImport(
         `inline:sha256:${contentHash}`,
         request.file.bytes,
         request.file.rows.length,
+        request.file.scan.status,
+        request.file.scan.scanner,
+        request.file.scan.scannedAt,
       ],
     );
     const importFileId = file.rows[0]?.id;

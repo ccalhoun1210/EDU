@@ -146,6 +146,7 @@ suite(title, () => {
         mediaType: 'text/csv',
         bytes: Buffer.from('lea_id,state_local_total,children\nLEA-0417,4830000.00,1004\n', 'utf8'),
         rows: [row],
+        scan: { status: 'CLEAN', scanner: 'test-scanner', scannedAt: '2026-08-01T00:00:00.000Z' },
       },
       snapshot: {
         organizationId: who.organizationId,
@@ -156,8 +157,12 @@ suite(title, () => {
             subjectType: 'FISCAL_YEAR',
             subjectId: 'FY2026',
             field: 'state_local_total',
-            // A decimal string, never a Number — invariant 5 starts here.
-            value: { kind: 'MONEY', value: '4830000.00', unit: 'USD' },
+            // A bare decimal string with `valueType: 'money'` beside it — exactly what
+            // `packages/ingest` produces. A fixture that wrapped it in a tagged object would
+            // be testing a shape nothing sends, which is how a fiscal figure came to be
+            // stored in a text column without a single test noticing.
+            value: '4830000.00',
+            valueType: 'money',
             classification: 'CONFIDENTIAL',
             origin: 'DISTRICT_EXPORT',
             provenance: { kind: 'FILE_ROW', sourceRow: 1, sourceFields: ['state_local_total'] },
@@ -167,7 +172,8 @@ suite(title, () => {
             subjectId: 'FY2026',
             field: 'state_share_of_total',
             // Seventeen significant digits — more than a double can hold. See the money test.
-            value: { kind: 'RATIO', value: '1234567.1234567891' },
+            value: '1234567.1234567891',
+            valueType: 'money',
             classification: 'CONFIDENTIAL',
             origin: 'DISTRICT_EXPORT',
             provenance: { kind: 'FILE_ROW', sourceRow: 1, sourceFields: ['state_share'] },
@@ -176,7 +182,8 @@ suite(title, () => {
             subjectType: 'FISCAL_YEAR',
             subjectId: 'FY2026',
             field: 'children_with_disabilities',
-            value: { kind: 'COUNT', value: '1004' },
+            value: 1004,
+            valueType: 'count',
             classification: 'CONFIDENTIAL',
             origin: 'DISTRICT_EXPORT',
             provenance: { kind: 'FILE_ROW', sourceRow: 1, sourceFields: ['children'] },
@@ -384,11 +391,10 @@ suite(title, () => {
       const fact = await app.withTenant(alpha.tenantId, (db) =>
         db.query<{
           numeric_value: string;
-          unit: string | null;
           text_value: string | null;
           exact: boolean;
         }>(
-          `SELECT numeric_value, unit, text_value,
+          `SELECT numeric_value, text_value,
                   numeric_value = $2::numeric AS exact
              FROM canonical_facts WHERE id = $1`,
           [stored.factIds.get(factKey(STATE_SHARE)), '1234567.1234567891'],
@@ -401,13 +407,12 @@ suite(title, () => {
       expect(fact.rows[0]?.text_value).toBeNull();
 
       const money = await app.withTenant(alpha.tenantId, (db) =>
-        db.query<{ unit: string | null; exact: boolean }>(
-          `SELECT unit, numeric_value = $2::numeric AS exact FROM canonical_facts WHERE id = $1`,
+        db.query<{ exact: boolean }>(
+          `SELECT numeric_value = $2::numeric AS exact FROM canonical_facts WHERE id = $1`,
           [stored.factIds.get(factKey(STATE_LOCAL_TOTAL)), '4830000.00'],
         ),
       );
       expect(money.rows[0]?.exact).toBe(true);
-      expect(money.rows[0]?.unit).toBe('USD');
     });
 
     it('refuses a fact with no row behind it, rather than storing one', async () => {
@@ -427,7 +432,8 @@ suite(title, () => {
                 subjectType: 'FISCAL_YEAR',
                 subjectId: 'FY2025',
                 field: 'prior_year_moe_status',
-                value: { kind: 'ENUM', value: 'MET' },
+                value: 'MET',
+                valueType: 'text',
                 classification: 'CONFIDENTIAL',
                 origin: 'PLATFORM_DETERMINATION',
                 provenance: { kind: 'DETERMINATION', assessmentRunId: 'RUN-PRIOR-0001' },
@@ -488,9 +494,7 @@ suite(title, () => {
         snapshot: {
           ...corrected.snapshot,
           facts: corrected.snapshot.facts.map((fact) =>
-            fact.field === 'state_local_total'
-              ? { ...fact, value: { kind: 'MONEY', value: '4915000.00', unit: 'USD' } }
-              : fact,
+            fact.field === 'state_local_total' ? { ...fact, value: '4915000.00' } : fact,
           ),
         },
       });

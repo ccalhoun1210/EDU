@@ -22,6 +22,7 @@ import {
   type DataClassification,
   type FactOrigin,
 } from '@complianceos/domain';
+import type { ValueType } from './mapping.js';
 import type { FactProvenance, ProvenanceKind, SourceFileRef } from './provenance.js';
 
 /**
@@ -37,6 +38,20 @@ export interface CanonicalFact {
   readonly subjectId: string;
   readonly field: string;
   readonly value: CanonicalValue;
+  /**
+   * What kind of value this is, from the mapping template that produced it.
+   *
+   * Not inferable from `value` and not to be guessed from it. Money is a decimal string, a
+   * date is a `YYYY-MM-DD` string and an enum is just a string — so a store deciding by
+   * spelling would put `"4830000.00"` in a text column whenever a template happened to call
+   * it text, and would put an enum that looked like a number into a numeric one. Either way
+   * a fiscal figure stops being a NUMERIC the database can compare and sum, which is
+   * invariant 5 lost quietly at the last step.
+   *
+   * Carried on the fact because the fact is what gets stored, and by then the template is
+   * long out of scope.
+   */
+  readonly valueType: ValueType;
   readonly classification: DataClassification;
   /**
    * Whose statement this is.
@@ -155,6 +170,10 @@ export function computeSnapshotHash(
       subjectId: fact.subjectId,
       field: fact.field,
       value: fact.value,
+      // Hashed for the same reason `origin` is: without it a sealed snapshot could be edited
+      // to relabel a money figure as text — changing how it is stored and compared — and
+      // `verifySnapshot` would still return true.
+      valueType: fact.valueType,
       // Hashed for the same reason the raw source text is: if origin were outside the hash,
       // a sealed snapshot could be edited to relabel a district's own figure as a platform
       // determination, and `verifySnapshot` would still return true.

@@ -11,6 +11,7 @@
 
 import { describe, expect, it } from 'vitest';
 import type { CanonicalValue, DataClassification, FactOrigin } from '@complianceos/domain';
+import type { ValueType } from './mapping.js';
 import {
   isFileRowProvenance,
   type DeterminationProvenance,
@@ -98,6 +99,7 @@ interface FactSpec {
   readonly classification?: DataClassification;
   readonly origin?: FactOrigin;
   readonly provenance?: FactProvenance;
+  readonly valueType?: ValueType;
 }
 
 /** A plausible carry-forward record, for the origins that are not a district's file. */
@@ -123,6 +125,7 @@ function fact(spec: FactSpec): CanonicalFact {
     subjectId: spec.subjectId ?? 'LEA-4412:2028',
     field: spec.field,
     value: spec.value,
+    valueType: spec.valueType ?? 'text',
     classification: spec.classification ?? 'INTERNAL',
     origin,
     // Defaulted to the shape the origin is entitled to, so a fixture cannot accidentally

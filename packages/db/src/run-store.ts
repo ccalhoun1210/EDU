@@ -34,6 +34,12 @@
  * because a stored finding is the one somebody might later cite.
  */
 
+import {
+  EVALUATION_STATUSES,
+  SEVERITIES,
+  type EvaluationStatus,
+  type Severity,
+} from '@complianceos/domain';
 import type { Database } from './client.js';
 import { factKey } from './import-store.js';
 
@@ -255,6 +261,24 @@ export function persistRun(
   });
 }
 
+/**
+ * A stored value, checked against the vocabulary it is supposed to belong to.
+ *
+ * The database enforces the same set with a CHECK. This is not redundancy for its own sake:
+ * the CHECK governs what may be written, and this governs what is trusted after being read,
+ * which are different moments with different things that can have gone wrong between them.
+ */
+function oneOf<T extends string>(allowed: readonly T[], value: string, where: string): T {
+  const found = allowed.find((candidate) => candidate === value);
+  if (found === undefined) {
+    throw new Error(
+      `${where} holds ${JSON.stringify(value)}, which is not one of ${allowed.join(', ')}. ` +
+        'Refusing to render a compliance result the platform has no vocabulary for.',
+    );
+  }
+  return found;
+}
+
 export interface StoredRunSummary {
   readonly assessmentRunId: string;
   readonly organizationId: string;
@@ -275,8 +299,17 @@ export interface StoredResult {
   readonly ruleTitle: string;
   readonly authorityCitation: string;
   readonly authorityUrl: string | null;
-  readonly status: string;
-  readonly severity: string;
+  /**
+   * Narrowed on the way out, not asserted.
+   *
+   * The column's CHECK admits only these values and `canonical.test.ts` proves that CHECK
+   * matches the vocabulary — but a cast would still be a claim about a value read at runtime
+   * from a database that a migration, a manual fix or a restore could have put anything into.
+   * A caller rendering a status it has no label for should get a loud failure here rather
+   * than a blank cell on a compliance screen.
+   */
+  readonly status: EvaluationStatus;
+  readonly severity: Severity;
   readonly explanation: string;
   readonly indeterminateReason: string | null;
   readonly evaluationHash: string;
@@ -380,8 +413,8 @@ export function resultsForRun(
       ruleTitle: row.title,
       authorityCitation: row.authority_citation,
       authorityUrl: row.official_url,
-      status: row.status,
-      severity: row.severity,
+      status: oneOf(EVALUATION_STATUSES, row.status, `evaluation_results.status (${row.rule_id})`),
+      severity: oneOf(SEVERITIES, row.severity, `evaluation_results.severity (${row.rule_id})`),
       explanation: row.explanation,
       indeterminateReason: row.indeterminate_reason,
       evaluationHash: row.evaluation_hash,

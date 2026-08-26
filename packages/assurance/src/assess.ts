@@ -34,6 +34,7 @@ import {
   type CanonicalFact,
   type DataSnapshot,
   type ImportOutcome,
+  type ValidationIssue,
   type ImportRequest,
 } from '@complianceos/ingest';
 import type { LoadedRulePack, RuleLifecycleStatus } from '@complianceos/rulepack-sdk';
@@ -56,7 +57,19 @@ export interface AssessDistrictExportRequest {
    * permits; `projectFactBag` refuses the rest.
    */
   readonly priorDeterminations: readonly CanonicalFact[];
-  readonly subject: SubjectRef;
+  /**
+   * What is being assessed, when the caller already knows.
+   *
+   * Omitted for an upload, because the caller does not: the subject key is built by the
+   * mapping template from `keyFields` *after* transformation, so `FY2026` and `2026` name the
+   * same subject and only the import can say which. A route that parsed the CSV a second time
+   * to work it out would be a second implementation of "which subject is this row about", and
+   * the day the two disagreed the assessment would be filed against a subject the facts are
+   * not stored under — every input absent, every rule INDETERMINATE, and nothing to say why.
+   *
+   * Supplied for a fixture, where the subject is the point of the fixture.
+   */
+  readonly subject?: SubjectRef;
   readonly context: Omit<RunContext, 'dataSnapshotId'>;
   readonly packs: readonly LoadedRulePack[];
   /** The run's as-of date, deciding which rule versions were in force. */
@@ -71,6 +84,51 @@ export interface AssessDistrictExportOutcome {
   readonly snapshot?: DataSnapshot;
   /** Absent when there was no snapshot to assess. */
   readonly assessment?: AssessmentRunOutcome;
+}
+
+/**
+ * The one subject an import is about, or `undefined` if that is not one thing.
+ *
+ * Read from the facts the import actually produced, which is the only place the answer
+ * exists: the subject key is assembled by the mapping template from transformed values, not
+ * from raw cells. Deliberately not "the first one" — a file covering three LEAs assessed as
+ * though it covered one would report two districts' compliance under a third's name.
+ */
+function soleSubjectOf(facts: readonly CanonicalFact[]): SubjectRef | undefined {
+  const subjects = new Map<string, SubjectRef>();
+  for (const fact of facts) {
+    subjects.set(`${fact.subjectType}\u0000${fact.subjectId}`, {
+      subjectType: fact.subjectType,
+      subjectId: fact.subjectId,
+    });
+  }
+  return subjects.size === 1 ? [...subjects.values()][0] : undefined;
+}
+
+function ambiguousSubjectIssue(facts: readonly CanonicalFact[]): ValidationIssue {
+  const subjects = new Set(facts.map((fact) => `${fact.subjectType}:${fact.subjectId}`));
+  return subjects.size === 0
+    ? {
+        severity: 'ERROR',
+        code: 'NO_SUBJECT',
+        message:
+          'The file was read but produced no facts, so there is nothing to assess and no ' +
+          'subject to assess it for.',
+        resolution:
+          'Check that the export has the columns the mapping template names, and that its ' +
+          'rows carry the key fields. The reconciliation summary above lists what was ' +
+          'quarantined and which columns went unmapped.',
+      }
+    : {
+        severity: 'ERROR',
+        code: 'MULTIPLE_SUBJECTS',
+        message:
+          `The file covers ${subjects.size} subjects (${[...subjects].sort().join(', ')}), and ` +
+          'this path assesses one.',
+        resolution:
+          'Upload one export per LEA and fiscal year. Assessing several at once would file ' +
+          "each subject's figures under whichever the platform happened to pick first.",
+      };
 }
 
 /**
@@ -114,13 +172,27 @@ export function assessDistrictExport(
 
   if (!verifySnapshot(snapshot)) throw new SnapshotIntegrityError(snapshot.snapshotId);
 
-  const facts = projectFactBag(snapshot, request.subject.subjectType, request.subject.subjectId);
+  const subject = request.subject ?? soleSubjectOf(imported.snapshot.facts);
+  if (subject === undefined) {
+    // Either the file produced no facts — a district export mapping nothing is not an
+    // assessment of nothing — or it produced facts about several subjects, which is a
+    // multi-LEA file this path does not yet split. Both are the district's to fix, so both
+    // are issues on the import rather than an exception.
+    return {
+      import: {
+        ...imported,
+        issues: [...imported.issues, ambiguousSubjectIssue(imported.snapshot.facts)],
+      },
+    };
+  }
+
+  const facts = projectFactBag(snapshot, subject.subjectType, subject.subjectId);
 
   const assessment = runAssessment({
     // The snapshot actually assessed, never a caller-supplied string. A result whose
     // provenance names a snapshot it was not computed from is worse than one with none.
     context: { ...request.context, dataSnapshotId: snapshot.snapshotId },
-    subject: request.subject,
+    subject,
     asOf: request.asOf,
     packs: request.packs,
     facts,

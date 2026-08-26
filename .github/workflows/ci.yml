@@ -113,6 +113,15 @@ jobs:
           REQUIRE_DATABASE_TESTS: '1'
         run: pnpm smoke:auth
 
+      # The other half: a posted file becoming rows, and the page reading those rows back.
+      # A route that never calls the store and a page that renders the worked example over a
+      # real district's run both pass every unit suite.
+      - name: District upload and persisted run, end to end
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/complianceos_test
+          REQUIRE_DATABASE_TESTS: '1'
+        run: pnpm smoke:upload
+
   data-hygiene:
     runs-on: ubuntu-latest
     steps:

@@ -101,6 +101,32 @@ export const MALWARE_SCAN_STATUSES = ['PENDING', 'CLEAN', 'INFECTED', 'FAILED'] 
 export type MalwareScanStatus = (typeof MALWARE_SCAN_STATUSES)[number];
 
 /**
+ * The same first stage for an uploaded district export (section 10), which needs one status
+ * section 15's pipeline does not.
+ *
+ * `NOT_SCANNED` is not a failure and it is not PENDING. It is terminal: no scanner is
+ * configured on this deployment, and nobody is going to look at the file later. PENDING would
+ * be a promise the deployment cannot keep and CLEAN a verdict nothing reached — and a stored
+ * artifact claiming to have been cleared when it was not is a lie in the evidentiary record,
+ * which is worse than an acknowledged gap. `runImport` still refuses it unless the caller
+ * sets `acknowledgeUnscanned`, and an import admitted that way carries a FILE_NOT_SCANNED
+ * warning onto every screen that renders it. See the threat model, "Malicious file".
+ *
+ * Kept separate from `MALWARE_SCAN_STATUSES` rather than widening it. Evidence documents go
+ * through a different pipeline with a different operator, and a value one of them can hold is
+ * not automatically one the other should.
+ */
+export const IMPORT_SCAN_STATUSES = [
+  'PENDING',
+  'CLEAN',
+  'INFECTED',
+  'FAILED',
+  'NOT_SCANNED',
+] as const;
+
+export type ImportScanStatus = (typeof IMPORT_SCAN_STATUSES)[number];
+
+/**
  * Text extraction / OCR, the later pipeline stage. NOT_REQUIRED is a real state: a native
  * spreadsheet export has no text layer to extract and is not thereby a defective document.
  */

@@ -11,16 +11,49 @@
 
 import Link from 'next/link';
 import { StatusBadge } from '@/components/status-badge';
+import { StoredAssessment } from '@/components/stored-assessment';
+import { UploadExport } from '@/components/upload-export';
 import { byAttention, outstanding, rollUpSentence } from '@/lib/summary';
 import { currentSession } from '@/lib/session';
+import { TEMPLATE_ID, TEMPLATE_VERSION, storedAssessment } from '@/lib/district';
 import { SUBJECT, UPLOAD, workedExample } from '@/lib/worked-example';
 
 // Recomputed per request so a deployment missing its regulatory content fails here, visibly,
 // rather than serving a value baked in at build time. See `worked-example.ts`.
 export const dynamic = 'force-dynamic';
 
-export default async function AssessmentPage() {
+export default async function AssessmentPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await currentSession();
+  const outcomeCode = (await searchParams)['upload'];
+  const uploadOutcome = typeof outcomeCode === 'string' ? outcomeCode : undefined;
+
+  // A district that has uploaded something gets its own assessment, read back from the
+  // database. The worked example is what a page shows when there is genuinely nothing else
+  // to show — never something layered on top of a district's real run.
+  if (session.signedIn) {
+    const stored = await storedAssessment(session.principal);
+    if (stored !== null) {
+      return (
+        <>
+          <StoredAssessment
+            run={stored.run}
+            results={stored.results}
+            organizationName={session.principal.displayName}
+          />
+          <UploadExport
+            outcome={uploadOutcome}
+            templateId={TEMPLATE_ID}
+            templateVersion={TEMPLATE_VERSION}
+          />
+        </>
+      );
+    }
+  }
+
   const { outcome, pack } = await workedExample();
   const { assessment, snapshot } = outcome;
 
@@ -209,6 +242,14 @@ export default async function AssessmentPage() {
         failing year compliant and lower the bar the next year is measured against.
       </p>
 
+      {session.signedIn ? (
+        <UploadExport
+          outcome={uploadOutcome}
+          templateId={TEMPLATE_ID}
+          templateVersion={TEMPLATE_VERSION}
+        />
+      ) : null}
+
       <h2>What this deployment does not do</h2>
       <div className="prose">
         <p>
@@ -227,14 +268,21 @@ export default async function AssessmentPage() {
                 'configuration is missing.'}
           </li>
           <li>
-            <strong>Upload.</strong> No district export can be uploaded through the product, so the
-            assessment above is the only one that exists.
+            <strong>Upload and persistence.</strong>{' '}
+            {session.signedIn
+              ? 'Done, and the form above is it: an export you upload is parsed, sealed into a ' +
+                'content-hashed snapshot, evaluated, and written to the database with every ' +
+                'figure linked to the row it came from. This page then reads the stored run ' +
+                'rather than recomputing one.'
+              : 'A signed-in officer can upload a district export, which is stored with its ' +
+                'facts, its snapshot and the assessment run made from it. Nobody is signed in ' +
+                'here, so the worked example above is what there is.'}
           </li>
           <li>
-            <strong>Persistence.</strong> The schema, its row-level security and its isolation tests
-            exist in <code>packages/db</code>, and the application now connects to it to resolve who
-            is signed in — but no assessment run is stored, so nothing on this page survives the
-            request that produced it.
+            <strong>Malware scanning.</strong> No scanner is wired up. The gate is real —{' '}
+            <code>runImport</code> refuses a file that has not been cleared — but a deployment with
+            no scanner must accept unscanned uploads explicitly, and every import admitted that way
+            is recorded as <code>NOT_SCANNED</code> rather than quietly as clean.
           </li>
           <li>
             <strong>Evidence.</strong> A finding cannot yet be linked to a document, so section

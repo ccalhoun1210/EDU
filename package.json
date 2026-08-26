@@ -15,13 +15,15 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "rules:validate": "vitest run --project rulepack-sdk",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm smoke:web",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm smoke:web && pnpm smoke:upload",
     "dev": "pnpm --filter @complianceos/web dev",
     "build": "tsc --build && pnpm --filter @complianceos/web build",
     "smoke:web": "pnpm exec node scripts/smoke-web.mjs",
     "smoke:auth": "pnpm exec node scripts/smoke-auth.mjs",
     "db:migrate": "pnpm exec tsc --build && pnpm exec node scripts/migrate.mjs",
-    "db:seed:demo": "pnpm exec node scripts/seed-demo.mjs"
+    "db:seed:demo": "pnpm exec node scripts/seed-demo.mjs",
+    "db:publish:rulepack": "pnpm exec tsc --build && pnpm exec node --conditions=dist scripts/publish-rulepack.mjs",
+    "smoke:upload": "pnpm exec node scripts/smoke-upload.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
