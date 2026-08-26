@@ -11,4 +11,6 @@
  */
 
 export * from './client.js';
+export * from './import-store.js';
 export * from './migrate.js';
+export * from './run-store.js';
