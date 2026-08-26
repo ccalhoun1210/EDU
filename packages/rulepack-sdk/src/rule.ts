@@ -53,6 +53,15 @@ export const EffectiveWindowSchema = z.object({
 export const RuleSchema = z
   .object({
     ruleId: z.string().min(1),
+    /**
+     * What the requirement is called, in words a district officer reads.
+     *
+     * Required, not optional. The finding-detail screen's first job is to answer "what failed
+     * or is at risk" (section 24), and a screen headed `IDEA-MOE-COMPLIANCE-001` does not
+     * answer it. The calculator's own title cannot stand in: a rule whose arithmetic is not
+     * yet written has no calculator, and that rule still appears on an assessment.
+     */
+    title: z.string().min(1),
     pack: z.string().min(1),
     jurisdiction: z.string().min(1),
     program: z.string().min(1),

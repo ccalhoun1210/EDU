@@ -9,6 +9,11 @@ import type { NextConfig } from 'next';
  * that looked configured and was not. Declared in the framework, they apply wherever the app
  * runs, including `next start` and local development.
  *
+ * The Content-Security-Policy is not here. It needs a fresh nonce per request, which a static
+ * header cannot carry, so it is issued by `src/middleware.ts` — see that file for what the
+ * static policy got wrong. A header set in both places would be enforced as the intersection
+ * of the two, which would silently reinstate the bug.
+ *
  * Spec: Master Technical Buildout section 19.
  */
 const SECURITY_HEADERS = [
@@ -17,22 +22,6 @@ const SECURITY_HEADERS = [
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-  // No inline script is used, so the policy can be strict from the start. Loosening it later
-  // is a deliberate act; starting loose and tightening never happens.
-  {
-    key: 'Content-Security-Policy',
-    value: [
-      "default-src 'self'",
-      "script-src 'self'",
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data:",
-      "font-src 'self'",
-      "connect-src 'self'",
-      "frame-ancestors 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-    ].join('; '),
-  },
 ];
 
 const config: NextConfig = {
@@ -46,6 +35,7 @@ const config: NextConfig = {
     '@complianceos/calculators',
     '@complianceos/rules-engine',
     '@complianceos/ingest',
+    '@complianceos/assurance',
   ],
 
   outputFileTracingRoot: new URL('../../', import.meta.url).pathname,
@@ -57,7 +47,9 @@ const config: NextConfig = {
    * application that cannot start.
    */
   outputFileTracingIncludes: {
-    '/': ['../../rulepacks/**/*.yaml'],
+    // Every route, not just `/`. Three surfaces now read the packs, and a key naming one route
+    // would leave the others building green and failing on their first request.
+    '/**': ['../../rulepacks/**/*.yaml'],
   },
 
   /**

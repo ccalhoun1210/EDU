@@ -29,6 +29,7 @@ function makeRule(
 ): Rule {
   return {
     ruleId,
+    title: `Requirement ${ruleId}`,
     pack: packId,
     jurisdiction: 'US',
     program: 'IDEA_PART_B',

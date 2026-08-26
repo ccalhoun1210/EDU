@@ -15,9 +15,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "rules:validate": "vitest run --project rulepack-sdk",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm smoke:web",
     "dev": "pnpm --filter @complianceos/web dev",
-    "build": "tsc --build && pnpm --filter @complianceos/web build"
+    "build": "tsc --build && pnpm --filter @complianceos/web build",
+    "smoke:web": "pnpm exec node scripts/smoke-web.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

@@ -184,6 +184,7 @@ export function evaluateRule(request: EvaluateRuleRequest): EvaluationResult {
     dataSnapshotId: context.dataSnapshotId,
     engineVersion: ENGINE_VERSION,
     ruleId: rule.ruleId,
+    ruleTitle: rule.title,
     ruleLifecycle: rule.lifecycle,
     pack: resolved.pack,
     ...(resolved.supersedes === undefined ? {} : { supersedes: resolved.supersedes }),

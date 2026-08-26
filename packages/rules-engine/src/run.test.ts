@@ -58,6 +58,7 @@ const FEDERAL_PACK: PackRef = { packId: 'idea-part-b-federal', version: '1.0.0',
 function rule(overrides: Partial<Rule> = {}): Rule {
   return {
     ruleId: 'IDEA-MOE-COMPLIANCE-001',
+    title: 'IDEA Part B — LEA maintenance of effort, compliance standard',
     pack: 'idea-part-b-federal',
     jurisdiction: 'US',
     program: 'IDEA-PART-B',
@@ -175,6 +176,7 @@ function hashInput(result: EvaluationResult, overrides: Partial<HashInput> = {})
     dataSnapshotId: result.dataSnapshotId,
     engineVersion: result.engineVersion,
     ruleId: result.ruleId,
+    ruleTitle: result.ruleTitle,
     ruleLifecycle: result.ruleLifecycle,
     pack: result.pack,
     ...(result.supersedes === undefined ? {} : { supersedes: result.supersedes }),

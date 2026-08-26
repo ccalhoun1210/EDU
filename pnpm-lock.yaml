@@ -35,15 +35,24 @@ importers:
 
   apps/web:
     dependencies:
+      '@complianceos/assurance':
+        specifier: workspace:*
+        version: link:../../packages/assurance
       '@complianceos/calculators':
         specifier: workspace:*
         version: link:../../packages/calculators
       '@complianceos/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@complianceos/ingest':
+        specifier: workspace:*
+        version: link:../../packages/ingest
       '@complianceos/rulepack-sdk':
         specifier: workspace:*
         version: link:../../packages/rulepack-sdk
+      '@complianceos/rules-engine':
+        specifier: workspace:*
+        version: link:../../packages/rules-engine
       next:
         specifier: ^15.5.6
         version: 15.5.24(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

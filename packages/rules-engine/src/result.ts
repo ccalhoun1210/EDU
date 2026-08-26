@@ -58,6 +58,15 @@ export interface EvaluationResult {
   readonly engineVersion: string;
 
   readonly ruleId: string;
+  /**
+   * The requirement's name, copied from the rule that produced this result.
+   *
+   * Copied rather than looked up, so a finding rendered years later reads under the name the
+   * requirement carried when it was evaluated, without needing the pack on disk. Deliberately
+   * outside the evaluation hash: rewording a title does not change what was computed, and a
+   * copy-edit that invalidated every prior hash would make reproducibility unusable.
+   */
+  readonly ruleTitle: string;
   readonly ruleLifecycle: string;
   readonly pack: PackRef;
   /** Present when a state overlay superseded a lower layer's rule of the same id. */

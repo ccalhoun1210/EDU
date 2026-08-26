@@ -349,3 +349,134 @@ code {
     margin-bottom: 0.6rem;
   }
 }
+
+/* --------------------------------------------------------------- navigation -- */
+
+.site-nav {
+  margin-left: auto;
+}
+
+.site-nav ul {
+  display: flex;
+  gap: 1.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
+.site-nav a {
+  color: var(--muted);
+  text-decoration: none;
+  padding-bottom: 2px;
+  border-bottom: 2px solid transparent;
+}
+
+.site-nav a:hover {
+  color: var(--fg);
+}
+
+/* The current page is marked by weight and a rule, not by colour alone. */
+.site-nav a[aria-current='page'] {
+  color: var(--fg);
+  font-weight: 650;
+  border-bottom-color: var(--accent);
+}
+
+.breadcrumb {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0 0 1rem;
+}
+
+/* -------------------------------------------------------------- finding page -- */
+
+.headline {
+  margin: 0 0 1.5rem;
+}
+
+.headline .status {
+  font-size: 0.95rem;
+  padding: 0.3rem 0.8rem;
+}
+
+/*
+ * The machine-readable status beside the human one. A district reading "Not determined" on a
+ * screen and INDETERMINATE in an export needs to see, once, that they are the same thing.
+ */
+.status-code {
+  font-family: var(--mono);
+  font-size: 0.78em;
+  font-weight: 500;
+  opacity: 0.75;
+  letter-spacing: 0;
+}
+
+.muted {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 0.85em;
+}
+
+/* A 64-character hash must wrap rather than push a table sideways. */
+.hash {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+/*
+ * `definition-list` is a two-column grid, so a nested list inside a `dd` would inherit the
+ * grid and misalign. Wrapping each pair in a row element keeps both levels readable.
+ */
+.definition-list .nested-row {
+  display: contents;
+}
+
+.definition-list.nested {
+  grid-template-columns: minmax(7rem, max-content) 1fr;
+  gap: 0.2rem 1rem;
+  font-size: 0.95em;
+}
+
+.explanation {
+  white-space: pre-wrap;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  background: var(--bg-sunken);
+  border-radius: var(--radius);
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  margin: 0.75rem 0 0;
+}
+
+details {
+  margin: 1.5rem 0;
+  border-top: 1px solid var(--line);
+  padding-top: 0.75rem;
+}
+
+summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+details[open] summary {
+  color: var(--fg);
+}
+
+.prose ul,
+.issue-list {
+  padding-left: 1.15rem;
+}
+
+.prose li,
+.issue-list li {
+  margin-bottom: 0.5rem;
+}
+
+.issue-list {
+  max-width: 46rem;
+  font-size: 0.9rem;
+}

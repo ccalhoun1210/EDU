@@ -42,6 +42,12 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # Every page is force-dynamic and reads the rule packs off disk at request time, so a
+      # build proves only that the code compiles. This starts the built server and checks what
+      # each route actually returns — the failure mode a green build hides.
+      - name: Web route smoke test
+        run: pnpm smoke:web
+
   # Tenant isolation is the severest threat in a multi-tenant compliance platform
   # (threat model row 1), and the controls that prevent it are Postgres features —
   # FORCE row level security, composite tenant foreign keys, a non-owner application
