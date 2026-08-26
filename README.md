@@ -17,7 +17,7 @@ and ERP remain authoritative. Integrations are read-only.
 
 **Platform core, and the first two statutory calculators.** The engine and the data path are
 built and tested. The two IDEA maintenance-of-effort calculators are implemented against a
-42-case golden corpus and run end to end through the engine; the other four are specified and
+47-case golden corpus and run end to end through the engine; the other four are specified and
 waiting.
 
 | Package                 | What it does                                                                                                                                     |
