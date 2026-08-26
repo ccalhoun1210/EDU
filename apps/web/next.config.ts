@@ -3,9 +3,9 @@ import type { NextConfig } from 'next';
 /**
  * Security headers.
  *
- * These live here rather than in `vercel.json` because the root `vercel.json` is only read
- * for a deployment whose Root Directory is the repository root. This app deploys with Root
- * Directory `apps/web`, so headers declared there were never applied — a security control
+ * These live here rather than in `vercel.json` because a repository-root `vercel.json` is only
+ * read for a deployment whose Root Directory is the repository root, and this app deploys with
+ * Root Directory `apps/web`. Headers declared there were never applied — a security control
  * that looked configured and was not. Declared in the framework, they apply wherever the app
  * runs, including `next start` and local development.
  *
@@ -38,9 +38,15 @@ const SECURITY_HEADERS = [
 const config: NextConfig = {
   reactStrictMode: true,
 
-  // Workspace packages are compiled by Next rather than pre-built, so a `vercel build` needs
-  // no separate build step for the monorepo packages.
-  transpilePackages: ['@complianceos/domain', '@complianceos/rulepack-sdk'],
+  // Workspace packages are compiled by Next from source rather than pre-built, so a
+  // `vercel build` needs no separate build step for them.
+  transpilePackages: [
+    '@complianceos/domain',
+    '@complianceos/rulepack-sdk',
+    '@complianceos/calculators',
+    '@complianceos/rules-engine',
+    '@complianceos/ingest',
+  ],
 
   outputFileTracingRoot: new URL('../../', import.meta.url).pathname,
 
@@ -52,6 +58,21 @@ const config: NextConfig = {
    */
   outputFileTracingIncludes: {
     '/': ['../../rulepacks/**/*.yaml'],
+  },
+
+  /**
+   * The workspace packages are ESM TypeScript importing siblings with explicit `.js`
+   * specifiers, which is what `verbatimModuleSyntax` and Node ESM require of the *emitted*
+   * code. Next compiles the `.ts` source directly, so webpack has to be told that a `.js`
+   * specifier means the `.ts` file next to it.
+   */
+  webpack: (webpackConfig: { resolve: { extensionAlias?: Record<string, readonly string[]> } }) => {
+    webpackConfig.resolve.extensionAlias = {
+      ...webpackConfig.resolve.extensionAlias,
+      '.js': ['.ts', '.tsx', '.js'],
+      '.mjs': ['.mts', '.mjs'],
+    };
+    return webpackConfig;
   },
 
   async headers() {
