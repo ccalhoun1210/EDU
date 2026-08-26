@@ -17,5 +17,6 @@
 export * from './claim.js';
 export * from './principal.js';
 export * from './providers/demo.js';
+export * from './providers/neon-auth.js';
 export * from './resolve.js';
 export * from './session.js';
