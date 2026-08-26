@@ -19,7 +19,9 @@
     "dev": "pnpm --filter @complianceos/web dev",
     "build": "tsc --build && pnpm --filter @complianceos/web build",
     "smoke:web": "pnpm exec node scripts/smoke-web.mjs",
-    "smoke:auth": "pnpm exec node scripts/smoke-auth.mjs"
+    "smoke:auth": "pnpm exec node scripts/smoke-auth.mjs",
+    "db:migrate": "pnpm exec tsc --build && pnpm exec node scripts/migrate.mjs",
+    "db:seed:demo": "pnpm exec node scripts/seed-demo.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
