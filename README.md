@@ -15,15 +15,48 @@ and ERP remain authoritative. Integrations are read-only.
 
 ## Status
 
-**Phase 0 — foundation.** What works today:
+**Platform core, and the first two statutory calculators.** The engine and the data path are
+built and tested. The two IDEA maintenance-of-effort calculators are implemented against a
+42-case golden corpus and run end to end through the engine; the other four are specified and
+waiting.
 
-- Rule-pack schema, restricted rule DSL, and pack loader, with validation in CI
-- Federal IDEA Part B baseline pack: three fiscal rules, each carrying its CFR citation
-- Core domain vocabulary — evaluation statuses, organization model, explicit access scopes
-- A page that loads the committed rule pack and reports what parsed
+| Package                 | What it does                                                                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `packages/domain`       | Exact-decimal money, calendar arithmetic, canonical hashing, data classification, findings, corrective actions, evidence, retention, audit chain |
+| `packages/rulepack-sdk` | Rule schema, restricted DSL, pack loader, regulatory source registry                                                                             |
+| `packages/rules-engine` | Three-valued evaluator, pack layering, deterministic explanations, evaluation hash, run orchestration                                            |
+| `packages/ingest`       | Strict parsing, versioned mapping templates, validation, reconciliation, provenance, immutable snapshots                                         |
+| `packages/db`           | Migrations with composite tenant keys, forced RLS, immutability triggers, append-only audit log                                                  |
+| `packages/calculators`  | Calculator contract, registry, golden-corpus runner, purity scan, and the two IDEA maintenance-of-effort calculators                             |
 
-No rule is evaluated yet. Calculators are declared in the registry and not implemented; no
-rule has passed legal review. The roadmap is §32 of the master technical buildout.
+1,072 tests: 1,043 run anywhere, 29 exercise tenant isolation against a real Postgres.
+
+**No rule evaluates district data, and that is enforced rather than merely true.** No
+regulatory text has been retrieved in this environment — eCFR is unreachable behind the
+egress policy — so every source in the registry is unverified, and a rule citing an
+unverified source cannot leave the authoring stages. The entire federal corpus is held at
+`DRAFT`. See [ADR 0006](docs/adrs/0006-a-rule-may-not-go-live-on-an-unverified-citation.md).
+
+Each statutory specification was independently reviewed by an adversarial pass that
+recomputed every case by hand. All six came back needing revision, with findings including
+an order-dependent ceiling and a path where a claimed reduction larger than the comparison
+amount produced a trivially passing zero requirement. The calculators are therefore built to a
+**refusal policy**: correct where the regulation is unambiguous, and `MANUAL_REVIEW` with the
+provision named where it is not.
+[ADR 0007](docs/adrs/0007-a-calculator-refuses-rather-than-guesses.md) explains why that is
+the right behaviour for a compliance product, and what it costs.
+
+The two maintenance-of-effort calculators are what that policy looks like in code. Where the
+regulation is clear they answer exactly — the four measures, the exceptions at 34 CFR 300.204,
+the adjustment ceiling at 300.205 apportioned pro rata so no claim is favoured by its position
+in a list, per-capita comparisons decided by cross-multiplication so no rounding can flip a
+boundary. Where it is not, they evaluate every live reading and refuse when the readings
+disagree, naming the provision and the open question. A zero requirement is never a pass, and a
+compliance failure is never issued on a calculation that could not be completed.
+[`docs/regulatory-methodology/idea-moe.md`](docs/regulatory-methodology/idea-moe.md) is the
+specification; `packages/calculators/golden/` is the test corpus a domain reviewer reads.
+
+The roadmap is §32 of the master technical buildout.
 
 ## Getting started
 
@@ -48,15 +81,31 @@ of it — nothing is wired to a database yet.
 | `pnpm build`     | Production build                                       |
 | `pnpm verify`    | format + lint + typecheck + test — run before every PR |
 
+The tenant-isolation suite skips without a database. To run it:
+
+```bash
+DATABASE_URL=postgres://postgres@localhost:5432/complianceos_test pnpm exec vitest run --project db
+```
+
+CI runs it against a Postgres service container, and fails rather than skips if that job
+does not supply a database — a suite that silently skips would report that isolation holds
+without having checked it.
+
 ## Layout
 
 ```
-apps/web/               Next.js application
-packages/domain/        Evaluation vocabulary, organization model, access rules
-packages/rulepack-sdk/  Rule schema, DSL, loader, calculator allow-list
-rulepacks/              Regulatory content as YAML
-docs/architecture/      Design documents and the master technical buildout
-docs/adrs/              Architecture decision records
+apps/web/                    Next.js application
+packages/domain/             Core vocabulary: money, dates, hashing, findings, evidence, audit
+packages/rulepack-sdk/       Rule schema, DSL, loader, source registry
+packages/rules-engine/       Evaluator, pack resolver, explanations, assessment runs
+packages/calculators/        Calculator contract, registry, golden corpora
+packages/ingest/             Parsing, mapping, validation, provenance, snapshots
+packages/db/                 Migrations, RLS policies, tenant-scoped access
+rulepacks/                   Regulatory content as YAML, plus the source registry
+docs/architecture/           Design documents and the master technical buildout
+docs/adrs/                   Architecture decision records
+docs/regulatory-methodology/ How each regulatory conclusion is derived
+docs/threat-model/           Section 37 threats and what mitigates each today
 ```
 
 ## Deployment
@@ -64,6 +113,28 @@ docs/adrs/              Architecture decision records
 Vercel, with Neon Postgres, Inngest for durable background work, and Vercel Blob for
 objects. This differs from the AWS design in the buildout; ADR 0002 records the swap and
 what it costs, including the procurement questions to close before a district contract.
+
+### How it deploys
+
+The Next application lives in `apps/web`, and the Vercel project's Root Directory points at
+it, so `apps/web/vercel.json` is the config that gets read. A repository-root `vercel.json`
+would be ignored under that setting, which is why there isn't one — a config file nothing
+reads is worse than no config file, because it looks like the setting is in force.
+
+Two consequences worth knowing:
+
+- **Workspace packages resolve from TypeScript source**, not from a built `dist/`. Each
+  package's `exports` points at `./src/index.ts` and Next transpiles them, so a deploy needs
+  no separate build step for the monorepo. The packages are ESM and import siblings with
+  explicit `.js` specifiers, so `next.config.ts` teaches webpack that a `.js` specifier means
+  the `.ts` file beside it. `tsc --build` still runs in CI — it is the typecheck, not a
+  prerequisite of the bundle.
+- **The rule packs are read from disk at request time** and nothing imports them, so Next's
+  dependency tracing cannot see them. `outputFileTracingIncludes` pulls them into the bundle;
+  without it the build succeeds and the deployed application fails on its first request.
+
+Security headers are declared in `next.config.ts` rather than in `vercel.json`, so they apply
+under `next start` and in local development as well as on Vercel.
 
 ## Contributing
 

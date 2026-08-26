@@ -7,16 +7,27 @@ apps/
   web/                   Next.js application — web UI and route handlers
 
 packages/
-  domain/                Evaluation vocabulary, organization model, access rules
-  rulepack-sdk/          Rule schema, restricted DSL, pack loader, calculator allow-list
+  domain/                Evaluation vocabulary, exact-decimal money, calendar arithmetic,
+                         canonical hashing, data classification, findings, corrective actions,
+                         assessment runs, evidence, retention, the audit hash chain
+  rulepack-sdk/          Rule schema, restricted DSL, pack loader, calculator allow-list,
+                         regulatory source registry
+  rules-engine/          Three-valued DSL evaluator, pack layering, deterministic explanations,
+                         evaluation hash, assessment run orchestration
+  calculators/           Calculator contract, registry, golden corpus runner, purity scan
+  ingest/                CSV parsing, mapping templates, transformations, validation,
+                         reconciliation, provenance, immutable data snapshots
+  db/                    Migrations, RLS policies, tenant-scoped access, migration runner
 
 rulepacks/
   federal/idea-b/        US-FED-IDEA-B-2026 — federal baseline pack
+  sources/               Regulatory source registry with retrieval metadata
 
 docs/
   architecture/          Design documents, including the master technical buildout
   adrs/                  Architecture decision records
   regulatory-methodology/  How each regulatory conclusion is derived
+  threat-model/          Section 37 threats mapped to what mitigates them today
 ```
 
 ## Target structure

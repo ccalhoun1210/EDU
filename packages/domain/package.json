@@ -13,5 +13,8 @@
   },
   "scripts": {
     "test": "vitest run"
+  },
+  "dependencies": {
+    "decimal.js": "^10.6.0"
   }
 }

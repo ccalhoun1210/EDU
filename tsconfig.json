@@ -6,6 +6,18 @@
     },
     {
       "path": "./packages/rulepack-sdk"
+    },
+    {
+      "path": "./packages/calculators"
+    },
+    {
+      "path": "./packages/rules-engine"
+    },
+    {
+      "path": "./packages/ingest"
+    },
+    {
+      "path": "./packages/db"
     }
   ]
 }

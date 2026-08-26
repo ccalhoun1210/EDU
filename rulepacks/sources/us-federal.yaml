@@ -1,0 +1,271 @@
+# ---------------------------------------------------------------------------
+# Federal regulatory source library
+#
+# Spec: Master Technical Buildout sections 9 and 41.
+#
+# READ THIS BEFORE ADVANCING ANY RULE PAST QA_APPROVED.
+#
+# Every entry below has `retrieval: null`. That is not an oversight and it is not a
+# placeholder to be filled in with a plausible-looking hash. It means precisely what the
+# schema says it means: the official text at `officialUrl` has not been fetched, hashed and
+# archived, so no rule citing it may reach STAGED, SHADOW or ACTIVE.
+# `assertRuleSourcesVerified` enforces that, and the rule-pack test suite calls it.
+#
+# The build environment these entries were authored in has no route to ecfr.gov — outbound
+# requests to it are refused by the egress policy. Rather than transcribe regulatory text
+# from memory and present it as authoritative, the citations record *where the answer is*
+# and the retrieval record records *that nobody has looked yet*.
+#
+# To verify a source: fetch the document at `officialUrl`, archive the exact bytes, record
+# the SHA-256 as `documentHash`, and fill in `retrievedOn`, `archiveRef` and `retrievedBy`.
+# Then, separately, confirm that each rule citing it actually implements what it says. The
+# retrieval record proves the text was obtained; a domain reviewer's approval is what proves
+# the rule matches it. They are different gates and both are required by section 35.
+# ---------------------------------------------------------------------------
+
+registryId: US-FEDERAL
+description: >-
+  Federal authorities for IDEA Part B fiscal compliance and the Uniform Guidance provisions
+  that govern records and internal controls for the same funds.
+
+sources:
+  - sourceId: REG-US-IDEA-300-16
+    jurisdiction: US-FED
+    publisher: U.S. Department of Education
+    title: Assistance to States for the Education of Children With Disabilities — Excess costs
+    citation: 34 CFR 300.16
+    officialUrl: https://www.ecfr.gov/current/title-34/part-300/section-300.16
+    publishedOn: null
+    effective:
+      start: 2006-10-13
+      end: null
+    programs:
+      - IDEA_PART_B
+    supersedes: null
+    retrieval: null
+    notes: >-
+      Defines "excess costs" and points at the computation. Cited together with 300.202(b)
+      and Appendix A; the definition alone does not supply the arithmetic.
+
+  - sourceId: REG-US-IDEA-300-133
+    jurisdiction: US-FED
+    publisher: U.S. Department of Education
+    title: Expenditures for parentally-placed private school children with disabilities
+    citation: 34 CFR 300.133
+    officialUrl: https://www.ecfr.gov/current/title-34/part-300/section-300.133
+    publishedOn: null
+    effective:
+      start: 2006-10-13
+      end: null
+    programs:
+      - IDEA_PART_B
+    supersedes: null
+    retrieval: null
+    notes: >-
+      The proportionate-share obligation. Section 611 and section 619 shares are computed
+      separately; a single blended ratio is a known common error and the calculator must not
+      permit one.
+
+  - sourceId: REG-US-IDEA-300-202
+    jurisdiction: US-FED
+    publisher: U.S. Department of Education
+    title: Use of amounts
+    citation: 34 CFR 300.202
+    officialUrl: https://www.ecfr.gov/current/title-34/part-300/section-300.202
+    publishedOn: null
+    effective:
+      start: 2006-10-13
+      end: null
+    programs:
+      - IDEA_PART_B
+    supersedes: null
+    retrieval: null
+    notes: The excess-cost requirement at paragraph (b).
+
+  - sourceId: REG-US-IDEA-300-203
+    jurisdiction: US-FED
+    publisher: U.S. Department of Education
+    title: Maintenance of effort
+    citation: 34 CFR 300.203
+    officialUrl: https://www.ecfr.gov/current/title-34/part-300/section-300.203
+    publishedOn: null
+    effective:
+      start: 2015-07-01
+      end: null
+    programs:
+      - IDEA_PART_B
+    supersedes: null
+    retrieval: null
+    notes: >-
+      Paragraph (a) is the eligibility (budget) standard, (b) the compliance (actual
+      expenditure) standard, (c) the rule fixing which prior year is the comparison year.
+      The effective date recorded here reflects the 2015 amendments that restructured this
+      section; confirm the exact applicability date on retrieval, because a run reproducing
+      a pre-2015 fiscal year needs the prior text.
+
+  - sourceId: REG-US-IDEA-300-204
+    jurisdiction: US-FED
+    publisher: U.S. Department of Education
+    title: Exception to maintenance of effort
+    citation: 34 CFR 300.204
+    officialUrl: https://www.ecfr.gov/current/title-34/part-300/section-300.204
+    publishedOn: null
+    effective:
+      start: 2006-10-13
+      end: null
+    programs:
+      - IDEA_PART_B
+    supersedes: null
+    retrieval: null
+    notes: >-
+      The enumerated grounds on which an LEA may reduce its required level of effort. A
+      claimed exception that does not name one of the enumerated grounds is a validation
+      failure, never a silently accepted reduction.
+
+  - sourceId: REG-US-IDEA-300-205
+    jurisdiction: US-FED
+    publisher: U.S. Department of Education
+    title: Adjustment to local fiscal effort in certain fiscal years
+    citation: 34 CFR 300.205
+    officialUrl: https://www.ecfr.gov/current/title-34/part-300/section-300.205
+    publishedOn: null
+    effective:
+      start: 2006-10-13
+      end: null
+    programs:
+      - IDEA_PART_B
+    supersedes: null
+    retrieval: null
+    notes: >-
+      The 50-percent adjustment, and its interaction with the CEIS reservation under 300.226.
+      The two draw on the same increase in allocation and cannot both be taken in full.
+
+  - sourceId: REG-US-IDEA-300-226
+    jurisdiction: US-FED
+    publisher: U.S. Department of Education
+    title: Early intervening services
+    citation: 34 CFR 300.226
+    officialUrl: https://www.ecfr.gov/current/title-34/part-300/section-300.226
+    publishedOn: null
+    effective:
+      start: 2006-10-13
+      end: null
+    programs:
+      - IDEA_PART_B
+    supersedes: null
+    retrieval: null
+    notes: Permissive CEIS — the reservation ceiling, the population served, and reporting.
+
+  - sourceId: REG-US-IDEA-300-646
+    jurisdiction: US-FED
+    publisher: U.S. Department of Education
+    title: Disproportionality
+    citation: 34 CFR 300.646
+    officialUrl: https://www.ecfr.gov/current/title-34/part-300/section-300.646
+    publishedOn: null
+    effective:
+      start: 2017-01-18
+      end: null
+    programs:
+      - IDEA_PART_B
+    supersedes: null
+    retrieval: null
+    notes: >-
+      The State's determination of significant disproportionality and the consequences,
+      including required comprehensive CEIS at paragraph (d). The determination is the
+      State's; this platform computes ratios and reports distance from the State threshold.
+
+  - sourceId: REG-US-IDEA-300-647
+    jurisdiction: US-FED
+    publisher: U.S. Department of Education
+    title: Determining significant disproportionality
+    citation: 34 CFR 300.647
+    officialUrl: https://www.ecfr.gov/current/title-34/part-300/section-300.647
+    publishedOn: null
+    effective:
+      start: 2017-01-18
+      end: null
+    programs:
+      - IDEA_PART_B
+    supersedes: null
+    retrieval: null
+    notes: >-
+      The risk-ratio methodology, and the State-selected parameters — risk ratio threshold,
+      minimum cell size, minimum n-size, number of consecutive years, reasonable progress.
+      Every one of those is a State parameter and must come from a State rule pack, never a
+      default baked into a calculator.
+
+  - sourceId: REG-US-IDEA-300-704
+    jurisdiction: US-FED
+    publisher: U.S. Department of Education
+    title: State-level activities — high cost fund
+    citation: 34 CFR 300.704(c)
+    officialUrl: https://www.ecfr.gov/current/title-34/part-300/section-300.704
+    publishedOn: null
+    effective:
+      start: 2006-10-13
+      end: null
+    programs:
+      - IDEA_PART_B
+    supersedes: null
+    retrieval: null
+    notes: Referenced by one of the 300.204 maintenance-of-effort exceptions.
+
+  - sourceId: REG-US-IDEA-APPENDIX-A
+    jurisdiction: US-FED
+    publisher: U.S. Department of Education
+    title: Appendix A to Part 300 — Excess Costs Calculation
+    citation: Appendix A to 34 CFR Part 300
+    officialUrl: https://www.ecfr.gov/current/title-34/part-300/appendix-Appendix%20A%20to%20Part%20300
+    publishedOn: null
+    effective:
+      start: 2006-10-13
+      end: null
+    programs:
+      - IDEA_PART_B
+    supersedes: null
+    retrieval: null
+    notes: >-
+      The worked computation. This is the operative source for the excess-cost calculator —
+      300.16 defines the term and 300.202(b) imposes the requirement, but the ordered steps
+      and the specific exclusions live here. Retrieval of this appendix is the highest
+      priority in this registry.
+
+  - sourceId: REG-US-UG-200-334
+    jurisdiction: US-FED
+    publisher: Office of Management and Budget
+    title: Uniform Guidance — Retention requirements for records
+    citation: 2 CFR 200.334
+    officialUrl: https://www.ecfr.gov/current/title-2/part-200/section-200.334
+    publishedOn: null
+    effective:
+      start: 2014-12-26
+      end: null
+    programs:
+      - IDEA_PART_B
+      - FEDERAL_PROGRAMS
+    supersedes: null
+    retrieval: null
+    notes: >-
+      The federal record-retention floor for these funds. The period runs from the date of
+      submission of the final expenditure report, which is why the retention engine anchors
+      a period to a named event rather than to record creation.
+
+  - sourceId: REG-US-UG-200-303
+    jurisdiction: US-FED
+    publisher: Office of Management and Budget
+    title: Uniform Guidance — Internal controls
+    citation: 2 CFR 200.303
+    officialUrl: https://www.ecfr.gov/current/title-2/part-200/section-200.303
+    publishedOn: null
+    effective:
+      start: 2014-12-26
+      end: null
+    programs:
+      - IDEA_PART_B
+      - FEDERAL_PROGRAMS
+    supersedes: null
+    retrieval: null
+    notes: >-
+      The internal-control obligation that makes an assurance platform relevant to a
+      district's own compliance posture, not only to a monitor's.
